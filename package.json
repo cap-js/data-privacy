@@ -1,0 +1,26 @@
+{
+  "name": "@sap/cds-dpi",
+  "version": "0.1.0",
+  "author": "SAP",
+  "main": "cds-plugin.js",
+  "keywords": [
+    "cds",
+    "CAP"
+  ],
+  "dependencies": {
+    "@sap/audit-logging": "^5.0.0",
+    "dayjs": "^1.11.5",
+    "express": "^4.17.1",
+    "path": "^0.12.7",
+    "serve-static": "^1.15.0"
+  },
+  "devDependencies": {
+    "@sap/cds": "*",
+    "sqlite3": "^5.1.6"
+  },
+  "scripts": {
+    "start": "cds run --in-memory?",
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "watch": "cds watch"
+  }
+}
