@@ -38,7 +38,7 @@ function serveArchiveRequests(srv, db) {
         )
 
         if (legalEntity != 'ALL') {
-            const legalField = _getLegalEntityIDField(legalGroundEntity.entities)
+            const legalField = _getLegalEntityIDField(legalGroundEntity.elements)
             where.push(
                 'and',
                 {ref: [legalField]},
@@ -46,8 +46,8 @@ function serveArchiveRequests(srv, db) {
                 {val: legalEntity}
             )
         }
-        if (!excludedLegalEntities) {
-            const legalField = _getLegalEntityIDField(legalGroundEntity.entities)
+        if (excludedLegalEntities && excludedLegalEntities.length !== 0) {
+            const legalField = _getLegalEntityIDField(legalGroundEntity.elements)
             let innerWhere = []
             excludedLegalEntities.forEach((e, idx) => {
                 if (idx !== 0) innerWhere.push('and')

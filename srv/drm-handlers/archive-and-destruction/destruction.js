@@ -14,7 +14,7 @@ function serveDestructionRequests(srv, db) {
             ` the request ID ${requestId}.`,
             `The selection criteria are:`, selectionCriteria)
             
-        const legalGroundsToBeDestroyedIDs = await getLegalGroundIDsToBeDeleted(msg.data)
+        const legalGroundsToBeDestroyedIDs = await getLegalGroundIDsToBeDeleted(req.data)
        
         if (legalGroundsToBeDestroyedIDs.length > 0) {
             LOG.info(`Deleted the following blocking store entries:`, legalGroundsToBeDestroyedIDs)
@@ -39,7 +39,7 @@ function serveDestructionRequests(srv, db) {
             ` the request ID ${requestId}.`,
             `The selection criteria are:`, selectionCriteria)
 
-        const legalGroundsToBeDestroyedIDs = await getLegalGroundIDsToBeDeleted(msg.data)
+        const legalGroundsToBeDestroyedIDs = await getLegalGroundIDsToBeDeleted(req.data)
         req.res.statusCode = 202
         LOG.info(`Result of destruction request: `, "Request intiated succesfully.", "with status code 1",
             `The request ID is ${requestId}.`)
@@ -66,7 +66,7 @@ function serveDestructionRequests(srv, db) {
                     (criteria.value !== null && archivedLegalGround[criteria.name] === criteria.value) || 
                     (criteria.valueRange && archivedLegalGround[criteria.name] >= criteria.valueRange.from && archivedLegalGround[criteria.name] <= criteria.valueRange.to)
                 )
-                    legalGroundsToBeDestroyedIDs.push(archivedLegalGround.ID)
+                    legalGroundsToBeDestroyedIDs.push(legal_ground.ID)
             })
         }
         return legalGroundsToBeDestroyedIDs
