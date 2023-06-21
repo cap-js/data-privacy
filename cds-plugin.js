@@ -30,10 +30,6 @@ const cds = require('@sap/cds'), fs = require("fs"), path = require("path")
 
 let servicesLoaded = false, DRMServiceLoaded = false
 
-cds.once ('bootstrap', app => {
-    cds.env.roots.push(__dirname);
-})
-
 cds.on('loaded', async m => {
     if (DRMServiceLoaded) return
     const namespaces = {}
@@ -41,7 +37,7 @@ cds.on('loaded', async m => {
     const namespaceString = (namespace, entity) => {
         if (namespaces[namespace]) return namespaces[namespace]
         namespaces[namespace] = `import${Object.entries(namespaces).length}`
-        importString += `using { ${namespace} as ${namespaces[namespace]} } from '${cds.resolve(entity.$location.file)[0]}';`;
+        importString += `using { ${namespace} as ${namespaces[namespace]} } from '${entity.$location.file}';`;
         return namespaces[namespace]
     } 
     for (let each in m.definitions) {
@@ -75,6 +71,85 @@ cds.on('loaded', async m => {
 
 //cds.load(path.join(__dirname, '/srv/drm-service.cds')) -> if in package defs are changed, this needs to change as well
 const fullDRMService = {
+    "sap.capire.blocking.BlockingStore": {
+      kind: "entity",
+      includes: [
+        "cuid",
+        "managed",
+      ],
+      elements: {
+        ID: {
+          key: true,
+          type: "cds.UUID",
+        },
+        createdAt: {
+          "@cds.on.insert": {
+            "=": "$now",
+          },
+          "@UI.HiddenFilter": true,
+          "@Core.Immutable": true,
+          "@title": "{i18n>CreatedAt}",
+          "@readonly": true,
+          type: "cds.Timestamp",
+        },
+        createdBy: {
+          "@cds.on.insert": {
+            "=": "$user",
+          },
+          "@UI.HiddenFilter": true,
+          "@Core.Immutable": true,
+          "@title": "{i18n>CreatedBy}",
+          "@readonly": true,
+          "@description": "{i18n>UserID.Description}",
+          type: "User",
+          length: 255,
+        },
+        modifiedAt: {
+          "@cds.on.insert": {
+            "=": "$now",
+          },
+          "@cds.on.update": {
+            "=": "$now",
+          },
+          "@UI.HiddenFilter": true,
+          "@title": "{i18n>ChangedAt}",
+          "@readonly": true,
+          type: "cds.Timestamp",
+        },
+        modifiedBy: {
+          "@cds.on.insert": {
+            "=": "$user",
+          },
+          "@cds.on.update": {
+            "=": "$user",
+          },
+          "@UI.HiddenFilter": true,
+          "@title": "{i18n>ChangedBy}",
+          "@readonly": true,
+          "@description": "{i18n>UserID.Description}",
+          type: "User",
+          length: 255,
+        },
+        ObjectType: {
+          type: "cds.String",
+        },
+        ObjectKey: {
+          type: "cds.String",
+        },
+        ObjectAsBlob: {
+          type: "cds.LargeString",
+        },
+        DataSubjectID: {
+          type: "cds.String",
+        },
+        dataSubjectRole: {
+          type: "cds.String",
+        },
+        EndOfRetentionDate: {
+          type: "cds.DateTime",
+        },
+      },
+    },
     DRMService: {
       kind: "service",
       "@protocol": "rest",
