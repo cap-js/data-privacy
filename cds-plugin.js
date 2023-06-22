@@ -152,6 +152,7 @@ const fullDRMService = {
     },
     DRMService: {
       kind: "service",
+      "@requires": "DataRetentionManagerUser",
       "@protocol": "rest",
       "@cds.provided": true,
       "@path": "/drm",
