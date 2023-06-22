@@ -144,7 +144,6 @@ function serveArchiveRequests(srv, db) {
         LOG.info(`Requested archive for legal ground: ${legalGroundEntity.name}. Constructed where clause:`, where)
 
         const legalGroundEntities = await SELECT.from(legalGroundEntity).where(where).columns(_getWholeObjectTree(legalGroundEntity))
-
         LOG.debug(`Result of archive query for legal ground: ${legalGroundEntity.name}:`, legalGroundEntities)
 
         let success = 0, failed = 0
@@ -153,6 +152,12 @@ function serveArchiveRequests(srv, db) {
             const legalGround = legalGroundEntities.find(legalGround => {
                 let result = true
                 for (const key of legal_ground.keys) {
+                    if ( !legalGroundEntity.elements[key.key].key ){
+                        req.error({
+                            code: 'KEY_HAS_TO_BE_KEYFIELD_OF_LEGAL_GROUND',
+                            status: 400
+                        })
+                    }
                     if (legalGround[key.key] !== key.value) {
                         result = false
                         break;
@@ -160,6 +165,9 @@ function serveArchiveRequests(srv, db) {
                 }
                 return result
             })
+            if(req.errors){
+                return req.errors
+            }
             if (!legalGround) {
                 failed++
                 continue
