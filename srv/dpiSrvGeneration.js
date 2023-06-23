@@ -20,7 +20,7 @@ const fieldsFn = {
   dsID: _getDataSubjectIDField,
   eob: _getEndOfBusinessDateField
 }
-const addCompositions = (fullName, def, dsFields, m, namespaceString) => {
+const addCompositions = (fullName, def, dsFields, m, namespaceString, redirectForParent = false) => {
   let result = ''
   const compositons = Object.entries(def.elements).filter(([n, e]) => e.type === 'cds.Composition')
   if (compositons.length > 0) {
@@ -30,9 +30,11 @@ const addCompositions = (fullName, def, dsFields, m, namespaceString) => {
       const entity = m.definitions[comp.target], eName = comp.target
       let shortName = eName.split('.')[eName.split('.').length-1],
         nspace = eName.substring(0,eName.length-1-shortName.length),
+        target = `${namespaceString(nspace, def)}.${shortName}`,
         backLinkName = hasBacklink(entity.elements, fullName) ? backlink(entity.elements, fullName) : 'backlink' 
-      if (!hasBacklink(entity.elements, fullName)) {
+      if (!hasBacklink(entity.elements, fullName) || redirectForParent) {
         //Use on condition from root and fit it to child
+        const additionalFields = []
         const compCondition = () => JSON.parse(JSON.stringify(comp.on)).reduce((acc, val) => {
           if (Array.isArray(val.ref)) {
             if (val.ref[0] === name) val.ref.shift()
@@ -42,8 +44,14 @@ const addCompositions = (fullName, def, dsFields, m, namespaceString) => {
           else acc += val
           return acc
         }, '')
-        result += `entity ${shortName}_wBackLink as projection on ${namespaceString(nspace, def)}.${shortName} {*,${backLinkName}: Association to one ${entityName} on ${compCondition()}};`
-      }
+        if (!hasBacklink(entity.elements, fullName))
+            additionalFields.push(`${backLinkName}: Association to one ${entityName} on ${compCondition()}`)
+        if (redirectForParent)
+            additionalFields.push(`${backLinkName}: redirected to ${entityName}`)
+        const newTarget = `${shortName}_wBackLink`
+        result += `entity ${newTarget} as projection on ${target} {*,${concatArr(additionalFields,',')}};`
+        target = newTarget
+    }
       const newDsFields = {...dsFields}
       const ensureDPrelatedFieldsOnChild = () => {
         let additionalFields = ['*'], formatter = (f) => `${backLinkName}.${f} as ${backLinkName}_${f}`
@@ -64,8 +72,8 @@ const addCompositions = (fullName, def, dsFields, m, namespaceString) => {
         additionalFields = concatArr(additionalFields,',')
         return additionalFields.length > 0 ? `{${additionalFields}}` : additionalFields
       }
-      result += `entity ${shortName} as projection on ${!hasBacklink(entity.elements, fullName) ? `${shortName}_wBackLink` : (namespaceString(nspace, entity) +'.'+shortName)}${ensureDPrelatedFieldsOnChild()};`
-      //result += addCompositions(comp.target, entity, newDsFields, m, namespaceString) //REVISIT - does not add deeper than 1 level as added backlinks cannot be referenced in deeper comps 
+      result += `entity ${shortName} as projection on ${target}${ensureDPrelatedFieldsOnChild()};`
+      result += addCompositions(comp.target, entity, newDsFields, m, namespaceString, !hasBacklink(entity.elements, fullName)) //REVISIT - does not add deeper than 1 level as added backlinks cannot be referenced in deeper comps 
     }
   }
   return result
@@ -155,7 +163,7 @@ module.exports = function dpiServiceGeneration() {
         {silent: true}
         )
         dpiModel.definitions.DRMService = fullDPIService.DRMService;
-        dpiModel.definitions.DRMService['@impl'] = path.join(__dirname, '/srv/drm-service.js')
+        dpiModel.definitions.DRMService['@impl'] = path.join(__dirname, './drm-service.js')
         dpiModel.definitions.PDMService = fullDPIService.PDMService;
         for (const each in dpiModel.definitions) {
             if ((each.startsWith('DRMService') || each.startsWith('PDMService')) && !m.definitions[each]) {
