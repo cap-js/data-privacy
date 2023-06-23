@@ -2,15 +2,18 @@
   "name": "@sap/cds-dpi",
   "version": "0.1.2",
   "author": "SAP",
-  "main": "cds-plugin.js",
+  "main": "index.js",
   "keywords": [
     "cds",
-    "CAP"
+    "CAP",
+    "cdsbuild"
   ],
   "dependencies": {
     "@sap/audit-logging": "^5.0.0",
+    "@sap/textbundle": "^4.2.0",
     "dayjs": "^1.11.5",
     "express": "^4.17.1",
+    "js-yaml": "^4.1.0",
     "path": "^0.12.7",
     "serve-static": "^1.15.0"
   },

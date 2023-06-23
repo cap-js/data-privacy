@@ -32,7 +32,9 @@ module.exports = async srv => {
         //In future: Merge logic that provides unified bundle for drm
         //cds.i18n.drm_folder - if not provided cds.evn.i18n.folders[0]
         //translations deactivated when cds.env.i18n.languages === 'none'
-    cds.on('served', async () => {
-        cds.app.use('/i18n', serveStatic(path.join(__dirname, '../',cds.env.i18n.drm_folder || cds.env.i18n.folders[0])))
-    });
+    if (cds.env.i18n.languages !== 'none') {
+        cds.on('served', async () => {
+            cds.app.use('/i18n', serveStatic(path.join(__dirname, '../',cds.env.i18n.drm_folder || cds.env.i18n.folders[0])))
+        });
+    }
 } 

@@ -1,3 +1,5 @@
+const { translationUtils } = require('../utils')
+
 const cds = require('@sap/cds'), dayjs = require('dayjs'), LOG = cds.log('drm')
 
 const conditionEntity = {
@@ -18,29 +20,8 @@ const conditionEntity = {
 }
 
 function serveLegalGrounds(srv, db) {
-    const {legalGrounds} = srv.entities 
-    const no_translations = cds.env.i18n.languages === 'none'
-    const standard_locale = cds.env.i18n.fallback_bundle || cds.env.i18n.default_language
-    const i18nBundle = cds.localize.bundle4(srv.model, standard_locale)
-      //value of annotations with i18n is complete key
-      //if they are provided manual translation required so that the properties in the entity have the default_language values
-    const getTranslationKey = (value) => {
-      const result = value.match(/(?<=\{@?(i18n>))\w*(?=\})/g) //REVISIT, what is allowed for i18n as key?
-      return result || no_translations ? result[0] : undefined
-    }
-    /**
-     * Translates a given annotation text value
-     * Returns the value if no i18n key was found,
-     * If one was found but no translation exists the key is returned
-     * else the translation is returned 
-     */
-    const translate = (value) => {
-      const result = value.match(/(?<=\{@?(i18n>))\w*(?=\})/g) //REVISIT, what is allowed for i18n as key?
-      if (!result) return value
-      if (i18nBundle[result[0]]) return i18nBundle[result[0]]
-      else return result[0]
-    }
-
+    const {legalGrounds} = srv.entities     
+    const { translate, getTranslationKey } = translationUtils(srv.model)
 
     //Legal grounds which are served to drm are saved in memory for improved performance
     const servicePath = srv.path
