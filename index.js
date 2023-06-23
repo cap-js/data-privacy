@@ -5,7 +5,8 @@ const path = require('path')
 const LOG = cds.log('@sap/cds-dpi')
 const yaml = require('js-yaml');
 const fs = require('fs-extra')
-const { translationUtils, _getLegalEntity } = require('./srv/utils')
+const { translationUtils, _getLegalEntity } = require('./srv/utils');
+const dpiSrvGeneration = require('./srv/dpiSrvGeneration');
 const UTF_8 = 'utf-8'
 
 const DRMScope = 'DataRetentionManagerUser'
@@ -135,8 +136,8 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
 
     async init() {
         this._cds = cds
-        this.mta = await _getMta('./', LOG)
-        this.ID = this.mta.ID.split('.')[this.mta.ID.split('.').length-1]
+        this.mta = await _getMta(LOG)
+        this.ID = this.mta ? this.mta.ID.split('.')[this.mta.ID.split('.').length-1] : null
         this.service = this.mta.modules.find(m => m.name === `${this.ID}-srv`);
         this.xsuaa = this.mta.resources.find(m => m.parameters.service === `xsuaa` && this.service.requires.some(r => r.name === m.name));
         this.drm = this.mta.resources.find(m => m.parameters.service === `retention-manager`);
@@ -149,6 +150,8 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
 
     async build() {
         const csn = cds.reflect(await this.model())
+        const dpiServiceLoader = dpiSrvGeneration() 
+        await dpiServiceLoader(csn)
         this.checkPrivacyAnnotations(csn)
         this.annotationHelper(csn)
 
@@ -306,9 +309,18 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
         
         
         //Write back to cds file
-        await fs.writeFile(MTA_YAML, yaml.dump(this.mta));
+        const writes = []
+        await fs.writeFile(MTA_YAML, yaml.dump(this.mta)); //Dont include in promise.all - because when that is interrupted mta is empty
         this._result = {csn}
-        await this.write(cds.compile(csn).to.json()).to('srv/csn-dpi.json')
+        writes.push(this.write(cds.compile(csn).to.json()).to('srv/srv/csn-dpi.json'))
+
+        //Generate hdb artefacts for DRM und PDM service
+        const all = cds.compile.to.hdbtable (csn)
+        for (let [src,{file}] of all) {
+            if (file.match(/DRMService\./g) || file.match(/PDMService\./g) || file.match(/\.BlockingStore/g))
+                writes.push(this.write(src).to(`db/src/gen/${file}`))
+        }
+        await Promise.all(writes)
     }
 
     /**
@@ -420,9 +432,9 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
     }
 }
 
-async function _getMta(projectPath, logger) {
+async function _getMta(logger) {
     // yaml.parse  oesn't like null
-    const mtaFilePath = path.join(projectPath, MTA_YAML)
+    const mtaFilePath = path.join(cds.root, MTA_YAML)
 
     const existsMtaYaml = await fs.pathExists(mtaFilePath)
     if (!existsMtaYaml) {

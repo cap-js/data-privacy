@@ -15,7 +15,7 @@
 - It automatically adds a DRM service to your CAP application, which serves all DRM endpoints generically based on your privacy annotations. Those are currently explained in: https://github.tools.sap/cap/dev/issues/177#issuecomment-2232113
 - It automatically adds a PDM service to your CAP application, whic serves as a generic PDM endpoint. All PersonalData entities are added, including compositions. If you have a service called `PDMService` or served at `/pdm` the service is not created and the package just adds the entities, it misses in the service.
 - Views / Projections / Selections are currently not considered when generating DRM and PDM services. Only "table" entities, which are annotated, are considered
-- In addition to the annotations you need to configure your drm service instance in a proper way. Either do that manually or just add the task `{ "use": "@sap/cds-dpi", "src": "srv" }` to cds build.
+- In addition to the annotations you need to configure your drm service instance in a proper way. Either do that manually or just add the task `{ "use": "@sap/cds-dpi", "src": "srv" }` to cds build. However you anyways need the task for the service, to generate the required HANA artifacts for production.
 ```
 "cds": {
   "build": {
