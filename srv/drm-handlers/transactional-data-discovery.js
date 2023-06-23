@@ -32,7 +32,7 @@ function serveLegalGrounds(srv, db) {
         const selectionCriteria = buildSelectionCriteriaForLegalGround(nameOf(entity), entity.elements, entity)
         const legalGround = {
           legalGround: nameOf(entity),
-          legalGroundDescription: translate(entity['@Core.Description']),
+          legalGroundDescription: translate(entity['@Core.Description']) || nameOf(entity),
           //legalGroundDescriptionKey: nameOf(entity), //Whats the difference // name <-- caused in combination with legalGroundDescriptionKey in archive issues 
           dataSubjectEndofBusinessEndPoint: `${servicePath}/dataSubjectEndOfBusiness`,
           dataSubjectLegalEntitiesEndPoint: `${servicePath}/dataSubjectLegalEntities`,
@@ -215,7 +215,7 @@ function serveLegalGrounds(srv, db) {
             type: type, //String, Integer, Decimal, Boolean, Timestamp
             isRangeEnabled: fieldIsAllowedForRange(name, type, entity)
           }
-          if (getTranslationKey(value["@Common.Label"])) selectionCriteria.displayNameKey = getTranslationKey(value["@Common.Label"])
+          if (getTranslationKey(value["@Common.Label"] || name)) selectionCriteria.displayNameKey = getTranslationKey(value["@Common.Label"] || name)
 
           if (value['@Core.Description']) {
             selectionCriteria.description = translate(value['@Core.Description'])

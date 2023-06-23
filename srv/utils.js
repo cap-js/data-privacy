@@ -219,6 +219,7 @@ const translationUtils = (model, o = {}) => {
       //value of annotations with i18n is complete key
       //if they are provided manual translation required so that the properties in the entity have the default_language values
     const getTranslationKey = (value) => {
+        if (typeof value !== 'string') return undefined
       const result = value.match(/(?<=\{@?(i18n>))\w*(?=\})/g) //REVISIT, what is allowed for i18n as key?
       return result && no_translations ? result[0] : undefined
     }
@@ -229,6 +230,7 @@ const translationUtils = (model, o = {}) => {
      * else the translation is returned 
      */
     const translate = (value) => {
+        if (typeof value !== 'string') return value 
       const result = value.match(/(?<=\{@?(i18n>))\w*(?=\})/g) //REVISIT, what is allowed for i18n as key?
       if (!result) return value
       if (o.isBuild) {

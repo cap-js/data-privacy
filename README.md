@@ -54,7 +54,3 @@ cds : {
 }
 ```
 This ensures that the plugin is loaded, when it is not automatically detected.
-
-## To many HDB artifacts
-
-To resolve the entity hierarchy for the PDM service, the plugin relies on back links to the parent entity to get all required data privacy related fields. When a child does not have a backlink, e.g. an association back to the parent, the plugin uses intermediate views to create those backlinks. This results in more HDB artifacts.

@@ -130,6 +130,7 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
             applicationGroupDescription: "CAP application",
             applicationGroupBaseURL: "${default-url}",
             simulationSupportedForDestruction: true,
+            applicationGroupType: ["DataSubjectMaster", "TransactionMaster"], //ConsentMaster is also possible, but not sure when to use
             dataSubjects: dataSubjects,
         }
     }
@@ -192,8 +193,10 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
         //Ensure that xs security properties are set on instance
         if (!this.drm.parameters.config['xs-security']) {
             this.pushMessage('Added xs-security part to drm service in mta.yaml as it is required for granting access to the service', INFO)
-            this.drm.parameters['xs-security'] = this.getDRMParameterConfigTemplate()['xs-security']
+            this.drm.parameters.config['xs-security'] = this.getDRMParameterConfigTemplate()['xs-security']
         }
+
+        this.drm.parameters.config["retention-configs"] = this.getRetentionConfigs(csn)
 
         //Ensure that scope for DRM is added to XSUAA service that it already exist - here ensure that grant to app - name of app is correct
         if (!this.xsuaa.parameters.config.scopes || !this.xsuaa.parameters.config.scopes.some(scope => scope.name === `$XSAPPNAME.${DRMScope}`)) {
@@ -207,6 +210,7 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
                 ],
             })
         }
+
         //Ensure that the grant as authority to app service name is correct - else update will fail
         const drmScope = this.xsuaa.parameters.config.scopes.find(scope => scope.name === `$XSAPPNAME.${DRMScope}`)
         if (drmScope && drmScope['grant-as-authority-to-apps'] !== `$XSSERVICENAME(${this.drm.parameters['service-name']})`) {
@@ -262,7 +266,7 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
         //Ensure that xs security properties are set on instance
         if (!this.pdm.parameters.config['xs-security']) {
             this.pushMessage('Added xs-security part to pdm service in mta.yaml as it is required for granting access to the service', INFO)
-            this.pdm.parameters['xs-security'] = this.getPDMParameterConfigTemplate()['xs-security']
+            this.pdm.parameters.config['xs-security'] = this.getPDMParameterConfigTemplate()['xs-security']
         }
         //Ensure that fullyQualifiedApplicationName is set in pdm config - if not set it to CAP module name
         if (!this.pdm.parameters.config.fullyQualifiedApplicationName) {
@@ -393,7 +397,7 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
         }
         for (let each in m.definitions) {
             let def = m.definitions[each]
-            if (!def.query && def.kind === 'entity' && def['@PersonalData.EntitySemantics']) {
+            if (!def.query && def.kind === 'entity' && def['@PersonalData.EntitySemantics'] && !each.match(/DRMService\./g) && !each.match(/PDMService\./g) ) {
                 if (def['@PersonalData.EntitySemantics'] === 'DataSubject') dataSubjects.push(each)
                 else if (def['@PersonalData.EntitySemantics'] === 'Other') legalGrounds.push(each)
             }
@@ -415,6 +419,9 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
             legalGrounds.forEach(dsName => {
                 const lg = m.definitions[dsName]
                 let hasEOB, hasDS, hasLegal
+                if (!lg['@Core.Description'] && !lg['@description']) {
+                    this.pushMessage(`${lg.$location.file}:${lg.$location.line}:${lg.$location.col} Legal ground ${dsName} is lacking @Core.Description or @description, which is used for the DRM provisioning`, WARNING)
+                }
                 for (const e in lg.elements) {
                     const element = lg.elements[e]
                     if (element['@PersonalData.FieldSemantics'] === 'DataSubjectID') hasDS = true

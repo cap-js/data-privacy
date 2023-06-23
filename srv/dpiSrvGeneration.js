@@ -14,47 +14,72 @@ const _getField = (elements, name) => {
 const concatArr = (arr, div = '.') => arr.reduce((acc, val) => acc.length === 0 ? acc += val : acc += `${div}${val}`,'')
 const hasBacklink = (elements, parent) => Object.values(elements).some(e => e.target && e.target === parent)
 const backlink = (elements, parent) => Object.entries(elements).find(([n,e]) => e.target && e.target === parent)[0]
-const gCompsToOne = elements => Object.entries(elements).filter(([n, e]) => e.type === 'cds.Composition' && e.cardinality && e.cardinality.max === 1)
+const gCompsToOne = elements => Object.entries(elements).filter(([n, e]) => e.type === 'cds.Composition' && e.cardinality && e.cardinality.max === 1) //REVISIT: Is possible issue for compositions hidden behind a custom type
 const fieldsFn = {
   legalID:  _getLegalEntityIDField,
   dsID: _getDataSubjectIDField,
   eob: _getEndOfBusinessDateField
 }
-const addCompositions = (fullName, def, dsFields, m, namespaceString, redirectForParent = false) => {
+const compCondition = (name, cmp, backLinkName) => {
+  if (cmp.on)
+    return backLinkName ? JSON.parse(JSON.stringify(cmp.on)).reduce((acc, val) => {
+        if (Array.isArray(val.ref)) {
+            if (val.ref[0] === name) val.ref.shift()
+            else val.ref = [backLinkName, ...val.ref]
+            acc += concatArr(val.ref)
+        } else if (val.val) acc += val.val
+        else acc += val
+        return acc
+    }, '') : cmp.on.reduce((acc,val) => {
+      if (Array.isArray(val.ref)) {
+        acc += concatArr(val.ref)
+      } else if (val.val) acc += val.val
+      else acc += val
+      return acc
+    }, '')
+  if (cmp.keys)
+      return JSON.parse(JSON.stringify(cmp.keys)).reduce((acc, val) => {
+          if (acc.length > 0) acc += ' and '
+          acc += `${name}.${val.ref[0]} = $self.${name}_${val.ref[0]}`
+          return acc
+      }, '')
+}
+const addCompositions = (fullName, def, dsFields, m, namespaceString, redirectForParent = false, DRMEntities) => {
   let result = ''
-  const compositons = Object.entries(def.elements).filter(([n, e]) => e.type === 'cds.Composition')
+  const compositons = Object.entries(def.elements).filter(([n, e]) => e.type === 'cds.Composition') //REVISIT: Possible problem if one hides the compositon behind a custom type
   if (compositons.length > 0) {
     const entityName = fullName.split('.')[fullName.split('.').length-1]
     const semanticKeys = def['@Common.SemanticKey'] ? def['@Common.SemanticKey'].map(m => m['=']) : []
     for (const [name, comp] of compositons) {
+      DRMEntities[comp.target] = 1 //Ensures that entities are not tracked twice
       const entity = m.definitions[comp.target], eName = comp.target
       let shortName = eName.split('.')[eName.split('.').length-1],
         nspace = eName.substring(0,eName.length-1-shortName.length),
         target = `${namespaceString(nspace, def)}.${shortName}`,
         backLinkName = hasBacklink(entity.elements, fullName) ? backlink(entity.elements, fullName) : 'backlink' 
-      if (!hasBacklink(entity.elements, fullName) || redirectForParent) {
-        //Use on condition from root and fit it to child
-        const additionalFields = []
-        const compCondition = () => JSON.parse(JSON.stringify(comp.on)).reduce((acc, val) => {
-          if (Array.isArray(val.ref)) {
-            if (val.ref[0] === name) val.ref.shift()
-            else val.ref = [backLinkName, ...val.ref]
-            acc += concatArr(val.ref)
-          } else if (val.val) acc += val.val
-          else acc += val
-          return acc
-        }, '')
-        if (!hasBacklink(entity.elements, fullName))
-            additionalFields.push(`${backLinkName}: Association to one ${entityName} on ${compCondition()}`)
-        if (redirectForParent)
-            additionalFields.push(`${backLinkName}: redirected to ${entityName}`)
-        const newTarget = `${shortName}_wBackLink`
-        result += `entity ${newTarget} as projection on ${target} {*,${concatArr(additionalFields,',')}};`
-        target = newTarget
-    }
       const newDsFields = {...dsFields}
-      const ensureDPrelatedFieldsOnChild = () => {
-        let additionalFields = ['*'], formatter = (f) => `${backLinkName}.${f} as ${backLinkName}_${f}`
+      const mixinFieldsToExclude = []
+      const mixin = () => {
+        const additionalFields = []
+
+        if (!hasBacklink(entity.elements, fullName))
+            additionalFields.push(`${backLinkName}: Association to one ${entityName} on ${compCondition(name, comp, backLinkName)}`)
+        if (redirectForParent)
+            additionalFields.push(`${backLinkName}: Association to one ${entityName} on ${compCondition(backLinkName, entity.elements[backLinkName])}`)
+        if (redirectForParent) mixinFieldsToExclude.push(backLinkName)
+        const isOne = (child) => child.cardinality && child.cardinality.max == '1' ? 'one' : ''
+        if (!hasBacklink(entity.elements, fullName)) { //In that case the childs need to rewrite backlink and hence comp needs to be mixed in
+            const children = Object.entries(entity.elements).filter(([n,e]) => e.type === 'cds.Composition') //REVISIT: Possible problem if one hides the compositon behind a custom type
+            for (const [cname, child] of children) {
+                mixinFieldsToExclude.push(cname)
+                const childName = child.target.split('.')[child.target.split('.').length-1]
+                additionalFields.push(`${cname}: Composition of ${isOne(child)} ${childName} on ${compCondition(cname, child)}`)
+            }
+        }
+        return concatArr(additionalFields,';')
+      }
+      const columns = () => {
+        let additionalFields = ['*', backLinkName], formatter = (f) => `${backLinkName}.${f} as ${backLinkName}_${f}`
         //additionalFields.push(`${backLinkName}: redirected to ${entityName}`)
         //Add keys and semantic keys - label ID keys as "<entity> ID"
         //Dont render foreign keys
@@ -69,18 +94,108 @@ const addCompositions = (fullName, def, dsFields, m, namespaceString, redirectFo
             newDsFields[field] = `${backLinkName}_${dsFields[field]}`
           } 
         }
+        //Add keys to select for mixin
+        if (redirectForParent && entity.elements[backLinkName] && entity.elements[backLinkName].keys) {
+            entity.elements[backLinkName].keys.forEach(k => {
+                const f = formatter(k.ref[0])
+                if (!additionalFields.some(a => a === f)) additionalFields.push(f)
+            })
+        }
+        //Add to exclude fields if not already present, to ensure that mixed in fields are used
+        mixinFieldsToExclude.forEach(f => {
+            if (!additionalFields.some(a => a === f)) additionalFields.push(f)
+        })
         additionalFields = concatArr(additionalFields,',')
-        return additionalFields.length > 0 ? `{${additionalFields}}` : additionalFields
+        return additionalFields
       }
-      result += `entity ${shortName} as projection on ${target}${ensureDPrelatedFieldsOnChild()};`
-      result += addCompositions(comp.target, entity, newDsFields, m, namespaceString, !hasBacklink(entity.elements, fullName)) //REVISIT - does not add deeper than 1 level as added backlinks cannot be referenced in deeper comps 
+      const excluding = () => mixinFieldsToExclude.length > 0 ? `excluding {${concatArr(mixinFieldsToExclude,',')}}` : ''
+
+      if(!entity['@PersonalData.DataSubjectRole']) entity['@PersonalData.DataSubjectRole'] = def['@PersonalData.DataSubjectRole']
+      if(!entity['@PersonalData.EntitySemantics']) entity['@PersonalData.EntitySemantics'] = def['@PersonalData.EntitySemantics']
+
+        result += `${annotations(entity, newDsFields)} `+
+            `entity ${shortName} as select from ${target} mixin {${mixin()}} into {${columns()}} ${excluding()};`
+        result += addCompositions(comp.target, entity, newDsFields, m, namespaceString, !hasBacklink(entity.elements, fullName), DRMEntities) //REVISIT - does not add deeper than 1 level as added backlinks cannot be referenced in deeper comps 
     }
   }
   return result
 }
 
+const managedFields = {createdBy: 1, createdAt: 1, modifiedBy: 1, modifiedAt: 1}
+
+function annotations(entity, dsFields) {
+  let result = `@(
+    PersonalData.DataSubjectRole : '${entity['@PersonalData.DataSubjectRole']}',
+    PersonalData.EntitySemantics : '${entity['@PersonalData.EntitySemantics']}')`
+
+  if (!entity['@UI.LineItem']) {
+    //Show key first
+    //Than semantic keys
+    //Than end of business
+    //Than all other fields 
+    const hasManaged = entity.includes && entity.includes.some(i => i === 'managed')
+    const semanticKeys = entity['@Common.SemanticKey'] ? entity['@Common.SemanticKey'].map(m => m['=']) : []
+    const asLineItem = (field) => ({Value: {'=': field}})
+    const lineItemElementMapping = ([field, element]) => {
+      if(element.keys) {
+        //REVISIT: Arbitrary limitation that only first key values are taken over
+        return asLineItem(field+'_'+concatArr(element.keys[0].ref,'_'))
+      } else return asLineItem(field)
+    }
+    //Only fields which are not yet added and possible (e.g. exclude assocs/comps without foreign key or which are to many) + sort after which contain personal data
+    const otherFields = Object.entries(entity.elements).filter(([n, e]) => 
+      !e.key && 
+      (!(e.type === 'cds.Association' || e.type === 'cds.Composition' || (!e.keys && e.on)) || e.keys) && 
+      n !== dsFields.eob && !semanticKeys.some(s => s === n)
+    ).sort(([f1,e1],[f2,e2]) => {
+      if (
+        (e1['@PersonalData.IsPotentiallySensitive'] && !e2['@PersonalData.IsPotentiallySensitive']) ||
+        (e1['@PersonalData.IsPotentiallyPersonal'] && !e2['@PersonalData.IsPotentiallySensitive'] && !e2['@PersonalData.IsPotentiallyPersonal']) 
+      )
+        return -1
+      if (
+        (e2['@PersonalData.IsPotentiallySensitive'] && !e1['@PersonalData.IsPotentiallySensitive']) ||
+        (e2['@PersonalData.IsPotentiallyPersonal'] && !e1['@PersonalData.IsPotentiallySensitive'] && !e1['@PersonalData.IsPotentiallyPersonal']) 
+      )
+        return 1
+      return 0
+    })
+    //Ensure that in other fields managed fields are at the end
+    if (hasManaged) {
+      for (const m in managedFields) {
+        const index = otherFields.indexOf(otherFields.find(([n]) => n === m))
+        otherFields.push(...otherFields.splice(index,1))
+      }
+    }
+    entity['@UI.LineItem'] = [
+      ...Object.entries(entity.elements).filter(([n, e]) => e.key).map(lineItemElementMapping),
+      ...semanticKeys.map(m => asLineItem(m)),
+      ...(dsFields.eob !== null && typeof dsFields.eob !== 'function' ? [asLineItem(dsFields.eob)] : []),
+      ...otherFields.map(lineItemElementMapping)
+    ]
+  }
+  result += `@UI.LineItem : [${entity['@UI.LineItem'].reduce((acc, val) => {
+    acc += `{Value: ${val.Value['=']}},`
+    return acc
+  }, '')}]`
+
+  if (!Object.keys(entity).some(k => k.startsWith('@UI.FieldGroup'))) {
+    entity['@UI.FieldGroup#CAP_DPI_GENERATED.Label'] = entity['@Core.Description'] 
+      || entity['@description'] 
+      || (entity['@PersonalData.EntitySemantics'] === 'DataSubjectDetails'?'Data subject details':'Details') //REVISIT - make last one translatable
+    entity['@UI.FieldGroup#CAP_DPI_GENERATED.Data'] = entity['@UI.LineItem']
+    result += `@UI.FieldGroup #CAP_DPI_GENERATED : {Label: '${entity['@UI.FieldGroup#CAP_DPI_GENERATED.Label']}', Data: [${entity['@UI.LineItem'].reduce((acc, val) => {
+      acc += `{Value: ${val.Value['=']}},`
+      return acc
+    }, '')}]}`
+  }
+  
+  return result
+}
+
 module.exports = function dpiServiceGeneration() {
     let DRMServiceLoaded = false, PDMServiceLoaded = false
+    const DRMEntities = {}
     return async m => {
         if (DRMServiceLoaded) return
         let drmServiceString = `service DRMService {`, importString = '', pdmServiceString = `service PDMService {`
@@ -105,7 +220,8 @@ module.exports = function dpiServiceGeneration() {
                 PDMServiceLoaded = true
             //add entities to drm
             //REVISIT - projections are common of external entities - check if that is really fine
-            if (!def.query && !def.projection && def.kind === 'entity' && def['@PersonalData.EntitySemantics']) {
+            if (!def.query && !def.projection && def.kind === 'entity' && def['@PersonalData.EntitySemantics'] && !(each in DRMEntities)) {
+              DRMEntities[each] = 1
                 //Skip datasubject details if they are a composition of data subject
                 if (
                 def['@PersonalData.EntitySemantics'] === 'DataSubjectDetails' && 
@@ -150,8 +266,8 @@ module.exports = function dpiServiceGeneration() {
                 additionalFields = concatArr(additionalFields,',')
                 return additionalFields.length > 1 ? `{${additionalFields}}` : ''
                 }
-                pdmServiceString += `entity ${entityName} as projection on ${namespaceString(namespace, def)}.${entityName}${ensureDPrelatedFieldsOnRoot()};`
-                pdmServiceString += addCompositions(each, def, fields, m, namespaceString)
+                pdmServiceString += `${annotations(def, fields)} entity ${entityName} as projection on ${namespaceString(namespace, def)}.${entityName}${ensureDPrelatedFieldsOnRoot()};`
+                pdmServiceString += addCompositions(each, def, fields, m, namespaceString, undefined, DRMEntities)
             }
         }
         drmServiceString += '};' //Closing service def
