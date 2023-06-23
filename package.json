@@ -1,6 +1,6 @@
 {
   "name": "@sap/cds-dpi",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": "SAP",
   "main": "index.js",
   "keywords": [
@@ -10,16 +10,17 @@
   ],
   "dependencies": {
     "@sap/audit-logging": "^5.0.0",
-    "@sap/cds-dk": "^7.0.0",
+    "@sap/cds-foss": "^4.0.2",
     "@sap/textbundle": "^4.2.0",
     "dayjs": "^1.11.5",
     "express": "^4.17.1",
+    "fs-extra": "^11.1.1",
     "js-yaml": "^4.1.0",
     "path": "^0.12.7",
     "serve-static": "^1.15.0"
   },
   "devDependencies": {
-    "@sap/cds": "*",
+    "@sap/cds": "5.9.8",
     "sqlite3": "^5.1.6"
   },
   "scripts": {

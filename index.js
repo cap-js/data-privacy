@@ -1,10 +1,10 @@
-const { BuildTaskHandler, BuildError } = require('@sap/cds-dk/lib/build'), { WARNING, ERROR, INFO } = BuildTaskHandler,
-    { MTA_YAML } = require('@sap/cds-dk/lib/deploy/to-hana/mtaUtil')
+const { BuildTaskHandler, BuildError } = require('@sap/cds/bin/build'), { WARNING, ERROR, INFO } = BuildTaskHandler,
+    MTA_YAML = 'mta.yaml';
 const cds = require('@sap/cds')
 const path = require('path')
 const LOG = cds.log('@sap/cds-dpi')
 const yaml = require('js-yaml');
-const { fs } = require('@sap/cds-foss')
+const fs = require('fs-extra')
 const { translationUtils, _getLegalEntity } = require('./srv/utils')
 const UTF_8 = 'utf-8'
 
