@@ -1,5 +1,5 @@
-const { BuildTaskHandler, BuildError } = require('@sap/cds/bin/build'), { WARNING, ERROR, INFO } = BuildTaskHandler,
-    { MTA_YAML } = require('@sap/cds/bin/build/mtaUtil')
+const { BuildTaskHandler, BuildError } = require('@sap/cds-dk/lib/build'), { WARNING, ERROR, INFO } = BuildTaskHandler,
+    { MTA_YAML } = require('@sap/cds-dk/lib/deploy/to-hana/mtaUtil')
 const cds = require('@sap/cds')
 const path = require('path')
 const LOG = cds.log('@sap/cds-dpi')

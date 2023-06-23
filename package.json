@@ -1,6 +1,6 @@
 {
   "name": "@sap/cds-dpi",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "SAP",
   "main": "index.js",
   "keywords": [
@@ -10,6 +10,7 @@
   ],
   "dependencies": {
     "@sap/audit-logging": "^5.0.0",
+    "@sap/cds-dk": "^7.0.0",
     "@sap/textbundle": "^4.2.0",
     "dayjs": "^1.11.5",
     "express": "^4.17.1",
