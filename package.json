@@ -1,6 +1,6 @@
 {
   "name": "@sap/cds-dpi",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": "SAP",
   "main": "index.js",
   "keywords": [

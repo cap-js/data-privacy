@@ -89,7 +89,7 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
         }
     }
 
-    getRetentionConfigs(csn) {
+    getRetentionConfigs(csn, alternativeURL) {
         const { translate } = translationUtils(csn, {isBuild: true})
         const dataSubjects = []
         for (let each in csn.definitions) {
@@ -104,7 +104,7 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
                 const dataSubject = {
                     dataSubjectRole: role,
                     dataSubjectDescription: translate(def['@Core.Description'] || entityName),
-                    dataSubjectBaseURL: "${default-url}",
+                    dataSubjectBaseURL: alternativeURL || "${default-url}",
                     dataSubjectInformationFilterEnabled: true,
                     dataSubjectInformationEndPoint: "/drm/dataSubjectInformation",
                     dataSubjectDeletionEndPoint: "/drm/deleteDataSubject",
@@ -128,7 +128,7 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
         return {
             applicationGroupName: this.service.name,
             applicationGroupDescription: "CAP application",
-            applicationGroupBaseURL: "${default-url}",
+            applicationGroupBaseURL: alternativeURL || "${default-url}",
             simulationSupportedForDestruction: true,
             applicationGroupType: ["DataSubjectMaster", "TransactionMaster"], //ConsentMaster is also possible, but not sure when to use
             dataSubjects: dataSubjects,
@@ -195,8 +195,11 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
             this.pushMessage('Added xs-security part to drm service in mta.yaml as it is required for granting access to the service', INFO)
             this.drm.parameters.config['xs-security'] = this.getDRMParameterConfigTemplate()['xs-security']
         }
+        
+        if (!this.drm.requires.some(r => r.name === 'srv-api'))
+            this.drm.requires.push({name: 'srv-api'})
 
-        this.drm.parameters.config["retention-configs"] = this.getRetentionConfigs(csn)
+        this.drm.parameters.config["retention-configs"] = this.getRetentionConfigs(csn, '~{srv-api/srv-url}')
 
         //Ensure that scope for DRM is added to XSUAA service that it already exist - here ensure that grant to app - name of app is correct
         if (!this.xsuaa.parameters.config.scopes || !this.xsuaa.parameters.config.scopes.some(scope => scope.name === `$XSAPPNAME.${DRMScope}`)) {
