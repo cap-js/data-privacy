@@ -225,22 +225,23 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
         if(!this.service_drm_binding) {
             this.service_drm_binding = {
                 name: this.drm.name,
-                parameters: {
+                /* parameters: {
                   config: {
                     "retention-configs": this.getRetentionConfigs(csn)
                   }
-                }
+                } */
             }
         }
 
         //Ensrue that retention configs are set
-        if (!this.service_drm_binding.parameters) {
+        //REVISIT: It appears that DRM config has to be done on instance level and cannot be done via binding
+        /* if (!this.service_drm_binding.parameters) {
             this.service_drm_binding.parameters = {config: {"retention-configs": this.getRetentionConfigs(csn)}}
         } else if (!this.service_drm_binding.parameters?.config) {
             this.service_drm_binding.parameters.config = {"retention-configs": this.getRetentionConfigs(csn)}
         } else {
             this.service_drm_binding.parameters.config["retention-configs"] = this.getRetentionConfigs(csn)
-        }
+        } */
         
 
 
