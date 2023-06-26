@@ -130,7 +130,7 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
             applicationGroupDescription: "CAP application",
             applicationGroupBaseURL: alternativeURL || "${default-url}",
             simulationSupportedForDestruction: true,
-            applicationGroupType: ["DataSubjectMaster", "TransactionMaster"], //ConsentMaster is also possible, but not sure when to use
+            //applicationGroupType: ["TransactionMaster"], //DataSubjectMaster <- maybe does not work, DataSubjectMasterApplication, ConsentMaster is also possible, but not sure when to use
             dataSubjects: dataSubjects,
         }
     }

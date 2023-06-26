@@ -128,6 +128,7 @@ function annotations(entity, dsFields) {
     PersonalData.DataSubjectRole : '${entity['@PersonalData.DataSubjectRole']}',
     PersonalData.EntitySemantics : '${entity['@PersonalData.EntitySemantics']}')`
 
+    //TODO: Consider UI.Hidden or think about it, as those columns cannot be shown anyways - @PersonalData obviously would overule, but in the other cases it would make sense
   if (!entity['@UI.LineItem']) {
     //Show key first
     //Than semantic keys
