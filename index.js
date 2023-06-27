@@ -113,13 +113,14 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
                     legalGroundDiscovery: true,
                     legalGroundDiscoveryEndPoint: `/drm/legalGrounds/${role}`,
                   }
-                const legalEntity = def.elements[_getLegalEntity(def.elements)]?._target
+                const legalEntity = def.elements[_getLegalEntity(def.elements)]?._target,
+                  legalEntityAssoc = def.elements[_getLegalEntity(def.elements)]
                 const legalEntityName = legalEntity.name.split('.')[legalEntity.name.split('.').length-1]
                 if (!legalEntity) {
                     this.pushMessage(`No legal entity association in entity ${entityName}. Due to that no legalEntity property added to DRM retention config for it`, WARNING)
                 } else {
                     dataSubject.legalEntity = {
-                        legalEntity: translate(legalEntity["@Common.Label"] || legalEntity['@UI.HeaderInfo.TypeName'] || legalEntityName),
+                        legalEntity: translate(legalEntityAssoc["@Common.Label"] || legalEntity['@UI.HeaderInfo.TypeName'] || legalEntityName),
                         legalEntityDescription: translate(legalEntity["@Core.Description"] || legalEntityName),
                         legalEntityDescriptionKey: `DRM_LEGAL_ENTITY_${String(role).toUpperCase()}`,
                         legalEntityValueHelpEndPoint: `/drm/legalEntities`,

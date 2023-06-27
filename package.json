@@ -1,6 +1,6 @@
 {
   "name": "@sap/cds-dpi",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "author": "SAP",
   "main": "index.js",
   "keywords": [
@@ -9,6 +9,7 @@
     "cdsbuild"
   ],
   "dependencies": {
+    "@sap-cloud-sdk/http-client": "^3.2.0",
     "@sap/audit-logging": "^5.0.0",
     "@sap/cds-foss": "^4.0.2",
     "@sap/textbundle": "^4.2.0",

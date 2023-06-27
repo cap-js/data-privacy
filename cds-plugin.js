@@ -1,4 +1,4 @@
-const cds = require('@sap/cds'), fs = require("fs"), path = require("path")
+const cds = require('@sap/cds'), fs = require("fs"), LOG = cds.log('@sap/cds-dpi'), path = require("path"), xsenv = require('@sap/xsenv'), {executeHttpRequest} = require('@sap-cloud-sdk/http-client')
 const { _getLegalEntityIDField, _getDataSubjectIDField, _getEndOfBusinessDateField } = require('./srv/utils')
 const dpiSrvGeneration = require('./srv/dpiSrvGeneration')
 const fullDPIService = require('./srv/fullDPIDefinitions')
@@ -37,10 +37,18 @@ cds.on('loaded', async m => {
   await dpiServiceLoader(m)
 })
 
-cds.on('served', (services)=>{
+cds.on('served', async (services)=>{
+    if (process.env.NODE_ENV !== 'production') return
     //Call DRM api for registering DRM service instance
-    //get xsenv config of drm 
-    //get xsenv or VCAP tenantID of subaccount
-    //call PUT endpoint for registering application to DRM
-    //LOG activity 
+    const svc = xsenv.serviceCredentials({ tag: 'drm' });
+    if(svc) {
+        const { applicationSubscription, uaa: {tenantid} } = svc;
+        try {
+            await executeHttpRequest({url: applicationSubscription.replace('{tenantId}', tenantid)}, {method: 'PUT'});
+
+        } catch (e) {
+            LOG.error('Error occured when trying to register application on bound DRM instance', e)
+        }
+        LOG.info('Registered application on DRM instance');
+    }
 });
