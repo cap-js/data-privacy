@@ -129,7 +129,7 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
         }
         return {
             applicationGroupName: this.service.name,
-            applicationGroupDescription: this.service.description,
+            applicationGroupDescription: this.service.description || this.service.name,
             applicationGroupDescriptionKey: 'DRM_APPLICATION_GROUP_DESCRIPTON',
             applicationGroupBaseURL: alternativeURL || "${default-url}",
             simulationSupportedForDestruction: true,
