@@ -83,6 +83,7 @@ The build task also adds `@PersonalData` annotations to your entities, when you 
 - In the current sample there is only one application, which is responsible for data subjects and transactional data. However reality is more complex. We plan to offer proper multi-service mashup support, so DRM still works, when the data subject is from a different application.
 - Testing is still in progress 
 - Allow for paths in the Communication.Contact annotation and resolve them for DRM behind the scences.
+- Ensure that same modelling concepts are possible with DRM as they are with PDM. With PDM you can currently model in any way and it should be supported. E.g. missing backlinks in children are added and @PersonalData.FieldSemantics annotations are also detected in (nested) compositon to one children. 
 
 # Troubleshooting
 
