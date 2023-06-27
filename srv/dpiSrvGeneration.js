@@ -282,6 +282,11 @@ module.exports = function dpiServiceGeneration() {
         dpiModel.definitions.DRMService = fullDPIService.DRMService;
         dpiModel.definitions.DRMService['@impl'] = path.join(__dirname, './drm-service.js')
         dpiModel.definitions.PDMService = fullDPIService.PDMService;
+        for (const each in fullDPIService) {
+          if ((each.startsWith('DRMService') || each.startsWith('PDMService') || each === 'SelectionCriteria' || each === 'Condition') && !m.definitions[each]) {
+              Object.assign(m.definitions, {[each]: fullDPIService[each]})
+          }
+      }
         for (const each in dpiModel.definitions) {
             if ((each.startsWith('DRMService') || each.startsWith('PDMService')) && !m.definitions[each]) {
                 Object.assign(m.definitions, {[each]: dpiModel.definitions[each]})
