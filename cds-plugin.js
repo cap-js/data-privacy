@@ -23,6 +23,7 @@ const fullDPIService = require('./srv/fullDPIDefinitions')
 
     //TODO:
         - Generate i18n folder for drm automatically
+        - Fully implement three tier config - but wait for feedback of first testers
         - Align on common DRM-API set we would offer
         - Implement object store from HANA
         - Concept for distributed services
@@ -36,7 +37,6 @@ cds.on('loaded', async m => {
   await dpiServiceLoader(m)
 })
 
-//TODO:
 cds.on('served', (services)=>{
     //Call DRM api for registering DRM service instance
     //get xsenv config of drm 

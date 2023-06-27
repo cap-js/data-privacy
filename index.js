@@ -114,13 +114,14 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
                     legalGroundDiscoveryEndPoint: `/drm/legalGrounds/${role}`,
                   }
                 const legalEntity = def.elements[_getLegalEntity(def.elements)]?._target
+                const legalEntityName = legalEntity.name.split('.')[legalEntity.name.split('.').length-1]
                 if (!legalEntity) {
                     this.pushMessage(`No legal entity association in entity ${entityName}. Due to that no legalEntity property added to DRM retention config for it`, WARNING)
                 } else {
                     dataSubject.legalEntity = {
-                        legalEntity: translate(legalEntity["@Common.Label"] || legalEntity['@UI.HeaderInfo.TypeName'] || legalEntity.name),
-                        legalEntityDescription: translate(legalEntity["@Core.Description"] || legalEntity.name),
-                        legalEntityDescriptionKey: legalEntity["@Core.Description"] || legalEntity.name,
+                        legalEntity: translate(legalEntity["@Common.Label"] || legalEntity['@UI.HeaderInfo.TypeName'] || legalEntityName),
+                        legalEntityDescription: translate(legalEntity["@Core.Description"] || legalEntityName),
+                        legalEntityDescriptionKey: `DRM_LEGAL_ENTITY_${String(role).toUpperCase()}`,
                         legalEntityValueHelpEndPoint: `/drm/legalEntities`,
                     }
                 }
@@ -128,7 +129,7 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
             }
         }
         return {
-            applicationGroupName: this.service.name,
+            applicationGroupName: this.service.name, //REVISIT: Probably not the correct property - maybe just as fallback
             applicationGroupDescription: this.service.description || this.service.name,
             applicationGroupDescriptionKey: 'DRM_APPLICATION_GROUP_DESCRIPTON',
             applicationGroupBaseURL: alternativeURL || "${default-url}",
@@ -421,7 +422,7 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
                 const lg = m.definitions[dsName]
                 let hasEOB, hasDS, hasLegal
                 if (!lg['@Core.Description'] && !lg['@description']) {
-                    this.pushMessage(`${lg.$location.file}:${lg.$location.line}:${lg.$location.col} Legal ground ${dsName} is lacking @Core.Description or @description, which is used for the DRM provisioning`, WARNING)
+                    this.pushMessage(`${lg.$location.file}:${lg.$location.line}:${lg.$location.col} Legal ground ${dsName} is lacking @Core.Description or @description, which is used for the DRM provisioning`, INFO)
                 }
                 for (const e in lg.elements) {
                     const element = lg.elements[e]
