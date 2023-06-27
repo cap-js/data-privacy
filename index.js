@@ -104,6 +104,7 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
                 const dataSubject = {
                     dataSubjectRole: role,
                     dataSubjectDescription: translate(def['@Core.Description'] || entityName),
+                    dataSubjectDescriptionKey: def['@Core.Description'] || entityName,
                     dataSubjectBaseURL: alternativeURL || "${default-url}",
                     dataSubjectInformationFilterEnabled: true,
                     dataSubjectInformationEndPoint: "/drm/dataSubjectInformation",
@@ -119,6 +120,7 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
                     dataSubject.legalEntity = {
                         legalEntity: translate(legalEntity["@Common.Label"] || legalEntity['@UI.HeaderInfo.TypeName'] || legalEntity.name),
                         legalEntityDescription: translate(legalEntity["@Core.Description"] || legalEntity.name),
+                        legalEntityDescriptionKey: legalEntity["@Core.Description"] || legalEntity.name,
                         legalEntityValueHelpEndPoint: `/drm/legalEntities`,
                     }
                 }
@@ -127,7 +129,8 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
         }
         return {
             applicationGroupName: this.service.name,
-            applicationGroupDescription: "CAP application",
+            applicationGroupDescription: this.service.description,
+            applicationGroupDescriptionKey: 'DRM_APPLICATION_GROUP_DESCRIPTON',
             applicationGroupBaseURL: alternativeURL || "${default-url}",
             simulationSupportedForDestruction: true,
             //applicationGroupType: ["TransactionMaster"], //DataSubjectMaster <- maybe does not work, DataSubjectMasterApplication, ConsentMaster is also possible, but not sure when to use
@@ -225,26 +228,8 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
         if(!this.service_drm_binding) {
             this.service_drm_binding = {
                 name: this.drm.name,
-                /* parameters: {
-                  config: {
-                    "retention-configs": this.getRetentionConfigs(csn)
-                  }
-                } */
             }
         }
-
-        //Ensrue that retention configs are set
-        //REVISIT: It appears that DRM config has to be done on instance level and cannot be done via binding
-        /* if (!this.service_drm_binding.parameters) {
-            this.service_drm_binding.parameters = {config: {"retention-configs": this.getRetentionConfigs(csn)}}
-        } else if (!this.service_drm_binding.parameters?.config) {
-            this.service_drm_binding.parameters.config = {"retention-configs": this.getRetentionConfigs(csn)}
-        } else {
-            this.service_drm_binding.parameters.config["retention-configs"] = this.getRetentionConfigs(csn)
-        } */
-        
-
-
 
         //Ensure that pdm service exists as resource
         if (!this.pdm) {
@@ -313,8 +298,20 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
         } else {
             this.service_pdm_binding.parameters.config = this.getPDMConfig(csn)
         }
-        
-        
+
+
+        //Ensure that DRM is added to SaaS dependencies in case of mtx
+        if (cds.env.requires.multitenancy || cds.env.requires["cds.xt.SaasProvisioningService"]) {
+            if (!this.service.properties) this.service.properties = {}
+            if (!this.service.properties.CDS_CONFIG) this.service.properties.CDS_CONFIG = {}
+            if (!this.service.properties.CDS_CONFIG.requires) this.service.properties.CDS_CONFIG.requires = {}
+            if (!this.service.properties.CDS_CONFIG.requires["cds.xt.SaasProvisioningService"]) 
+                this.service.properties.CDS_CONFIG.requires["cds.xt.SaasProvisioningService"] = {}
+            if (!this.service.properties.CDS_CONFIG.requires["cds.xt.SaasProvisioningService"].dependencies) 
+                this.service.properties.CDS_CONFIG.requires["cds.xt.SaasProvisioningService"].dependencies = [this.drm.parameters.config['xs-security'].xsappname]
+            else if(!this.service.properties.CDS_CONFIG.requires["cds.xt.SaasProvisioningService"].dependencies.some(d => d === this.drm.parameters.config['xs-security'].xsappname)) 
+                this.service.properties.CDS_CONFIG.requires["cds.xt.SaasProvisioningService"].dependencies.push(this.drm.parameters.config['xs-security'].xsappname)
+        }
         
         //Write back to cds file
         const writes = []

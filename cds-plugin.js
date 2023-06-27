@@ -35,3 +35,12 @@ cds.on('loaded', async m => {
   const dpiServiceLoader = dpiSrvGeneration() 
   await dpiServiceLoader(m)
 })
+
+//TODO:
+cds.on('served', (services)=>{
+    //Call DRM api for registering DRM service instance
+    //get xsenv config of drm 
+    //get xsenv or VCAP tenantID of subaccount
+    //call PUT endpoint for registering application to DRM
+    //LOG activity 
+});
