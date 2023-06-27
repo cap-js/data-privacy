@@ -119,7 +119,7 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
                     dataSubject.legalEntity = {
                         legalEntity: translate(legalEntity["@Common.Label"] || legalEntity['@UI.HeaderInfo.TypeName'] || legalEntity.name),
                         legalEntityDescription: translate(legalEntity["@Core.Description"] || legalEntity.name),
-                        legalEntityValueHelpEndPoint: `/drm/legalEntities/${role}`,
+                        legalEntityValueHelpEndPoint: `/drm/legalEntities`,
                     }
                 }
                 dataSubjects.push(dataSubject)
