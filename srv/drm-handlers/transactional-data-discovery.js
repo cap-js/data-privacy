@@ -19,20 +19,30 @@ const conditionEntity = {
   "@Capabilities.UpdateRestrictions.Updatable": false,
 }
 
-function serveLegalGrounds(srv, db) {
+/**
+ * 
+ * @param {*} srv 
+ * @param {*} db 
+ * @param {Boolean} o.registerVH Only register value helps 
+ */
+function serveLegalGrounds(srv, o) {
+    if (o.registerVH && srv.definitions) {
+      srv.entities = srv.definitions
+      srv.model = srv.definitions
+    }
     const {legalGrounds} = srv.entities     
     const { translate, getTranslationKey } = translationUtils(srv.model)
 
     //Legal grounds which are served to drm are saved in memory for improved performance
     const servicePath = srv.path
     const legalGroundPerDataSubject = {} //Get Data Subject for a legal ground and add them to map with legal grounds - goal is to provide specific endpoints for each role
-    const nameOf = (entity) => entity.name.split('.')[entity.name.split('.').length-1]
-    for(const entity of Object.values(srv.entities)) {
-      if (/* !entity._service && !entity.projection && !entity.select &&  */entity['@PersonalData.EntitySemantics'] === 'Other') {
-        const selectionCriteria = buildSelectionCriteriaForLegalGround(nameOf(entity), entity.elements, entity)
+    const nameOf = (entity, eName) => entity.name ? entity.name.split('.')[entity.name.split('.').length-1] : eName.split('.')[eName.split('.').length-1]
+    for(const [eName, entity] of Object.entries(srv.entities)) {
+      if (/* !entity._service && !entity.projection && !entity.select &&  */entity['@PersonalData.EntitySemantics'] === 'Other' && entity['@cds.drm.rootEntity']) {
+        const selectionCriteria = buildSelectionCriteriaForLegalGround(nameOf(entity, eName), entity.elements, entity)
         const legalGround = {
-          legalGround: nameOf(entity),
-          legalGroundDescription: translate(entity['@Core.Description']) || nameOf(entity),
+          legalGround: nameOf(entity, eName),
+          legalGroundDescription: translate(entity['@Core.Description']) || nameOf(entity, eName),
           //legalGroundDescriptionKey: nameOf(entity), //Whats the difference // name <-- caused in combination with legalGroundDescriptionKey in archive issues 
           dataSubjectEndofBusinessEndPoint: `${servicePath}/dataSubjectEndOfBusiness`,
           dataSubjectLegalEntitiesEndPoint: `${servicePath}/dataSubjectLegalEntities`,
@@ -58,7 +68,7 @@ function serveLegalGrounds(srv, db) {
             }
             return acc
           }, []),
-          legalGroundKeyColumns: (Object.entries(entity.keys)).map( ([name, value]) => {
+          legalGroundKeyColumns: entity.keys ? (Object.entries(entity.keys)).map( ([name, value]) => {
             const result = {
               keyFieldName: name,
               keyFieldDescription: translate(value["@Common.Label"] || name),
@@ -66,8 +76,8 @@ function serveLegalGrounds(srv, db) {
             }
             if (getTranslationKey(value["@Common.Label"])) result.keyFieldDescriptionKey = getTranslationKey(value["@Common.Label"])
             return result
-          }),
-          conditions: buildConditionsForLegalGround(nameOf(entity), entity.elements, entity),
+          }) : [],
+          conditions: buildConditionsForLegalGround(nameOf(entity, eName), entity.elements, entity),
           legalGroundBaseURL: null,
           selectionCriteria: selectionCriteria,
           destruction: {
@@ -79,6 +89,8 @@ function serveLegalGrounds(srv, db) {
             selectionCriteria: selectionCriteria
           }
         }
+        if (o.registerVH) continue
+
         if (getTranslationKey(entity['@Core.Description'])) 
           legalGround.legalGroundDescriptionKey = getTranslationKey(entity['@Core.Description'])
         if (!entity['@PersonalData.DataSubjectRole'])
@@ -105,9 +117,10 @@ function serveLegalGrounds(srv, db) {
             acc += `|| ', ' || ${val.ValueListProperty}`
           return acc
         }, '') : Object.entries(entity.keys)[0][0]
-        const ConditionVHName = `valueHelp_${entityName}_${name}`
+        const ConditionVHName = (o.registerVH ? `DRMService.` : '') +  `valueHelp_${entityName}_${value.keys ? name + '_' + value.keys[0].ref[0] : name}`
         srv.entities[ConditionVHName] = conditionEntity
         srv.entities[ConditionVHName].name = `DRMService.${ConditionVHName}`
+        if (o.registerVH) return `${servicePath}/${ConditionVHName}`;
         srv.on('READ', srv.entities[ConditionVHName], async req => {
           const result = await SELECT.from(srv.entities[value['@Common.ValueList.CollectionPath']]).columns(
             `${valueField} as value`,
@@ -236,7 +249,7 @@ function serveLegalGrounds(srv, db) {
       url += req._req.get('host')
       return url
     }
-
+    if (!o.registerVH)
     srv.on('READ', legalGrounds, async req => {
       if (Object.values(legalGroundPerDataSubject)[0][0].legalGroundBaseURL === null) {
         const baseUrl = buildBaseUrl(req)

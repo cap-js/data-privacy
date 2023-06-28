@@ -643,6 +643,13 @@ module.exports = {
           },
         },
       },
+      returns : {
+        elements: {
+          blockedLegalGrounds: {
+            type: "cds.Integer"
+          }
+        }
+      }
     },
     RetentionRule: {
       kind: "type",
@@ -819,6 +826,13 @@ module.exports = {
           },
         },
       },
+      returns : {
+        elements: {
+          blockedLegalGrounds: {
+            type: "cds.Integer"
+          }
+        }
+      }
     },
     "DRMService.RetentionRule": {
       kind: "type",

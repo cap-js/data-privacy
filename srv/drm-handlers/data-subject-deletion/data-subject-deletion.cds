@@ -60,7 +60,9 @@ action deleteLegalGroundInstances (
     maxDeletionDate: String, //String instead of DateTime because DRM sends data in wrong format
     legalGround: String,
     retentionRules: array of RetentionRule
-);
+) returns {
+    blockedLegalGrounds: Integer
+};
 
 type RetentionRule : {
     legalEntity: String;
@@ -135,7 +137,9 @@ extend service DRMService with {
         maxDeletionDate: String, //String instead of DateTime because DRM sends data in wrong format
         legalGround: String,
         retentionRules: array of RetentionRule
-    );
+    ) returns {
+        blockedLegalGrounds: Integer
+    };
 
     type RetentionRule : {
         legalEntity: String;

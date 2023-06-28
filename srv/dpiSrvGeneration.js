@@ -1,4 +1,5 @@
 const cds = require('@sap/cds'), fs = require("fs"), path = require("path"), fullDPIService = require('./fullDPIDefinitions')
+const serveLegalGrounds = require('./drm-handlers/transactional-data-discovery')
 
 const _getDataSubjectIDField = (elements) => _getField(elements, 'DataSubjectID')
 const _getLegalEntityIDField = (elements) => _getField(elements, 'LegalEntityID')
@@ -79,7 +80,7 @@ const addCompositions = (fullName, def, dsFields, m, namespaceString, redirectFo
         return concatArr(additionalFields,';')
       }
       const columns = () => {
-        let additionalFields = ['*', backLinkName], formatter = (f) => `${backLinkName}.${f} as ${backLinkName}_${f}`
+        let additionalFields = ['*', backLinkName], formatter = (f) => `${backLinkName}.${f} as ${backLinkName}_${f.replace('.','_')}`
         //additionalFields.push(`${backLinkName}: redirected to ${entityName}`)
         //Add keys and semantic keys - label ID keys as "<entity> ID"
         //Dont render foreign keys
@@ -89,7 +90,20 @@ const addCompositions = (fullName, def, dsFields, m, namespaceString, redirectFo
         for (const field in dsFields) {
           if (fieldsFn[field](entity.elements)) {
             newDsFields[field] = fieldsFn[field](entity.elements)
-          } else if(typeof dsFields[field] !== 'function' && dsFields[field]) {
+          } 
+          //last check in case managed assoc is such a field already 
+          else if(
+            typeof dsFields[field] !== 'function' && 
+            dsFields[field] && 
+            !additionalFields.some(a => 
+              a === formatter(dsFields[field]) || 
+              (
+                a === backLinkName && 
+                entity.elements[backLinkName] && 
+                entity.elements[backLinkName].keys.some(k => k.ref[0] === dsFields[field])
+              )
+            )
+          ) {
             additionalFields.push(formatter(dsFields[field]))
             newDsFields[field] = `${backLinkName}_${dsFields[field]}`
           } 
@@ -234,7 +248,6 @@ module.exports = function dpiServiceGeneration() {
                 ) continue;
                 const entityName = each.split('.')[each.split('.').length-1]
                 const namespace = each.substring(0,each.length-1-entityName.length)
-                drmServiceString += `entity ${entityName} as projection on ${namespaceString(namespace, def)}.${entityName};`
 
                 //add all composition entities to PDM too 
                 //if composition entity has backlink use that to also show parent keys & semantic keys - 
@@ -267,7 +280,9 @@ module.exports = function dpiServiceGeneration() {
                 additionalFields = concatArr(additionalFields,',')
                 return additionalFields.length > 1 ? `{${additionalFields}}` : ''
                 }
-                pdmServiceString += `${annotations(def, fields)} entity ${entityName} as projection on ${namespaceString(namespace, def)}.${entityName}${ensureDPrelatedFieldsOnRoot()};`
+                const newEntity = `@cds.drm.rootEntity ${annotations(def, fields)} entity ${entityName} as projection on ${namespaceString(namespace, def)}.${entityName}${ensureDPrelatedFieldsOnRoot()};`
+                pdmServiceString += newEntity
+                drmServiceString += newEntity
                 pdmServiceString += addCompositions(each, def, fields, m, namespaceString, undefined, DRMEntities)
             }
         }
@@ -282,16 +297,20 @@ module.exports = function dpiServiceGeneration() {
         dpiModel.definitions.DRMService = fullDPIService.DRMService;
         dpiModel.definitions.DRMService['@impl'] = path.join(__dirname, './drm-service.js')
         dpiModel.definitions.PDMService = fullDPIService.PDMService;
+        
         for (const each in fullDPIService) {
           if ((each.startsWith('DRMService') || each.startsWith('PDMService') || each === 'SelectionCriteria' || each === 'Condition') && !m.definitions[each]) {
-              Object.assign(m.definitions, {[each]: fullDPIService[each]})
+            Object.assign(m.definitions, {[each]: fullDPIService[each]})
           }
-      }
-        for (const each in dpiModel.definitions) {
-            if ((each.startsWith('DRMService') || each.startsWith('PDMService')) && !m.definitions[each]) {
-                Object.assign(m.definitions, {[each]: dpiModel.definitions[each]})
-            }
         }
+        for (const each in dpiModel.definitions) {
+          if ((each.startsWith('DRMService') || each.startsWith('PDMService')) && !m.definitions[each]) {
+            Object.assign(m.definitions, {[each]: dpiModel.definitions[each]})
+          }
+        }
+        m.definitions['sap.capire.blocking.BlockingStore'] = fullDPIService['sap.capire.blocking.BlockingStore'];
+        serveLegalGrounds(m, {registerVH: true})
+
         return m
     }
 }

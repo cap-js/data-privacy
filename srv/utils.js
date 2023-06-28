@@ -174,25 +174,20 @@ const _nullForeignKeysOnLegalGround = (entity, whereClause) => {
     const nullForeignKeysUpdateQueries = []
     if (!cds.db) return []
     entity = _getRoot(entity)
-    for (const definition in cds.db.model.definitions) {
+    for (const def in cds.db.model.definitions) {
+        const definition = cds.db.model.definitions[def]
         if (definition.kind === 'entity' && !definition.query && definition.associations 
             && Object.values(definition.associations).some(val => val.target === entity.name)
         ) {
             for (const assoc in definition.associations) {
-                if (assoc.target === entity.name) {
+                const association = definition.associations[assoc]
+                if (association.target === entity.name) {
                     nullForeignKeysUpdateQueries.push(
                         UPDATE.entity(definition).where([
                             'exists',
-                            {
-                                ref: [
-                                {
-                                    id: assoc.name,
-                                    where: whereClause
-                                }
-                                ]
-                            }
+                            SELECT.from(association.target).where(whereClause)
                         ]).set(
-                            assoc._foreignKeys.reduce((acc, val) => {
+                            association._foreignKeys.reduce((acc, val) => {
                                 acc[val.parentElement.name] = null
                                 return acc
                             }, {})

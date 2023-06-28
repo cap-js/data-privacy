@@ -16,7 +16,7 @@ const {
 
 function serveDataSubjectDeletion(srv, db) {
 
-    const { BlockingStore } = db.entities('sap.capire.blocking')
+    const { BlockingStore } = cds.entities('sap.capire.blocking')
     
     srv.on('dataSubjectEndOfBusiness', async req => {
         const { legalGround, dataSubjectRole, dataSubjectID } = req.data
@@ -188,6 +188,8 @@ function serveDataSubjectDeletion(srv, db) {
         }
         await Promise.all(_nullForeignKeysOnLegalGround(legalGroundEntityDef, where)) //TODO: Think about feature flag
         await DELETE.from(legalGroundEntityDef).where(where)
+        req.res.status(200)
+        return {blockedLegalGrounds: blockedEntries.length}
     })
 
     srv.on(['destroyLegalGroundInstances'], async req => {
