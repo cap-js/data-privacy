@@ -246,7 +246,7 @@ function serveLegalGrounds(srv, o) {
     const buildBaseUrl = (req) => {
       let url = ''
       if (process.env.NODE_ENV === 'production') url += 'https://'
-      url += req._req.get('host')
+      url += req._req ? req._req.get('host') : req.req.get('host')
       return url
     }
     if (!o.registerVH)
