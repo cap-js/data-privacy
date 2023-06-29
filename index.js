@@ -221,9 +221,9 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
 
         //Ensure that the grant as authority to app service name is correct - else update will fail
         const drmScope = this.xsuaa.parameters.config.scopes.find(scope => scope.name === `$XSAPPNAME.${DRMScope}`)
-        if (drmScope && drmScope['grant-as-authority-to-apps'] !== `$XSSERVICENAME(${this.drm.parameters['service-name']})`) {
+        if (drmScope && (!Array.isArray(drmScope) || drmScope['grant-as-authority-to-apps'][0] !== `$XSSERVICENAME(${this.drm.parameters['service-name']})`)) {
             this.pushMessage('Changed grant-as-authority-to-apps DRM scope service name to actual service name ', INFO)
-            drmScope['grant-as-authority-to-apps'] = `$XSSERVICENAME(${this.drm.parameters['service-name']})`
+            drmScope['grant-as-authority-to-apps'] = [`$XSSERVICENAME(${this.drm.parameters['service-name']})`]
         }
 
         //Ensure that CAP app requires drm service
@@ -279,9 +279,9 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
         }
         //Ensure that the grant as authority to app service name is correct - else update will fail
         const pdmScope = this.xsuaa.parameters.config.scopes.find(scope => scope.name === `$XSAPPNAME.${PDMScope}`)
-        if (pdmScope && pdmScope['grant-as-authority-to-apps'] !== `$XSSERVICENAME(${this.pdm.parameters['service-name']})`) {
+        if (pdmScope && (!Array.isArray(pdmScope) && pdmScope['grant-as-authority-to-apps'][0] !== `$XSSERVICENAME(${this.pdm.parameters['service-name']})`)) {
             this.pushMessage('Changed grant-as-authority-to-apps PDM scope service name to actual service name ', INFO)
-            pdmScope['grant-as-authority-to-apps'] = `$XSSERVICENAME(${this.pdm.parameters['service-name']})`
+            pdmScope['grant-as-authority-to-apps'] = [`$XSSERVICENAME(${this.pdm.parameters['service-name']})`]
         }
 
         //Ensure that CAP app requires pdm service
