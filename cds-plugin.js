@@ -1,7 +1,8 @@
-const cds = require('@sap/cds'), fs = require("fs"), LOG = cds.log('@sap/cds-dpi'), path = require("path"), xsenv = require('@sap/xsenv'), {executeHttpRequest} = require('@sap-cloud-sdk/http-client')
+const cds = require('@sap/cds'), fs = require("fs"), LOG = cds.log('@sap/cds-dpi'), path = require("path"), xsenv = require('@sap/xsenv'), {constants, requests: {requestClientCredentialsToken}} = require('@sap/xssec'), {executeHttpRequestWithOrigin} = require('@sap-cloud-sdk/http-client')
 const { _getLegalEntityIDField, _getDataSubjectIDField, _getEndOfBusinessDateField } = require('./srv/utils')
 const dpiSrvGeneration = require('./srv/dpiSrvGeneration')
 const fullDPIService = require('./srv/fullDPIDefinitions')
+const axios = require('axios')
 /*
     Logic for drm addition
     General plan: 3 step tier
@@ -38,17 +39,29 @@ cds.on('loaded', async m => {
 })
 
 cds.on('served', async (services)=>{
-    if (process.env.NODE_ENV !== 'production') return
+    if (process.env.NODE_ENV !== 'production' ||cds.env.requires.multitenancy || cds.env.requires["cds.xt.SaasProvisioningService"]) return
     //Call DRM api for registering DRM service instance
     const svc = xsenv.serviceCredentials({ tag: 'drm' });
     if(svc) {
-        const { applicationSubscription, uaa: {tenantid} } = svc;
+        const { applicationSubscription, uaa } = svc;
         try {
-            await executeHttpRequest({url: applicationSubscription.replace('{tenantId}', tenantid)}, {method: 'PUT'});
+            requestClientCredentialsToken(null, uaa, null, uaa.zoneid, async function(err, token) {
+                if (err) LOG.error(err)
+                else {
+                    const url = applicationSubscription.replace('{tenantId}', uaa.tenantid)
+                    const axi = new axios.Axios({})
+                    const result = await axi.put(url, undefined, {
+                        headers: {
+                            Authorization: `Bearer ${token}`, 'Content-Length': 0
+                        }
+                    })
+                    //await executeHttpRequestWithOrigin({url}, {method: 'PUT', headers: {}}, { fetchCsrfToken: false });
+                    LOG.info('Registered application on DRM instance. Status:', result.status);
+                }
+            })
 
         } catch (e) {
             LOG.error('Error occured when trying to register application on bound DRM instance', e)
         }
-        LOG.info('Registered application on DRM instance');
     }
 });
