@@ -35,7 +35,8 @@ function serveLegalGrounds(srv, o) {
 
     //Legal grounds which are served to drm are saved in memory for improved performance
     const servicePath = srv.path
-    const legalGroundPerDataSubject = {} //Get Data Subject for a legal ground and add them to map with legal grounds - goal is to provide specific endpoints for each role
+    if (!cds.env.requires.drm) cds.env.requires.drm = {}
+    cds.env.requires.drm.legalGroundPerDataSubject = {} //Get Data Subject for a legal ground and add them to map with legal grounds - goal is to provide specific endpoints for each role
     const nameOf = (entity, eName) => entity.name ? entity.name.split('.')[entity.name.split('.').length-1] : eName.split('.')[eName.split('.').length-1]
     for(const [eName, entity] of Object.entries(srv.entities)) {
       if (/* !entity._service && !entity.projection && !entity.select &&  */entity['@PersonalData.EntitySemantics'] === 'Other' && entity['@cds.drm.rootEntity']) {
@@ -95,14 +96,14 @@ function serveLegalGrounds(srv, o) {
           legalGround.legalGroundDescriptionKey = getTranslationKey(entity['@Core.Description'])
         if (!entity['@PersonalData.DataSubjectRole'])
           LOG.warn(`Entity ${entity.name} does not have the @PersonalData.DataSubjectRole annotation`)
-        if (legalGroundPerDataSubject[entity['@PersonalData.DataSubjectRole']] !== undefined) {
-          legalGroundPerDataSubject[entity['@PersonalData.DataSubjectRole']] = 
+        if (cds.env.requires.drm.legalGroundPerDataSubject[entity['@PersonalData.DataSubjectRole']] !== undefined) {
+          cds.env.requires.drm.legalGroundPerDataSubject[entity['@PersonalData.DataSubjectRole']] = 
             [
               legalGround, 
-              ...legalGroundPerDataSubject[entity['@PersonalData.DataSubjectRole']]
+              ...cds.env.requires.drm.legalGroundPerDataSubject[entity['@PersonalData.DataSubjectRole']]
             ]
         } else {
-          legalGroundPerDataSubject[entity['@PersonalData.DataSubjectRole']] = [legalGround]
+          cds.env.requires.drm.legalGroundPerDataSubject[entity['@PersonalData.DataSubjectRole']] = [legalGround]
         }
       }
     }
@@ -117,7 +118,7 @@ function serveLegalGrounds(srv, o) {
             acc += `|| ', ' || ${val.ValueListProperty}`
           return acc
         }, '') : Object.entries(entity.keys)[0][0]
-        const ConditionVHName = (o.registerVH ? `DRMService.` : '') +  `valueHelp_${entityName}_${value.keys ? name + '_' + value.keys[0].ref[0] : name}`
+        const ConditionVHName = (o.registerVH ? `DRMService.` : '') +  `valueHelp_${isCondition ? 'condition' : 'selection'}_${entityName}_${value.keys ? name + '_' + value.keys[0].ref[0] : name}`
         srv.entities[ConditionVHName] = conditionEntity
         srv.entities[ConditionVHName].name = `DRMService.${ConditionVHName}`
         if (o.registerVH) return `${servicePath}/${ConditionVHName}`;
@@ -251,9 +252,9 @@ function serveLegalGrounds(srv, o) {
     }
     if (!o.registerVH)
     srv.on('READ', legalGrounds, async req => {
-      if (Object.values(legalGroundPerDataSubject)[0][0].legalGroundBaseURL === null) {
+      if (Object.values(cds.env.requires.drm.legalGroundPerDataSubject)[0][0].legalGroundBaseURL === null) {
         const baseUrl = buildBaseUrl(req)
-        for (const legalGrounds of Object.values(legalGroundPerDataSubject)) {
+        for (const legalGrounds of Object.values(cds.env.requires.drm.legalGroundPerDataSubject)) {
           legalGrounds.forEach(legalGround => {
             legalGround.legalGroundBaseURL = baseUrl
             legalGround.destruction.legalGroundDestructionBaseURL = baseUrl
@@ -261,7 +262,7 @@ function serveLegalGrounds(srv, o) {
         }
       }
       const response = {
-        legalGrounds: req.data.ID ? legalGroundPerDataSubject[req.data.ID] : Object.values(legalGroundPerDataSubject).reduce((acc, val) => {
+        legalGrounds: req.data.ID ? cds.env.requires.drm.legalGroundPerDataSubject[req.data.ID] : Object.values(cds.env.requires.drm.legalGroundPerDataSubject).reduce((acc, val) => {
           acc.push(...val)
           return acc
         }, [])

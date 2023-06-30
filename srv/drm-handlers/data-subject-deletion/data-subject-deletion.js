@@ -216,17 +216,16 @@ function serveDataSubjectDeletion(srv, db) {
         const { applicationGroupName, dataSubjectRole, dataSubjectID, maxDeletionDate } = req.data
         LOG.info(`Delete data subject request for role ${dataSubjectRole}, ID ${dataSubjectID} and application group ${applicationGroupName} with end of retention ${maxDeletionDate}.`)
         const dsEntities = _getDataSubjectEntities(dataSubjectRole, srv) //Ensures that data subject details are also retrived
-        if (!dsEntities.length === 0) return req.error('Non existing data subject')
+        if (!dsEntities.length === 0 || !cds.env.requires.drm.legalGroundPerDataSubject[dataSubjectRole]) 
+            return req.error('Non existing data subject')
         //Delete if there are no active legal grounds for data subject
-        for (const entityName in srv.entities) {
-            const entity = srv.entities[entityName]
-            if (entity && entity['@PersonalData.EntitySemantics'] === 'Other' && entity[`@PersonalData.DataSubjectRole`] === dataSubjectRole) {
-                LOG.debug(`Where clause for getting active entities`, _buildWhereClauseForDS(entity, dataSubjectID))
-                const activeRecords = await cds.db.exists(entity).where(_buildWhereClauseForDS(entity, dataSubjectID))
-                if (activeRecords) { 
-                    LOG.info(`Delete data subject for ${dataSubjectRole}, ID ${dataSubjectID} does not work due to active entities in ${entity}.`)
-                    return req.error('Active records still exist for the entity')
-                }
+        for (const {legalGround} of cds.env.requires.drm.legalGroundPerDataSubject[dataSubjectRole]) {
+            const entity = srv.entities[legalGround]
+            LOG.debug(`Where clause for getting active entities`, _buildWhereClauseForDS(entity, dataSubjectID))
+            const activeRecords = await cds.db.exists(entity).where(_buildWhereClauseForDS(entity, dataSubjectID))
+            if (activeRecords) { 
+                LOG.info(`Delete data subject for ${dataSubjectRole}, ID ${dataSubjectID} does not work due to active entities in ${entity}.`)
+                return req.error({message: 'Active records still exist for the entity', code: 400})
             }
         }
 
