@@ -89,7 +89,7 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
         }
     }
 
-    getRetentionConfigs(csn, alternativeURL) {
+    getRetentionConfigs(csn) {
         const { translate } = translationUtils(csn, {isBuild: true})
         const dataSubjects = []
         for (let each in csn.definitions) {
@@ -104,8 +104,8 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
                 const dataSubject = {
                     dataSubjectRole: role,
                     dataSubjectDescription: translate(def['@Core.Description'] || entityName),
-                    dataSubjectDescriptionKey: def['@Core.Description'] || entityName,
-                    dataSubjectBaseURL: alternativeURL || "${default-url}",
+                    dataSubjectDescriptionKey: def['@Core.Description'] || entityName.toUpperCase(),
+                    dataSubjectBaseURL: '~{srv-api/srv-url}',
                     dataSubjectInformationFilterEnabled: true,
                     dataSubjectInformationEndPoint: "/drm/dataSubjectInformation",
                     dataSubjectDeletionEndPoint: "/drm/deleteDataSubject",
@@ -133,8 +133,10 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
             applicationGroupName: this.service.name, //REVISIT: Probably not the correct property - maybe just as fallback
             applicationGroupDescription: this.service.description || this.service.name,
             applicationGroupDescriptionKey: 'DRM_APPLICATION_GROUP_DESCRIPTON',
-            applicationGroupBaseURL: alternativeURL || "${default-url}",
+            applicationGroupBaseURL: '~{srv-api/srv-url}',
             simulationSupportedForDestruction: true,
+            textBundleEndPoint: '/drm-i18n/i18n.properties',
+            supportedLanguages: ["de","fr","ja","es","zh_CN"],
             //applicationGroupType: ["TransactionMaster"], //DataSubjectMaster <- maybe does not work, DataSubjectMasterApplication, ConsentMaster is also possible, but not sure when to use
             dataSubjects: dataSubjects,
         }
@@ -204,7 +206,7 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
         if (!this.drm.requires.some(r => r.name === 'srv-api'))
             this.drm.requires.push({name: 'srv-api'})
 
-        this.drm.parameters.config["retention-configs"] = this.getRetentionConfigs(csn, '~{srv-api/srv-url}')
+        this.drm.parameters.config["retention-configs"] = this.getRetentionConfigs(csn)
 
         //Ensure that scope for DRM is added to XSUAA service that it already exist - here ensure that grant to app - name of app is correct
         if (!this.xsuaa.parameters.config.scopes || !this.xsuaa.parameters.config.scopes.some(scope => scope.name === `$XSAPPNAME.${DRMScope}`)) {

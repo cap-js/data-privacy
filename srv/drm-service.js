@@ -34,7 +34,7 @@ module.exports = async srv => {
         //translations deactivated when cds.env.i18n.languages === 'none'
     if (cds.env.i18n.languages !== 'none') {
         cds.on('served', async () => {
-            cds.app.use('/i18n', serveStatic(path.join(__dirname, '../',cds.env.i18n.drm_folder || cds.env.i18n.folders[0])))
+            cds.app.use('/drm-i18n', serveStatic(path.join(__dirname, '../',cds.env.i18n.drm_folder || cds.env.i18n.folders[0])))
         });
     }
 } 
