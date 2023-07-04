@@ -151,7 +151,7 @@ function serveDataSubjectEligibleForDeletion(srv, db) {
         LOG.info(`Requested data Subject Information for ${dataSubjectRole} and application group ${applicationGroupName}`)
         LOG.debug(`Data subject info, data subject IDs`, dataSubjectIds)
 
-        const entity = Object.entries(srv.entities).find(([name, value]) => value['@PersonalData.DataSubjectRole'] === dataSubjectRole)
+        const entity = Object.entries(srv.entities).find(([name, value]) => value['@PersonalData.DataSubjectRole'] === dataSubjectRole && value['@PersonalData.EntitySemantics'] === 'DataSubject')
         if (!entity) return req.error({
             code: 'DATA_SUBJECT_ROLE_NOT_FOUND',
             status: 400
