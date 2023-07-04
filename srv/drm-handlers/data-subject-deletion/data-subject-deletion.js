@@ -216,7 +216,7 @@ function serveDataSubjectDeletion(srv, db) {
         const { applicationGroupName, dataSubjectRole, dataSubjectID, maxDeletionDate } = req.data
         LOG.info(`Delete data subject request for role ${dataSubjectRole}, ID ${dataSubjectID} and application group ${applicationGroupName} with end of retention ${maxDeletionDate}.`)
         const dsEntities = _getDataSubjectEntities(dataSubjectRole, srv) //Ensures that data subject details are also retrived
-        if (!dsEntities.length === 0 || !cds.env.requires.drm.legalGroundPerDataSubject[dataSubjectRole]) 
+        if (dsEntities.length === 0 || !cds.env.requires.drm.legalGroundPerDataSubject[dataSubjectRole]) 
             return req.error('Non existing data subject')
         //Delete if there are no active legal grounds for data subject
         for (const {legalGround} of cds.env.requires.drm.legalGroundPerDataSubject[dataSubjectRole]) {
