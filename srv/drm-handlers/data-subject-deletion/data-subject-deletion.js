@@ -266,6 +266,7 @@ function serveDataSubjectDeletion(srv, db) {
                 const entity = srv.entities[entityName]
                 if (entity && entity['@PersonalData.EntitySemantics'] === 'Other') {
                     const dataSubjectIDField = _getDataSubjectIDField(entity.elements)
+                    if(!dataSubjectIDField) continue
                     const where = {}
                     where[dataSubjectIDField] = dataSubjectID
                     const activeRecords = await cds.db.exists(entity).where(where)
