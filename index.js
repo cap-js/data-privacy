@@ -47,7 +47,7 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
 
     getPDMConfig() {
         return {
-            fullyQualifiedApplicationName: this.service.name,
+            fullyQualifiedApplicationName: cds.env.requires?.dpi?.name || this.service.name,
             applicationURL: '${default-url}',
             fullyQualifiedModuleName: this.service.name,
             applicationTitle: 'CAP application',
@@ -130,7 +130,7 @@ module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
             }
         }
         return {
-            applicationGroupName: this.service.name, //REVISIT: Probably not the correct property - maybe just as fallback
+            applicationGroupName: cds.env.requires?.dpi?.name || this.service.name,
             applicationGroupDescription: this.service.description || this.service.name,
             applicationGroupDescriptionKey: 'DRM_APPLICATION_GROUP_DESCRIPTON',
             applicationGroupBaseURL: '~{srv-api/srv-url}',
