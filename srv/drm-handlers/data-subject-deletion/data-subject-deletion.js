@@ -235,7 +235,9 @@ function serveDataSubjectDeletion(srv, db) {
             const entity = await SELECT.one.from(singleEntity).where(_buildWhereClauseForDS(singleEntity, dataSubjectID)).columns(_getWholeObjectTree(singleEntity))
             LOG.debug(`Where clause for getting ${singleEntity.name}`, _buildWhereClauseForDS(singleEntity, dataSubjectID),`with result`, entity)
             if (!entity) continue
-            if (dayjs().isAfter(maxDeletionDate) || blockedData)
+            //dayjs() gives you the current date, if it is greater than maxDeletionDate then the data subject can deleted immediately
+            //deleting immediately only allowed when no associated legal grounds in blocking store
+            if (dayjs().isBefore(maxDeletionDate) || blockedData)
                 await INSERT.into(BlockingStore).entries([{
                     ObjectType: singleEntity.name,     
                     ObjectKey: entity[_getDataSubjectIDField(singleEntity.elements)],
