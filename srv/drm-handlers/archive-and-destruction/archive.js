@@ -94,7 +94,7 @@ function serveArchiveRequests(srv, db) {
                         })
                         return acc
                     }, []),
-                    retentionStartDate: dayjs(legal_ground[eobField]).format('YYYY-MM-DDTHH:mm:ss.SSS')
+                    retentionStartDate: dayjs(legal_ground[eobField]).format('YYYY-MM-DDTHH:mm:ssZ')
                 }
             }),
             deltatoken: null,
