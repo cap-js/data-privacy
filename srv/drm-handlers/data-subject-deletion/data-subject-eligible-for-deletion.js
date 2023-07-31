@@ -30,7 +30,9 @@ function serveDataSubjectEligibleForDeletion(srv, db) {
         }
         
         LOG.debug(`endOfResidenceDS, where clause for all data subjects`, where)
-        const allDataSubjectsOfLegalGround = await SELECT.from(legalGroundEntity).where(where).columns(`${dsField} as dataSubjectID`, `count(${legalField}) as sumRecords`).groupBy(dsField)
+        const allDataSubjectsOfLegalGroundForLegalEntities = await SELECT.from(legalGroundEntity).where(where).columns(`${dsField} as dataSubjectID`, `count(${legalField}) as sumRecords`).groupBy(dsField)
+        const allDataSubjectsOfLegalGround = await SELECT.from(legalGroundEntity).columns(`${dsField} as dataSubjectID`, `count(${legalField}) as sumRecords`).groupBy(dsField)
+
         LOG.debug(`endOfResidenceDS, result for all data subjects of this legal ground`, allDataSubjectsOfLegalGround)
 
         const dsFieldDataSubject = _getDataSubjectIDField(dataSubjectEntity.elements)
@@ -51,7 +53,7 @@ function serveDataSubjectEligibleForDeletion(srv, db) {
             .where(where)
             .columns(`${dsField} as dataSubjectID`, `count(${legalField}) as sumRecords`).groupBy(dsField)
         LOG.debug(`endOfResidenceDS, result for data subjects matching conditions`, dataSubjectsMatchingConditions)
-        const success = [...dataSubjectsAtEndOfRedisdence(allDataSubjectsOfLegalGround, dataSubjectsMatchingConditions), ...dataSubjectsWithoutLegalGround]
+        const success = [...dataSubjectsAtEndOfRedisdence(allDataSubjectsOfLegalGroundForLegalEntities, dataSubjectsMatchingConditions), ...dataSubjectsWithoutLegalGround]
         const nonConfirmCondition = allDataSubjectsOfLegalGround.filter(ds => !success.some(s => s.dataSubjectID === ds.dataSubjectID))
 
         LOG.debug(`Successful requests`, success)
