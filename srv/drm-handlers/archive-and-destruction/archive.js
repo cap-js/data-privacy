@@ -33,7 +33,7 @@ function serveArchiveRequests(srv, db) {
         const eobField = endOfBusinessField || _getEndOfBusinessDateField(legalGroundEntity.elements)
         where.push(
             {ref: [eobField]},
-            '<=', 
+            '<', 
             {val: dayjs(retentionStartDate).format('YYYY-MM-DDTHH:mm:ssZ')},
         )
 
