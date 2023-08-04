@@ -136,7 +136,7 @@ function serveArchiveRequests(srv, db) {
         where = [
             {ref: [eobField]},
             '<',
-            {val: `${dayjs().format('YYYY-MM-DD')}`},
+            {val: `${dayjs().format('YYYY-MM-DDTHH:mm:ssZ')}`},
             'and',
             {xpr: where}
         ]
