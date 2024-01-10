@@ -2,6 +2,6 @@
 
 @requires: 'PersonalDataManagerUser'
 @cds.provided
-service PDMService @(path : 'pdm') {
+service PDMService @(path : '/pdm') {
 
 };
