@@ -23,7 +23,8 @@
     "serve-static": "^1.15.0"
   },
   "devDependencies": {
-    "@sap/cds": "5.9.8",
+    "@sap/cds": "^7",
+    "@sap/cds-dk": "^7",
     "sqlite3": "^5.1.6"
   },
   "scripts": {

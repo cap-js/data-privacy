@@ -3,6 +3,7 @@ const { _getLegalEntityIDField, _getDataSubjectIDField, _getEndOfBusinessDateFie
 const dpiSrvGeneration = require('./srv/dpiSrvGeneration')
 const fullDPIService = require('./srv/fullDPIDefinitions')
 const axios = require('axios')
+const DataPrivacyIntegrationBuildPlugin = require('.')
 /*
     Logic for drm addition
     General plan: 3 step tier
@@ -65,3 +66,5 @@ cds.on('served', async (services)=>{
         }
     }
 });
+
+cds.build?.register?.('cds-dpi', DataPrivacyIntegrationBuildPlugin)

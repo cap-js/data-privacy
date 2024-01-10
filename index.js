@@ -1,10 +1,9 @@
 const { BuildTaskHandler, BuildError } = require('@sap/cds/bin/build'), { WARNING, ERROR, INFO } = BuildTaskHandler,
     MTA_YAML = 'mta.yaml';
 const cds = require('@sap/cds')
-const path = require('path')
+const { fs, path } = cds.utils;
 const LOG = cds.log('@sap/cds-dpi')
 const yaml = require('js-yaml');
-const fs = require('fs-extra')
 const { translationUtils, _getLegalEntity } = require('./srv/utils');
 const dpiSrvGeneration = require('./srv/dpiSrvGeneration');
 const UTF_8 = 'utf-8'
@@ -15,7 +14,11 @@ const PDMScope = 'PersonalDataManagerUser'
  * The custom build task is used to generate the 
  * drm config into the mta.yaml file
  */
-module.exports = class NodeCfWithDPIModuleBuilder extends BuildTaskHandler {
+module.exports = class DataPrivacyIntegrationBuildPlugin extends cds.build.Plugin {
+    static taskDefaults = { src: cds.env.folders }
+    static hasTask() {
+        return true
+    }
 
     getPDMTemplate() {
         return {
