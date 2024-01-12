@@ -1,4 +1,4 @@
-const { BuildTaskHandler, BuildError } = require('@sap/cds/bin/build'), { WARNING, ERROR, INFO } = BuildTaskHandler,
+const { BuildTaskHandler } = require('@sap/cds/bin/build'), { WARNING, ERROR, INFO } = BuildTaskHandler,
     MTA_YAML = 'mta.yaml';
 const cds = require('@sap/cds')
 const { fs, path } = cds.utils;
