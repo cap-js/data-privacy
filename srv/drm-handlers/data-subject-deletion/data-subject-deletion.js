@@ -59,7 +59,7 @@ function serveDataSubjectDeletion(srv, db) {
         const where = _buildWhereClauseForDS(legalGroundEntityDef, dataSubjectID)
         const legalEntityField = _getLegalEntityIDField(legalGroundEntityDef.elements)
         LOG.debug(`where clause`, where)
-        const result = await SELECT.from(legalGroundEntityDef).where(where).columns(`${legalEntityField} as legalEntity`)
+        const result = await SELECT.from(legalGroundEntityDef).where(where).columns(`${legalEntityField} as legalEntity`).groupBy(legalEntityField);
         LOG.debug(`result`, result)
         return result
     })
