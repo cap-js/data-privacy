@@ -36,7 +36,11 @@ function serveLegalEntitiesAndVHs(srv, db) {
                 const legalEntity = entity.elements[element]._target
                 const valueColumn = entity.elements[element]._target['@UI.HeaderInfo.Title.Value']['=']
                 const descriptionColumn = entity.elements[element]._target['@UI.HeaderInfo.Title.Value']['=']
-                return await SELECT.from(legalEntity).columns(`${valueColumn} as value`, `${descriptionColumn} as valueDesc`)
+                /**
+                 * organizationAttributeValue & organizationAttributeValueDescription for nextGen
+                 * for old DRM it was value and valueDesc
+                 */
+                return await SELECT.from(legalEntity).columns(`${valueColumn} as organizationAttributeValue`, `${descriptionColumn} as organizationAttributeValueDescription`)
             }
         }
     })
