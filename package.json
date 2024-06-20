@@ -25,8 +25,7 @@
   "devDependencies": {
     "@sap/cds": "^7",
     "@sap/cds-dk": "^7",
-    "@cap-js/sqlite": "1.6",
-    "better-sqlite3": "8.5.2"
+    "@cap-js/sqlite": "^1"
   },
   "scripts": {
     "start": "cds run --in-memory?",
