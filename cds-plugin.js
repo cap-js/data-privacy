@@ -39,32 +39,4 @@ cds.on('loaded', async m => {
   await dpiServiceLoader(m)
 })
 
-cds.on('served', async (services)=>{
-    if (process.env.NODE_ENV !== 'production' ||cds.env.requires.multitenancy || cds.env.requires["cds.xt.SaasProvisioningService"]) return
-    //Call DRM api for registering DRM service instance
-    const svc = xsenv.serviceCredentials({ tag: 'drm' });
-    if(svc) {
-        const { applicationSubscription, uaa } = svc;
-        try {
-            requestClientCredentialsToken(null, uaa, null, uaa.zoneid, async function(err, token) {
-                if (err) LOG.error(err)
-                else {
-                    const url = applicationSubscription.replace('{tenantId}', uaa.tenantid)
-                    const axi = new axios.Axios({})
-                    const result = await axi.put(url, undefined, {
-                        headers: {
-                            Authorization: `Bearer ${token}`, 'Content-Length': 0
-                        }
-                    })
-                    //await executeHttpRequestWithOrigin({url}, {method: 'PUT', headers: {}}, { fetchCsrfToken: false });
-                    LOG.info('Registered application on DRM instance. Status:', result.status);
-                }
-            })
-
-        } catch (e) {
-            LOG.error('Error occured when trying to register application on bound DRM instance', e)
-        }
-    }
-});
-
 cds.build?.register?.('cds-dpi', DataPrivacyIntegrationBuildPlugin)
