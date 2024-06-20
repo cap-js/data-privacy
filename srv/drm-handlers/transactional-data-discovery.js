@@ -124,8 +124,8 @@ function serveLegalGrounds(srv, o) {
         if (o.registerVH) return `${servicePath}/${ConditionVHName}`;
         srv.on('READ', srv.entities[ConditionVHName], async req => {
           const result = await SELECT.from(srv.entities[value['@Common.ValueList.CollectionPath']]).columns(
-            `${valueField} as value`,
-            `${valueDescField} as ${isCondition ? 'valueDesc' : 'valueDescription'}`
+            `${valueField} as ${isCondition ? 'conditionFieldValue' : 'value'}`,
+            `${valueDescField} as ${isCondition ? 'conditionFieldValueDescription' : 'valueDescription'}`
           )
           LOG.debug(`Result Value Help for ${ConditionVHName}`, result)
           return result
