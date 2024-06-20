@@ -1,9 +1,9 @@
 const cds = require('@sap/cds'), fs = require("fs"), LOG = cds.log('@sap/cds-dpi'), path = require("path"), xsenv = require('@sap/xsenv'), {constants, requests: {requestClientCredentialsToken}} = require('@sap/xssec'), {executeHttpRequestWithOrigin} = require('@sap-cloud-sdk/http-client')
-const { _getLegalEntityIDField, _getDataSubjectIDField, _getEndOfBusinessDateField } = require('./srv/utils')
-const dpiSrvGeneration = require('./srv/dpiSrvGeneration')
-const fullDPIService = require('./srv/fullDPIDefinitions')
+const { _getLegalEntityIDField, _getDataSubjectIDField, _getEndOfBusinessDateField } = require('./lib/utils')
+const dpiSrvGeneration = require('./lib/dpiSrvGeneration')
+const fullDPIService = require('./lib/fullDPIDefinitions')
 const axios = require('axios')
-const DataPrivacyIntegrationBuildPlugin = require('.')
+
 /*
     Logic for drm addition
     General plan: 3 step tier
@@ -38,5 +38,3 @@ cds.on('loaded', async m => {
   const dpiServiceLoader = dpiSrvGeneration() 
   await dpiServiceLoader(m)
 })
-
-cds.build?.register?.('cds-dpi', DataPrivacyIntegrationBuildPlugin)
