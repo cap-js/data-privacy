@@ -3,8 +3,8 @@ using from './drm-handlers/archive-and-destruction/destruction';
 using from './drm-handlers/data-subject-deletion/data-subject-deletion';
 using from './drm-handlers/data-subject-deletion/data-subject-eligible-for-deletion';
 using from './drm-handlers/data-subject-deletion/legal-entities-and-condition-vh';
-using from './drm-handlers/data-subject-deletion/master-data-subject-deletion';
 using from './drm-handlers/transactional-data-discovery';
+using from '../db/generic_blocking_schema';
 
 @requires: 'DataRetentionManagerUser'
 @protocol: 'rest'

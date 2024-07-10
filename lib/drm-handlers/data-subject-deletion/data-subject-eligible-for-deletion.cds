@@ -1,86 +1,53 @@
 using {Condition} from '../transactional-data-discovery';
 using DRMService from '../../drm-service';
 
-action endOfResidenceDS (
-    legalGround: String, 
-    dataSubjectRole: String, 
-    startTime: String,
-    legalEntitiesResidenceRules: many {
-      legalEntity: String;
-      residenceRules: many { //What are the residence rules?
-        residenceDate: String; //String instead of DateTime because DRM sends data in wrong format
-        conditionSet: many Condition;
-      }
-    }
-) returns {
-    success: many {dataSubjectID: String };
-    nonConfirmCondition: many {dataSubjectID: String };
-};
-
-action endOfResidenceDSConfirmation (
-    legalGround: String, 
-    dataSubjectRole: String, 
-    startTime: String,
-    dataSubjects: many {
-      dataSubjectID: String
-    },
-    legalEntitiesResidenceRules: many {
-      legalEntity: String;
-      residenceRules: many { //What are the residence rules?
-        residenceDate: String; //String instead of DateTime because DRM sends data in wrong format
-        conditionSet: many Condition;
-      }
-    }
-) returns many {dataSubjectID: String};
-
-action dataSubjectInformation (
-    applicationGroupName: String,
-    dataSubjectRole: String,
-    dataSubjectIds : many String
-) returns many {
-    dataSubjectId: String; 
-    emailId: String; 
-    name: String 
-};
-
-
 extend service DRMService with {
-    action endOfResidenceDS (
-        legalGround: String, 
-        dataSubjectRole: String, 
-        startTime: String,
-        legalEntitiesResidenceRules: many {
-        legalEntity: String;
-        residenceRules: many { //What are the residence rules?
-            residenceDate: String; //String instead of DateTime because DRM sends data in wrong format
-            conditionSet: many Condition;
-        }
+    action dataSubjectsEndOfResidence (
+        applicationName: String,
+        iLMObjectName: String, 
+        dataSubjectRoleName: String, 
+        referenceDates: many {
+            referenceDateName: String;
+            organizationAttributeResidenceSet: many {
+                organizationAttributeName: String;
+                organizationAttributeValue: String;
+                residenceSet: many { //What are the residence rules?
+                    retentionStartDate: String; //String instead of DateTime because DRM sends data in wrong format
+                    conditionSet: many Condition;
+                }
+            };
         }
     ) returns {
-        success: many {dataSubjectID: String };
-        nonConfirmCondition: many {dataSubjectID: String };
+        success: many {dataSubjectId: String };
+        nonConfirmCondition: many {dataSubjectId: String };
     };
 
-    action endOfResidenceDSConfirmation (
-        legalGround: String, 
-        dataSubjectRole: String, 
-        startTime: String,
+    action dataSubjectsEndOfResidenceConfirmation (
+        applicationName: String,
+        iLMObjectName: String, 
+        dataSubjectRoleName: String, 
         dataSubjects: many {
-        dataSubjectID: String
+            dataSubjectId: String
         },
-        legalEntitiesResidenceRules: many {
-        legalEntity: String;
-        residenceRules: many { //What are the residence rules?
-            residenceDate: String; //String instead of DateTime because DRM sends data in wrong format
-            conditionSet: many Condition;
+        referenceDates: many {
+            referenceDateName: String;
+            organizationAttributeResidenceSet: many {
+                organizationAttributeName: String;
+                organizationAttributeValue: String;
+                residenceSet: many { //What are the residence rules?
+                    retentionStartDate: String; //String instead of DateTime because DRM sends data in wrong format
+                    conditionSet: many Condition;
+                }
+            };
         }
-        }
-    ) returns many {dataSubjectID: String};
+    ) returns many {dataSubjectId: String};
 
     action dataSubjectInformation (
-        applicationGroupName: String,
-        dataSubjectRole: String,
-        dataSubjectIds : many String
+        applicationName: String,
+        dataSubjectRoleName: String,
+        dataSubjects : many {
+            dataSubjectId: String
+        },
     ) returns many {
         dataSubjectId: String; 
         emailId: String; 

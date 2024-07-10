@@ -15,9 +15,9 @@ entity conditionFieldValues {
 
 extend service DRMService with {
     @readonly
-    entity legalEntities {
-        key dataSubjectRole : String;
-            value           : String;
-            valueDesc       : String;
+    entity organizationAttributeValues {
+        key dataSubjectRoleName : String;
+            organizationAttributeValue           : String;
+            organizationAttributeValueDescription       : String;
     }
 }

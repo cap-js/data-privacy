@@ -1,6 +1,6 @@
 {
   "name": "@sap/cds-dpi",
-  "version": "0.3.20",
+  "version": "0.4.0",
   "author": "SAP",
   "main": "index.js",
   "keywords": [
@@ -32,6 +32,7 @@
 	},
   "scripts": {
     "start": "cds run --in-memory?",
+    "build": "cds compile lib/drm-handlers > ./lib/csn.json",
     "test": "echo \"Error: no test specified\" && exit 0",
     "watch": "cds watch"
   }
