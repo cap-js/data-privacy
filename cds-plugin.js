@@ -33,10 +33,11 @@ const axios = require('axios')
             - How to consider applicationGroups concept from DRM
 
 */
-
-cds.on('loaded', m => {
-    //if (!process.env.NODE_ENV === 'production') {
-        const dpiServiceLoader = dpiSrvGeneration();
-        dpiServiceLoader(m);
-    //}
-})
+if (!cds.build?.register) {
+    cds.on('loaded', m => {
+        //if (!process.env.NODE_ENV === 'production') {
+            const dpiServiceLoader = dpiSrvGeneration();
+            dpiServiceLoader(m);
+        //}
+    })
+}
