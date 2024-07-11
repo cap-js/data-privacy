@@ -1,63 +1,17 @@
 {
   "definitions": {
-    "Condition": {
-      "kind": "type",
-      "elements": {
-        "conditionFieldName": {
-          "type": "cds.String"
-        },
-        "conditionFieldValue": {
-          "type": "cds.String"
-        }
-      }
-    },
-    "SelectionCriteria": {
-      "kind": "type",
-      "elements": {
-        "name": {
-          "type": "cds.String"
-        },
-        "value": {
-          "type": "cds.String"
-        },
-        "valueRange": {
-          "elements": {
-            "from": {
-              "type": "cds.String"
-            },
-            "to": {
-              "type": "cds.String"
-            }
-          }
-        }
-      }
-    },
-    "legalGrounds": {
-      "kind": "entity",
-      "@readonly": true,
-      "elements": {
-        "ID": {
-          "key": true,
-          "type": "cds.UUID"
-        }
-      }
-    },
-    "DRMService.legalGrounds": {
-      "kind": "entity",
-      "@readonly": true,
-      "elements": {
-        "ID": {
-          "key": true,
-          "type": "cds.UUID"
-        }
-      }
-    },
     "DRMService": {
       "kind": "service",
       "@requires": "DataRetentionManagerUser",
       "@protocol": "rest",
       "@cds.provided": true,
       "@path": "/drm"
+    },
+    "PDMService": {
+      "kind": "service",
+      "@requires": "PersonalDataManagerUser",
+      "@cds.provided": true,
+      "@path": "/pdm"
     },
     "DRMService.endOfResidence": {
       "kind": "action",
@@ -651,6 +605,58 @@
         },
         "organizationAttributeValueDescription": {
           "type": "cds.String"
+        }
+      }
+    },
+    "Condition": {
+      "kind": "type",
+      "elements": {
+        "conditionFieldName": {
+          "type": "cds.String"
+        },
+        "conditionFieldValue": {
+          "type": "cds.String"
+        }
+      }
+    },
+    "SelectionCriteria": {
+      "kind": "type",
+      "elements": {
+        "name": {
+          "type": "cds.String"
+        },
+        "value": {
+          "type": "cds.String"
+        },
+        "valueRange": {
+          "elements": {
+            "from": {
+              "type": "cds.String"
+            },
+            "to": {
+              "type": "cds.String"
+            }
+          }
+        }
+      }
+    },
+    "legalGrounds": {
+      "kind": "entity",
+      "@readonly": true,
+      "elements": {
+        "ID": {
+          "key": true,
+          "type": "cds.UUID"
+        }
+      }
+    },
+    "DRMService.legalGrounds": {
+      "kind": "entity",
+      "@readonly": true,
+      "elements": {
+        "ID": {
+          "key": true,
+          "type": "cds.UUID"
         }
       }
     },
