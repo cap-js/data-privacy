@@ -1,7 +1,7 @@
 const cds = require('@sap/cds'), fs = require("fs"), LOG = cds.log('@sap/cds-dpi'), path = require("path"), xsenv = require('@sap/xsenv'), {constants, requests: {requestClientCredentialsToken}} = require('@sap/xssec'), {executeHttpRequestWithOrigin} = require('@sap-cloud-sdk/http-client')
 const { _getLegalEntityIDField, _getDataSubjectIDField, _getEndOfBusinessDateField } = require('./lib/utils')
 const dpiSrvGeneration = require('./lib/dpiSrvGeneration')
-const fullDPIService = require('./lib/csn.json').definitions
+const fullDPIService = require('./lib/dpicsn.json').definitions
 const axios = require('axios')
 
 /*
