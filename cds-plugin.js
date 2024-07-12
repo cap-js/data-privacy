@@ -52,5 +52,6 @@ cds.build?.register?.('data-privacy', class DPIPlugin extends cds.build.Plugin {
     const model = await this.model();
     if (!model) return;
     await this.copy(path.join(__dirname, 'lib/drm-service.js')).to('drm-service.js');
+    await this.copy(path.join(__dirname, 'lib/drm-handlers')).to('drm-handlers'); //REVISIT: only copy .js files
   }
 })
