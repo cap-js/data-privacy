@@ -34,6 +34,7 @@ extend service DRMService with {
         applicationName: String,
         iLMObject: String, //Really?
         iLMObjectArchiveResidenceRules: array of {
+            residenceRuleId: String;
             iLMObjectInstances: array of {
                 retentionStartDate: DateTime;
                 retentionEndDate: DateTime;
