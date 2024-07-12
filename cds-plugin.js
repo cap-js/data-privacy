@@ -35,9 +35,7 @@ const axios = require('axios')
 */
 if (!cds.build?.register) {
     cds.on('loaded', m => {
-        //if (!process.env.NODE_ENV === 'production') {
-            const dpiServiceLoader = dpiSrvGeneration();
-            dpiServiceLoader(m);
-        //}
+        const dpiServiceLoader = dpiSrvGeneration();
+        dpiServiceLoader(m);
     })
 }
