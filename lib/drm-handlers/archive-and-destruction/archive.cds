@@ -32,7 +32,7 @@ extend service DRMService with {
 
     action archive (
         applicationName: String,
-        iLMObjectName: String,
+        iLMObject: String, //Really?
         iLMObjectArchiveResidenceRules: array of {
             iLMObjectInstances: array of {
                 retentionStartDate: DateTime;
@@ -42,7 +42,6 @@ extend service DRMService with {
                     value: String;
                 };
             };
-            residenceRuleId: UUID;
         },
         referenceDateName: String,
     ) returns {
