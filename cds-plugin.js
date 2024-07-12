@@ -33,9 +33,24 @@ const axios = require('axios')
             - How to consider applicationGroups concept from DRM
 
 */
-if (!cds.build?.register) {
+if (process.env.NODE_ENV !== 'production') {
     cds.on('loaded', m => {
         const dpiServiceLoader = dpiSrvGeneration();
         dpiServiceLoader(m);
-    })
+    });
 }
+
+cds.build?.register?.('data-privacy', class DPIPlugin extends cds.build.Plugin {
+  static taskDefaults = { src: cds.env.folders.srv }
+  static hasTask() {
+    return true;
+  }
+  init() {
+    this.task.dest = path.join(this.task.dest, 'srv');
+  }
+  async build() {
+    const model = await this.model();
+    if (!model) return;
+    await this.copy(path.join(__dirname, 'lib/drm-service.js')).to('drm-service.js');
+  }
+})
