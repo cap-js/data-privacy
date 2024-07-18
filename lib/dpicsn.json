@@ -102,7 +102,7 @@
         "applicationName": {
           "type": "cds.String"
         },
-        "iLMObject": {
+        "iLMObjectName": {
           "type": "cds.String"
         },
         "iLMObjectArchiveResidenceRules": {

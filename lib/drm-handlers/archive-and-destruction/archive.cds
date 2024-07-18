@@ -32,7 +32,7 @@ extend service DRMService with {
 
     action archive (
         applicationName: String,
-        iLMObject: String, //Really?
+        iLMObjectName: String, //Really?
         iLMObjectArchiveResidenceRules: array of {
             residenceRuleId: String;
             iLMObjectInstances: array of {
