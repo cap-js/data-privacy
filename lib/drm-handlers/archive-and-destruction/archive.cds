@@ -36,8 +36,8 @@ extend service DRMService with {
         iLMObjectArchiveResidenceRules: array of {
             residenceRuleId: String;
             iLMObjectInstances: array of {
-                retentionStartDate: DateTime;
-                retentionEndDate: DateTime;
+                retentionStartDate: String; //Is actually DateTime but DRM sends values like 2020-04-04 00:00:00.000000000 with much to high precision not aligning with DateTime standard
+                retentionEndDate: String; //Is actually DateTime but DRM sends values like 2020-04-04 00:00:00.000000000 with much to high precision not aligning with DateTime standard
                 keys: array of {
                     ![key]: String;
                     value: String;

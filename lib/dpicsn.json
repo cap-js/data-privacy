@@ -102,20 +102,23 @@
         "applicationName": {
           "type": "cds.String"
         },
-        "iLMObjectName": {
+        "iLMObject": {
           "type": "cds.String"
         },
         "iLMObjectArchiveResidenceRules": {
           "items": {
             "elements": {
+              "residenceRuleId": {
+                "type": "cds.String"
+              },
               "iLMObjectInstances": {
                 "items": {
                   "elements": {
                     "retentionStartDate": {
-                      "type": "cds.DateTime"
+                      "type": "cds.String"
                     },
                     "retentionEndDate": {
-                      "type": "cds.DateTime"
+                      "type": "cds.String"
                     },
                     "keys": {
                       "items": {
@@ -131,9 +134,6 @@
                     }
                   }
                 }
-              },
-              "residenceRuleId": {
-                "type": "cds.UUID"
               }
             }
           }
