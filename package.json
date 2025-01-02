@@ -1,6 +1,6 @@
 {
   "name": "@sap/cds-dpi",
-  "version": "0.4.25",
+  "version": "0.5.1",
   "description": "CDS plugin providing integration to the SAP Data Privacy Integration service for PII data retention and information retrieval based on annotations.",
   "repository": "cap-js/data-privacy",
   "author": "SAP SE (https://www.sap.com)",
@@ -18,22 +18,23 @@
   ],
   "dependencies": {
     "@sap/textbundle": "^4.2.0",
-    "dayjs": "^1.11.5"
+    "dayjs": "^1.11.5",
+    "js-yaml": "^4.1.0"
   },
   "peerDependencies": {
     "@sap/cds": ">=8.6"
   },
   "devDependencies": {
-    "express": "^4.17.1",
-    "@sap/cds-dpi": "file:.",
     "@cap-js/sqlite": "^1",
-    "@sap/cds-foss": "*",
     "@sap/cds-common-content": "*",
     "@sap/cds-dk": "^7",
-    "sqlite3": "^5.1.7",
+    "@sap/cds-dpi": "file:.",
+    "@sap/cds-foss": "*",
+    "axios": "^1",
     "eslint": "^9",
+    "express": "^4.17.1",
     "jest": "^29",
-    "axios": "^1"
+    "sqlite3": "^5.1.7"
   },
   "engines": {
     "node": "^18.16.0"

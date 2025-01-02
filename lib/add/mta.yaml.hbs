@@ -76,6 +76,8 @@ resources:
           applicationConfiguration :
             applicationName : {{appName}}-retention
             applicationTitle : {{appName}}
+            applicationDescription : {{appName}}
+            applicationBaseURL: ~{srv-api/srv-url}
 {{^hasMultitenancy}}
             enableAutoSubscription : true #Only for single tenant applications to subscribe
 {{/hasMultitenancy}}
@@ -88,3 +90,9 @@ resources:
               - fr
               - es
               - en
+          retentionConfiguration:
+            applicationConfiguration:
+              applicationType: TransactionMaster
+              simulationSupportedForArchiving: true
+              simulationSupportedForDestruction: true
+              iLMObjectDiscoveryEndPoint": /drm/iLMObjects

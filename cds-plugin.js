@@ -1,7 +1,7 @@
 const cds = require('@sap/cds');
-const dpiSrvGeneration = require('./lib/model/srv-generation')
 
 if (process.env.NODE_ENV !== 'production') {
+    const dpiSrvGeneration = require('./lib/model/srv-generation')
     //Else model is loaded in build and included in generated csn.json for deployed apps?
     //Also used during build
     //TODO: For npm run build / cds.compile via cli this somehow has to be disabled
