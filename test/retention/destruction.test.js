@@ -1,6 +1,6 @@
 const cds = require('@sap/cds')
-
 let { POST } = cds.test().in(__dirname);
+require('../utils/fast-tests');
 cds.test.data.autoReset(true);
 const DPI_Service = { username: 'dpi', password: '1234' }
 

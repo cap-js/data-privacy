@@ -18,5 +18,5 @@ function toContainMatchObject(received, expected) {
   
     return { pass, message }
 }
-  
+
 expect.extend({ toContainMatchObject })

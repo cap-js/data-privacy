@@ -9,6 +9,7 @@ const POST = async function() {
       return e.response ?? e;
   }
 }
+require('../utils/fast-tests');
 cds.test.data.autoReset(true);
 const DPI_Service = { username: 'dpi', password: '1234' }
 

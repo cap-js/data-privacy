@@ -1,5 +1,4 @@
 const cds = require('@sap/cds')
-
 let { POST: _POST } = cds.test().in(__dirname)
 const POST = async function() {
     try {
@@ -8,6 +7,7 @@ const POST = async function() {
         return e.response ?? e;
     }
 }
+require('../utils/fast-tests');
 cds.test.data.autoReset(true);
 //TODO: Test that all endpoints require authorisation
 //TODO: Test that i18n endpoints require authorisation
