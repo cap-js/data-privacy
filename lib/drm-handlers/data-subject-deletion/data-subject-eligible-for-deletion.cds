@@ -1,4 +1,4 @@
-using {Condition} from '../transactional-data-discovery';
+using {Condition} from '../data-discovery';
 using DRMService from '../../drm-service';
 
 extend service DRMService with {

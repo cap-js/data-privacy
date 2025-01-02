@@ -1,4 +1,4 @@
-using {SelectionCriteria} from '../transactional-data-discovery';
+using {SelectionCriteria} from '../data-discovery';
 using DRMService from '../../drm-service';
 
 extend service DRMService with {

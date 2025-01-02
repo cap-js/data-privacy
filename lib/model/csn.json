@@ -7,6 +7,15 @@
       "@cds.provided": true,
       "@path": "/drm"
     },
+    "DRMService.i18n-files": {
+      "kind": "entity",
+      "elements": {
+        "file": {
+          "key": true,
+          "type": "cds.String"
+        }
+      }
+    },
     "PDMService": {
       "kind": "service",
       "@requires": "PersonalDataManagerUser",
@@ -351,6 +360,9 @@
         "dataSubjectRoleName": {
           "type": "cds.String"
         }
+      },
+      "returns": {
+        "type": "cds.String"
       }
     },
     "DRMService.dataSubjectILMObjectInstanceBlocking": {
@@ -563,51 +575,6 @@
         }
       }
     },
-    "legalEntities": {
-      "kind": "entity",
-      "@readonly": true,
-      "elements": {
-        "dataSubjectRole": {
-          "key": true,
-          "type": "cds.String"
-        },
-        "value": {
-          "type": "cds.String"
-        },
-        "valueDesc": {
-          "type": "cds.String"
-        }
-      }
-    },
-    "conditionFieldValues": {
-      "kind": "entity",
-      "@readonly": true,
-      "elements": {
-        "value": {
-          "key": true,
-          "type": "cds.String"
-        },
-        "valueDesc": {
-          "type": "cds.String"
-        }
-      }
-    },
-    "DRMService.organizationAttributeValues": {
-      "kind": "entity",
-      "@readonly": true,
-      "elements": {
-        "dataSubjectRoleName": {
-          "key": true,
-          "type": "cds.String"
-        },
-        "organizationAttributeValue": {
-          "type": "cds.String"
-        },
-        "organizationAttributeValueDescription": {
-          "type": "cds.String"
-        }
-      }
-    },
     "Condition": {
       "kind": "type",
       "elements": {
@@ -640,7 +607,7 @@
         }
       }
     },
-    "legalGrounds": {
+    "iLMObjects": {
       "kind": "entity",
       "@readonly": true,
       "elements": {
@@ -650,7 +617,7 @@
         }
       }
     },
-    "DRMService.legalGrounds": {
+    "DRMService.iLMObjects": {
       "kind": "entity",
       "@readonly": true,
       "elements": {
@@ -676,6 +643,7 @@
             "=": "$now"
           },
           "@UI.HiddenFilter": true,
+          "@UI.ExcludeFromNavigationContext": true,
           "@Core.Immutable": true,
           "@title": "{i18n>CreatedAt}",
           "@readonly": true,
@@ -686,6 +654,7 @@
             "=": "$user"
           },
           "@UI.HiddenFilter": true,
+          "@UI.ExcludeFromNavigationContext": true,
           "@Core.Immutable": true,
           "@title": "{i18n>CreatedBy}",
           "@readonly": true,
@@ -701,6 +670,7 @@
             "=": "$now"
           },
           "@UI.HiddenFilter": true,
+          "@UI.ExcludeFromNavigationContext": true,
           "@title": "{i18n>ChangedAt}",
           "@readonly": true,
           "type": "cds.Timestamp"
@@ -713,28 +683,29 @@
             "=": "$user"
           },
           "@UI.HiddenFilter": true,
+          "@UI.ExcludeFromNavigationContext": true,
           "@title": "{i18n>ChangedBy}",
           "@readonly": true,
           "@description": "{i18n>UserID.Description}",
           "type": "User",
           "length": 255
         },
-        "ObjectType": {
+        "objectType": {
           "type": "cds.String"
         },
-        "ObjectKey": {
+        "objectKey": {
           "type": "cds.String"
         },
-        "ObjectAsBlob": {
+        "objectAsBlob": {
           "type": "cds.LargeString"
         },
-        "DataSubjectID": {
+        "dataSubjectID": {
           "type": "cds.String"
         },
         "dataSubjectRole": {
           "type": "cds.String"
         },
-        "EndOfRetentionDate": {
+        "endOfRetentionDate": {
           "type": "cds.DateTime"
         }
       }
@@ -1231,6 +1202,7 @@
             "=": "$now"
           },
           "@UI.HiddenFilter": true,
+          "@UI.ExcludeFromNavigationContext": true,
           "@Core.Immutable": true,
           "@title": "{i18n>CreatedAt}",
           "@readonly": true,
@@ -1241,6 +1213,7 @@
             "=": "$user"
           },
           "@UI.HiddenFilter": true,
+          "@UI.ExcludeFromNavigationContext": true,
           "@Core.Immutable": true,
           "@title": "{i18n>CreatedBy}",
           "@readonly": true,
@@ -1256,6 +1229,7 @@
             "=": "$now"
           },
           "@UI.HiddenFilter": true,
+          "@UI.ExcludeFromNavigationContext": true,
           "@title": "{i18n>ChangedAt}",
           "@readonly": true,
           "type": "cds.Timestamp"
@@ -1268,6 +1242,7 @@
             "=": "$user"
           },
           "@UI.HiddenFilter": true,
+          "@UI.ExcludeFromNavigationContext": true,
           "@title": "{i18n>ChangedBy}",
           "@readonly": true,
           "@description": "{i18n>UserID.Description}",
@@ -1295,15 +1270,6 @@
       "@description": "{i18n>UserID.Description}",
       "type": "cds.String",
       "length": 255
-    },
-    "extensible": {
-      "kind": "aspect",
-      "elements": {
-        "extensions__": {
-          "@cds.api.ignore": true,
-          "type": "cds.String"
-        }
-      }
     },
     "sap.common.Languages.texts": {
       "kind": "entity",
@@ -1452,7 +1418,7 @@
     }
   },
   "meta": {
-    "creator": "CDS Compiler v4.9.4",
+    "creator": "CDS Compiler v5.6.0",
     "flavor": "inferred"
   },
   "$version": "2.0"

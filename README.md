@@ -9,18 +9,6 @@ You no longer have do define service endpoints anc configure these services, ins
 ## How to use @sap/cds-dpi
 
 1. Add `@sap/cds-dpi` to your dependencies. Currently the package is only on the internal nexus, hence a `.npmrc` file in your project folder is required with the line `@sap:registry=https://int.repositories.cloud.sap/artifactory/api/npm/build-milestones-npm/` to specify that all `@sap` packages should be downloaded from the internal nexus.
-2. Add `@sap/cds-dpi` as a cds build task. It can be added to the cds config in the package.json file. Example:
-```
-"cds": {
-  "build": {
-    "tasks": [
-      { "use": "@sap/cds-dpi", "src": "." },
-      { "for": "nodejs" },
-      { "for": "hana" }
-    ]
-  },
-}
-```
 3. You enabled the out of box SAP DRM & PDM integration support. 🎉
 4. Ideally when building the app with `cds build` you already get a warning or info, if required annotations for the DRM are missing.
 5. If you encounter bugs or have feature proposals & ideas, please contact us / open a GitHub issue.
@@ -77,13 +65,10 @@ The build task also adds `@PersonalData` annotations to your entities, when you 
 
 ## Not yet implemented features
 - i18n for DRM and PDM. The goal is that we provide out of box the i18n endpoints for both services and mash up the file based on the exposed entities and their annotations.
-- Async deletion implementation for legal grounds. The DRM services offers and endpoint for async deletion of legal grounds, like Orders and similar transactional data, which still has to be implemented.
-- While the package already adds the DRM service as a dependency to the SaaS registry, we have not yet tested the multi tenancy support.
-- Currently for the DRM an environment variable has to be manually set. We'd like to also get rid of this step to offer a seemless usage. In addition also the first time tenant registration is not yet fully done.
+- Async deletion implementation for iLMObjects. The DRM services offers and endpoint for async deletion of iLMObjects, like Orders and similar transactional data, which still has to be implemented.
+- MTX support
 - In the current sample there is only one application, which is responsible for data subjects and transactional data. However reality is more complex. We plan to offer proper multi-service mashup support, so DRM still works, when the data subject is from a different application.
 - Testing is still in progress 
-- Allow for paths in the Communication.Contact annotation and resolve them for DRM behind the scences.
-- Ensure that same modelling concepts are possible with DRM as they are with PDM. With PDM you can currently model in any way and it should be supported. E.g. missing backlinks in children are added and @PersonalData.FieldSemantics annotations are also detected in (nested) compositon to one children. 
 
 # Troubleshooting
 

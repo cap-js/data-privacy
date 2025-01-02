@@ -4,21 +4,19 @@ namespace sap.capire.blocking;
 
 
 entity BlockingStore : cuid, managed {
-
-  ObjectType          : String;         // like SalesOrder
-  ObjectKey           : String;         // like 4711 or 0815      
+  objectType          : String;         // like SalesOrder
+  objectKey           : String;         // like 4711 or 0815      
   /*
    Single Key        >>> Plain, like 0001 or <UUID>
    Composite Key:    CLIENT = 000, KOKRS = 0001, KOSTL = 1000 -> JSON
   */
-  ObjectAsBlob        : LargeString;    // LargeBinary;    // <JSON> of real object
-  DataSubjectID       : String;         // DS of the Blob
+  objectAsBlob        : LargeString;    // LargeBinary;    // <JSON> of real object
+  dataSubjectID       : String;         // DS of the Blob
   dataSubjectRole     : String;
-  EndOfRetentionDate  : DateTime;           // Timestamp ??  
+  endOfRetentionDate  : DateTime;           // Timestamp ??  
                                         // might be dynamic - changing over time
                                         // due to legal changes   
   //  plus Resindence Reason ?
- 
 }
 
 /*

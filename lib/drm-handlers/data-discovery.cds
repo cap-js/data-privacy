@@ -16,12 +16,12 @@ type SelectionCriteria {
 
 extend service DRMService with {
   @readonly
-  entity legalGrounds {
-    key ID: UUID //Just empty facet for handler to return legal grounds
+  entity iLMObjects {
+    key ID: UUID //Just empty facet for handler to return iLMObjects
   }
 }
 
 @readonly
-entity legalGrounds {
-    key ID: UUID //Just empty facet for handler to return legal grounds
+entity iLMObjects {
+    key ID: UUID //Just empty facet for handler to return iLMObjects
 }

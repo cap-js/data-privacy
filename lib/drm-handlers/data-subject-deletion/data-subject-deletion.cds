@@ -1,4 +1,4 @@
-using {Condition} from '../transactional-data-discovery';
+using {Condition} from '../data-discovery';
 using DRMService from '../../drm-service';
 
 extend service DRMService with {
@@ -47,7 +47,7 @@ extend service DRMService with {
     action dataSubjectsDestroying(
         applicationName: String, 
         dataSubjectRoleName: String
-    );
+    ) returns String;
 
     /**
      * This endpoint has to be implemented by the application to delete (block) the transactional data instances for a given data subject and data subject role.
@@ -57,7 +57,7 @@ extend service DRMService with {
         Note -
 
         This endpoint has to be provided in the service instance configuration under-
-        retention-configs => dataSubjects => legalGrounds => dataSubjectLegalGroundDeletionEndPoint
+        retention-configs => dataSubjects => iLMObjects => dataSubjectILMObjectDeletionEndPoint
     */
     action dataSubjectILMObjectInstanceBlocking (
         applicationName: String,

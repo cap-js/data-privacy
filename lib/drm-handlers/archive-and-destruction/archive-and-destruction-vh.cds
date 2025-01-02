@@ -10,8 +10,8 @@
 
     This endpoint will have to be provided in the service instance configuration under:
 
-    retention-configs => dataSubjects => legalGrounds=>destruction => selectionCriteria => valueHelpEndPoint : for destruction
-    retention-configs => dataSubjects => legalGrounds=>selectionCriteria => valueHelpEndPoint : for archiving
+    retention-configs => dataSubjects => iLMObjects=>destruction => selectionCriteria => valueHelpEndPoint : for destruction
+    retention-configs => dataSubjects => iLMObjects=>selectionCriteria => valueHelpEndPoint : for archiving
   */
   //Requirements, that we dynamically set these endpoints up -- Done
 action archiveSelectionCriteriaValues () returns array of { //Implement later

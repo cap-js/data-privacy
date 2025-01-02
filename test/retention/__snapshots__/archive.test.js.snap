@@ -1,0 +1,37 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`archiving endOfResidence without conditions nor selection criteria 1`] = `
+{
+  "deltatoken": null,
+  "iLMObjectInstances": [
+    {
+      "keys": [
+        {
+          "key": "ID",
+          "value": "5e2f2640-6866-4dcf-8f4d-3027aa831cad",
+        },
+      ],
+      "retentionStartDate": "2020-04-04T00:00:00",
+    },
+    {
+      "keys": [
+        {
+          "key": "ID",
+          "value": "509b0641-ed5e-4ea8-a7ca-05e8027e20e3",
+        },
+      ],
+      "retentionStartDate": "2020-04-04T00:00:00",
+    },
+    {
+      "keys": [
+        {
+          "key": "ID",
+          "value": "44e718c9-ff99-47f1-8ca3-950c850777d4",
+        },
+      ],
+      "retentionStartDate": "2020-04-04T00:00:00",
+    },
+  ],
+  "iLMObjectInstancesArchiveCount": 3,
+}
+`;
