@@ -1,6 +1,6 @@
 {
   "name": "@sap/cds-dpi",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "CDS plugin providing integration to the SAP Data Privacy Integration service for PII data retention and information retrieval based on annotations.",
   "repository": "cap-js/data-privacy",
   "author": "SAP SE (https://www.sap.com)",
