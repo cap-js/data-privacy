@@ -172,7 +172,7 @@ describe('data subject deletion', () => {
           iLMObjectName: 'DRMService.Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
-          maxDeletionDate: dayjs().add(1, 'year').format('YYYY-MM-Dd')
+          maxDeletionDate: dayjs().add(1, 'year').format('YYYY-MM-DD')
         }, { auth: DPI_Service });
         const blockingBefore = await SELECT.from(BlockingStore).where({objectKey: '5e2f2640-6866-4dcf-8f4d-3027aa831cad'});
         expect(blockingBefore.length).toEqual(1);
