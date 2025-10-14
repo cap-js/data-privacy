@@ -1,0 +1,14 @@
+{
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.PersonalDataManagerUser",
+      "description": "PersonalDataManagerUser"
+    },
+    {
+      "name": "$XSAPPNAME.DataRetentionManagerUser",
+      "description": "DataRetentionManagerUser"
+    }
+  ],
+  "attributes": [],
+  "role-templates": []
+}
