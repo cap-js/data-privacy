@@ -57,7 +57,7 @@ You can read more about the concept in the backlog item: https://github.tools.sa
 
 ### Configuration
 - Currently you cannot disable the automatic addition of the services to your mta.yaml file.
-- If you'd like to override the default implementation, you can just define your own `PDMService` or `DRMService` and the plugin will only add the features, which you did not implement.
+- If you'd like to override the default implementation, you can just define your own `DPIInformationService` or `DPIRetentionService` and the plugin will only add the features, which you did not implement.
 - Views / Projections / Selections are currently not considered when generating DRM and PDM services. Only "table" entities, which are annotated, are considered. If you have a use case, where this is not suitable, please reach out with an example! Thanks 😊
 
 ### Convenience feature for semantically same annotations

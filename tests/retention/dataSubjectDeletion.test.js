@@ -19,7 +19,7 @@ describe('data subject deletion', () => {
       test('dataSubjectEndOfBusiness returns true if all objects have reached end of business', async () => {
         const {status, data} = await POST('/drm/dataSubjectEndOfBusiness', {
           applicationName: 'ABC_TEST', 
-          iLMObjectName: 'DRMService.Orders', 
+          iLMObjectName: 'DPIRetentionService.Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'
         }, { auth: DPI_Service });
@@ -36,7 +36,7 @@ describe('data subject deletion', () => {
         await UPDATE.entity(Orders).set({endOfWarrantyDate: dayjs().add(1, 'year').format('YYYY-MM-DD')})
         const {status, data} = await POST('/drm/dataSubjectEndOfBusiness', {
           applicationName: 'ABC_TEST', 
-          iLMObjectName: 'DRMService.Orders', 
+          iLMObjectName: 'DPIRetentionService.Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'
         }, { auth: DPI_Service });
@@ -51,7 +51,7 @@ describe('data subject deletion', () => {
       test('dataSubjectOrganizationAttributeValues returns attribute values', async () => {
         const {status, data} = await POST('/drm/dataSubjectOrganizationAttributeValues', {
           applicationName: 'ABC_TEST', 
-          iLMObjectName: 'DRMService.Orders', 
+          iLMObjectName: 'DPIRetentionService.Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
           organizationAttributeName: 'legalEntity_title'
@@ -67,7 +67,7 @@ describe('data subject deletion', () => {
       test('dataSubjectOrganizationAttributeValues returns error if org attribute does not exist', async () => {
         const {status, data} = await POST('/drm/dataSubjectOrganizationAttributeValues', {
           applicationName: 'ABC_TEST', 
-          iLMObjectName: 'DRMService.Orders', 
+          iLMObjectName: 'DPIRetentionService.Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
           organizationAttributeName: 'legalEntity_name'
@@ -80,7 +80,7 @@ describe('data subject deletion', () => {
       test('dataSubjectOrganizationAttributeValues returns error if org attribute is not annotated as LegalEntityID', async () => {
         const {status, data} = await POST('/drm/dataSubjectOrganizationAttributeValues', {
           applicationName: 'ABC_TEST', 
-          iLMObjectName: 'DRMService.Orders', 
+          iLMObjectName: 'DPIRetentionService.Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
           organizationAttributeName: 'ID'
@@ -93,7 +93,7 @@ describe('data subject deletion', () => {
       test('dataSubjectLatestRetentionStartDates', async () => {
         const {status, data} = await POST('/drm/dataSubjectLatestRetentionStartDates', {
           applicationName: 'ABC_TEST', 
-          iLMObjectName: 'DRMService.Orders', 
+          iLMObjectName: 'DPIRetentionService.Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
           organizationAttributeName: 'legalEntity_title',
@@ -117,7 +117,7 @@ describe('data subject deletion', () => {
         const {BlockingStore} = cds.entities('sap.capire.blocking');
         const {status, data} = await POST('/drm/dataSubjectILMObjectInstanceBlocking', {
           applicationName: 'ABC_TEST', 
-          iLMObjectName: 'DRMService.Orders', 
+          iLMObjectName: 'DPIRetentionService.Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
           maxDeletionDate: '2020-04-04T22:00:00'
@@ -134,7 +134,7 @@ describe('data subject deletion', () => {
         await DELETE.from(Orders);
         const {status} = await POST('/drm/dataSubjectILMObjectInstanceBlocking', {
           applicationName: 'ABC_TEST', 
-          iLMObjectName: 'DRMService.Orders', 
+          iLMObjectName: 'DPIRetentionService.Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
           maxDeletionDate: '2020-04-03T22:00:00'
@@ -147,7 +147,7 @@ describe('data subject deletion', () => {
         const {BlockingStore} = cds.entities('sap.capire.blocking');
         await POST('/drm/dataSubjectILMObjectInstanceBlocking', {
           applicationName: 'ABC_TEST', 
-          iLMObjectName: 'DRMService.Orders', 
+          iLMObjectName: 'DPIRetentionService.Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
           maxDeletionDate: '2020-04-04T22:00:00'
@@ -157,7 +157,7 @@ describe('data subject deletion', () => {
 
         await POST('/drm/dataSubjectsILMObjectInstancesDestroying', {
           applicationName: 'ABC_TEST', 
-          iLMObjectName: 'DRMService.Orders', 
+          iLMObjectName: 'DPIRetentionService.Orders', 
           dataSubjectRoleName: 'Customer', 
         }, { auth: DPI_Service });
 
@@ -169,7 +169,7 @@ describe('data subject deletion', () => {
         const {BlockingStore} = cds.entities('sap.capire.blocking');
         await POST('/drm/dataSubjectILMObjectInstanceBlocking', {
           applicationName: 'ABC_TEST', 
-          iLMObjectName: 'DRMService.Orders', 
+          iLMObjectName: 'DPIRetentionService.Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
           maxDeletionDate: dayjs().add(1, 'year').format('YYYY-MM-DD')
@@ -179,7 +179,7 @@ describe('data subject deletion', () => {
 
         await POST('/drm/dataSubjectsILMObjectInstancesDestroying', {
           applicationName: 'ABC_TEST', 
-          iLMObjectName: 'DRMService.Orders', 
+          iLMObjectName: 'DPIRetentionService.Orders', 
           dataSubjectRoleName: 'Customer', 
         }, { auth: DPI_Service });
 
@@ -277,7 +277,7 @@ describe('data subject deletion', () => {
           createdBy: "dpi",
           modifiedAt: "2020-01-02T11:24:58.252Z",
           modifiedBy: "dpi",
-          objectType: "DRMService.Customers",
+          objectType: "DPIRetentionService.Customers",
           objectKey: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
           objectAsBlob: "{\"ID\":\"8e2f2640-6866-4dcf-8f4d-3027aa831cad\",\"createdAt\":\"2019-01-31T00:00:00.000Z\",\"createdBy\":\"admin@business.com\",\"modifiedAt\":\"2019-04-04T00:00:00.000Z\",\"modifiedBy\":\"admin@business.com\",\"email\":\"john.doe@test.com\",\"firstName\":\"John\",\"lastName\":\"Doe\",\"gender\":null,\"dateOfBirth\":\"1970-01-01\",\"legalEntity_title\":\"SAP Ltd\",\"postalAddress_endOfCustomer\":null,\"postalAddress\":{\"ID\":\"1e2f2640-6866-4dcf-8f4d-3027aa831cad\",\"createdAt\":\"2019-01-31T00:00:00.000Z\",\"createdBy\":\"admin@business.com\",\"modifiedAt\":\"2019-04-04T00:00:00.000Z\",\"modifiedBy\":\"admin@business.com\",\"Customer_ID\":\"8e2f2640-6866-4dcf-8f4d-3027aa831cad\",\"street\":\"Hauptstrasse 11\",\"endOfCustomer\":null,\"town\":\"Berlin\",\"country_code\":\"DE\",\"someOtherField\":\"Eine Bemerkung\"},\"billingData\":{\"ID\":\"1e2f2640-6866-4dcf-8f4d-3027aa831cad\",\"createdAt\":\"2019-01-31T00:00:00.000Z\",\"createdBy\":\"admin@business.com\",\"modifiedAt\":\"2019-04-04T00:00:00.000Z\",\"modifiedBy\":\"admin@business.com\",\"Customer_ID\":\"8e2f2640-6866-4dcf-8f4d-3027aa831cad\",\"creditCardNo\":\"2222-1111-6666-7777\"}}",
           dataSubjectID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
@@ -302,7 +302,7 @@ describe('data subject deletion', () => {
     test('dataSubjectsEndOfResidence returns eligible data subjects for deletion', async () => {
       const {status, data} = await POST('/drm/dataSubjectsEndOfResidence', {
         applicationName: 'ABC_TEST', 
-        iLMObjectName: 'DRMService.Orders',
+        iLMObjectName: 'DPIRetentionService.Orders',
         dataSubjectRoleName: 'Customer', 
         referenceDates: [
           {
@@ -333,7 +333,7 @@ describe('data subject deletion', () => {
     test('dataSubjectsEndOfResidence properly considers org attribute', async () => {
       const {status, data} = await POST('/drm/dataSubjectsEndOfResidence', {
         applicationName: 'ABC_TEST', 
-        iLMObjectName: 'DRMService.Orders',
+        iLMObjectName: 'DPIRetentionService.Orders',
         dataSubjectRoleName: 'Customer', 
         referenceDates: [
           {
@@ -360,7 +360,7 @@ describe('data subject deletion', () => {
     test('dataSubjectsEndOfResidenceConfirmation confirms data subjects end of residence', async () => {
       const {status, data} = await POST('/drm/dataSubjectsEndOfResidenceConfirmation', {
         applicationName: 'ABC_TEST', 
-        iLMObjectName: 'DRMService.Orders', 
+        iLMObjectName: 'DPIRetentionService.Orders', 
         dataSubjectRoleName: 'Customer', 
         referenceDates: [
           {
@@ -390,7 +390,7 @@ describe('data subject deletion', () => {
     test('dataSubjectsEndOfResidence properly considers org attribute', async () => {
       const {status, data} = await POST('/drm/dataSubjectsEndOfResidenceConfirmation', {
         applicationName: 'ABC_TEST', 
-        iLMObjectName: 'DRMService.Orders',
+        iLMObjectName: 'DPIRetentionService.Orders',
         dataSubjectRoleName: 'Customer', 
         referenceDates: [
           {
@@ -417,7 +417,7 @@ describe('data subject deletion', () => {
     test('dataSubjectsEndOfResidenceConfirmation with empty reference dates still works', async () => {
       const {status, data} = await POST('/drm/dataSubjectsEndOfResidenceConfirmation', {
         applicationName: 'ABC_TEST', 
-        iLMObjectName: 'DRMService.Orders', 
+        iLMObjectName: 'DPIRetentionService.Orders', 
         dataSubjectRoleName: 'Customer', 
         referenceDates: [],
         dataSubjects: [

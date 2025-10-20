@@ -13,7 +13,7 @@ describe('archiving', () => {
     const blockingBefore = await SELECT.from(BlockingStore);
     const ordersBefore = await SELECT.from(Orders);
     const {status, data} = await POST('/drm/endOfResidence', {
-      iLMObjectName: 'DRMService.Orders',
+      iLMObjectName: 'DPIRetentionService.Orders',
       selectionCriteria: [], 
       retentionStartDate: '2020-06-06', 
       referenceDateName: 'endOfWarrantyDate', 
@@ -34,7 +34,7 @@ describe('archiving', () => {
     const {Orders} = cds.entities('sap.capire.bookshop');
     const ordersBefore = await SELECT.from(Orders);
     const {status, data} = await POST('/drm/archive', {
-      iLMObjectName: 'DRMService.Orders',
+      iLMObjectName: 'DPIRetentionService.Orders',
       referenceDateName: 'endOfWarrantyDate',
       iLMObjectArchiveResidenceRules: [{
         residenceRuleId: 'c355122e-5090-4e31-acf9-fe489d114581',

@@ -33,7 +33,7 @@ describe('iLMObject discovery', () => {
         expect(status).toEqual(200);
         for (const iLMObject of data) {
             for (const condition of iLMObject.conditions) {
-                expect(cds.model.definitions[`DRMService.${iLMObject.iLMObjectName}`].elements[condition.conditionFieldName]['@PersonalData.FieldSemantics']).toBeFalsy();
+                expect(cds.model.definitions[`DPIRetentionService.${iLMObject.iLMObjectName}`].elements[condition.conditionFieldName]['@PersonalData.FieldSemantics']).toBeFalsy();
                 const {status, data} = await GET(condition.conditionFieldValueHelpEndPoint, { auth: DPI_Service })
                 expect(status).toEqual(200);
                 expect(data.length).toBeGreaterThan(0)
@@ -47,7 +47,7 @@ describe('iLMObject discovery', () => {
 
     test('test org attribute endpoints', async () => {
         const { getDPIentities } = require('../../lib/model/get-dpi-entities');
-        const DRMSRV = await cds.connect.to('DRMService')
+        const DRMSRV = await cds.connect.to('DPIRetentionService')
         const {organizationAttributes} = getDPIentities(cds.model, DRMSRV);
         for (const attribute of organizationAttributes) {
             const {status, data} = await GET(attribute.organizationAttributeValueHelpEndPoint, { auth: DPI_Service })

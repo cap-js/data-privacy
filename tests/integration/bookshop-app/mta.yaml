@@ -148,7 +148,7 @@ resources:
               - organizationAttributeName: legalEntity_title
                 organizationAttributeDescription: Legal entity
                 organizationAttributeBaseURL: ~{srv-api/srv-url}
-                organizationAttributeValueHelpEndPoint: /drm/valueHelp_orgAttribute_sap_capire_bookshop_LegalEntities
+                organizationAttributeValueHelpEndPoint: /drm/valueHelp_orgAttribute_DPIRetentionService_LegalEntities
   - name: gdpr-auditlog
     type: org.cloudfoundry.managed-service
     parameters:

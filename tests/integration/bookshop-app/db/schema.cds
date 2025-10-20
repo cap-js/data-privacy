@@ -138,22 +138,22 @@ entity LegalEntities : managed {
 
 annotate Payments with {
   ID @title : 'ID';
-  Customer @Common : {
-    ValueList : {
-        CollectionPath : 'Customers',
-        Parameters : [
-            {
-                $Type : 'Common.ValueListParameterInOut',
-                LocalDataProperty : Customer_ID,
-                ValueListProperty : 'ID',
-            },
-            {
-                $Type : 'Common.ValueListParameterDisplayOnly',
-                ValueListProperty : 'firstName',
-            },
-        ],
-    },
-  }
+  // Customer @Common : {
+  //   ValueList : {
+  //       CollectionPath : 'Customers',
+  //       Parameters : [
+  //           {
+  //               $Type : 'Common.ValueListParameterInOut',
+  //               LocalDataProperty : Customer_ID,
+  //               ValueListProperty : 'ID',
+  //           },
+  //           {
+  //               $Type : 'Common.ValueListParameterDisplayOnly',
+  //               ValueListProperty : 'firstName',
+  //           },
+  //       ],
+  //   },
+  // }
 }
 
 annotate Orders with {

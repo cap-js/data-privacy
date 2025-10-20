@@ -7,7 +7,7 @@ const DPI_Service = { username: 'dpi', password: '1234' }
 describe('destruction', () => {
     beforeEach(async () => {
       await POST('/drm/archive', {
-        iLMObjectName: 'DRMService.Orders',
+        iLMObjectName: 'DPIRetentionService.Orders',
         referenceDateName: 'endOfWarrantyDate',
         iLMObjectArchiveResidenceRules: [{
           residenceRuleId: 'c355122e-5090-4e31-acf9-fe489d114581',
@@ -28,7 +28,7 @@ describe('destruction', () => {
       const blockingBefore = await SELECT.from(BlockingStore);
       const {status, data} = await POST('/drm/destruction', {
         applicationName: 'ABC_TEST', 
-        iLMObjectName: 'DRMService.Orders',
+        iLMObjectName: 'DPIRetentionService.Orders',
         runId: '38843682-4f35-4087-8618-19e5a9450d36', 
         selectionCriteria : []
       }, { auth: DPI_Service });
@@ -47,7 +47,7 @@ describe('destruction', () => {
     const blockingBefore = await SELECT.from(BlockingStore);
     const {status, data} = await POST('/drm/simulateDestruction', {
       applicationName: 'ABC_TEST', 
-      iLMObjectName: 'DRMService.Orders',
+      iLMObjectName: 'DPIRetentionService.Orders',
       runId: '38843682-4f35-4087-8618-19e5a9450d36', 
       selectionCriteria : []
     }, { auth: DPI_Service });

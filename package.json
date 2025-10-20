@@ -22,7 +22,8 @@
     "js-yaml": "^4.1.0"
   },
   "peerDependencies": {
-    "@sap/cds": ">=8.6"
+    "@sap/cds": ">=8.6",
+    "@cap-js/audit-logging": "^1.1.0"
   },
   "devDependencies": {
     "@cap-js/sqlite": "^1",
@@ -40,10 +41,28 @@
     "node": "^18.16.0"
   },
   "scripts": {
-    "build": "cds compile lib/ > ./lib/model/csn.json",
     "lint": "npx eslint .",
     "test": "npm run test-new-db && npm run test-old-db",
     "test-new-db": "CDS_ENV='better-sqlite' npx jest --silent",
     "test-old-db": "CDS_ENV='legacy-sqlite' npx jest --silent"
+  },
+  "workspaces": [
+    "tests/integration/bookshop-app"
+  ],
+  "cds": {
+    "requires": {
+      "data-privacy-retention": {
+        "kind": "data-privacy-retention-TableHeader"
+      },
+      "data-privacy-information": {
+        "model": "@sap/cds-dpi/srv/DPIInformation"
+      },
+      "kinds": {
+        "data-privacy-retention-TableHeader": {
+          "impl": "@sap/cds-dpi/srv/TableHeaderBlocking",
+          "model": "@sap/cds-dpi/srv/TableHeaderBlocking"
+        }
+      }
+    }
   }
 }

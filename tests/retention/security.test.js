@@ -16,7 +16,7 @@ describe('DRM endpoints cannot be accessed with an unauthorized user', () => {
     const DPI_Service = { username: 'abc', password: '1234' }
     test('endOfResidence', async () => {
         const {status} = await POST('/drm/endOfResidence', {
-            iLMObjectName: 'DRMService.Orders',
+            iLMObjectName: 'DPIRetentionService.Orders',
             selectionCriteria: [], 
             retentionStartDate: '2020-06-06', 
             referenceDateName: 'endOfWarrantyDate', 
@@ -27,7 +27,7 @@ describe('DRM endpoints cannot be accessed with an unauthorized user', () => {
 
     test('archive', async () => {
         const {status} = await POST('/drm/archive', {
-            iLMObjectName: 'DRMService.Orders',
+            iLMObjectName: 'DPIRetentionService.Orders',
             referenceDateName: 'endOfWarrantyDate',
             iLMObjectArchiveResidenceRules: [{
               residenceRuleId: 'c355122e-5090-4e31-acf9-fe489d114581',

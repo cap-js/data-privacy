@@ -12,6 +12,7 @@ annotate bookshop.Customers with @(
   email        @PersonalData.IsPotentiallyPersonal;
   firstName    @PersonalData.IsPotentiallyPersonal;
   lastName     @PersonalData.IsPotentiallyPersonal;
+//  creditCardNo @PersonalData.IsPotentiallySensitive;
   dateOfBirth  @PersonalData.IsPotentiallyPersonal;
   legalEntity  @PersonalData.FieldSemantics : 'LegalEntityID';
 }
