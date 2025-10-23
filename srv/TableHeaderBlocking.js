@@ -7,6 +7,7 @@ const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc')
 dayjs.extend(utc)
 const LOG = cds.log('data-privacy-retention')
+const { path } = cds.utils;
 
 module.exports = class TableHeaderBlockingService extends DPIRetentionService {
   async init() {
@@ -14,6 +15,12 @@ module.exports = class TableHeaderBlockingService extends DPIRetentionService {
 
     this.on('dataSubjectEndOfBusiness', async req => {
       const { applicationName, iLMObjectName: iLMObject, dataSubjectRoleName: dataSubjectRole, dataSubjectId: dataSubjectID } = req.data
+      //validate application name
+      let package_json = path.join(cds.root, 'package.json')
+      let { appName, description } = require(package_json)
+      if (applicationName !== appName) {
+        return new ResponseMesssage(400, { message: 'Application name does not match the service application name.' });
+      }
       LOG.info(`dataSubjectEndOfBusiness request for role ${dataSubjectRole} and ID ${dataSubjectID} and iLMObject ${iLMObject} and app ${applicationName}.`)
       const iLMObjectEntityDef = _getEntityForILMObject(iLMObject, this)
       const where = _buildWhereClauseForDS(iLMObjectEntityDef, dataSubjectID, dataSubjectRole)
@@ -48,6 +55,12 @@ module.exports = class TableHeaderBlockingService extends DPIRetentionService {
 
     this.on('dataSubjectOrganizationAttributeValues', async req => {
       const { applicationName, organizationAttributeName, iLMObjectName: iLMObject, dataSubjectRoleName: dataSubjectRole, dataSubjectId: dataSubjectID } = req.data
+      //validate application name
+      let package_json = path.join(cds.root, 'package.json')
+      let { appName, description } = require(package_json)
+      if (applicationName !== appName) {
+        return new ResponseMesssage(400, { message: 'Application name does not match the service application name.' });
+      }
       LOG.info(`dataSubjectOrganizationAttributeValues request for the iLMObject ${iLMObject}, the data subject role ${dataSubjectRole} with the data subject ID ${dataSubjectID} and app ${applicationName} and org attribute ${organizationAttributeName}`)
       const iLMObjectEntityDef = _getEntityForILMObject(iLMObject, this)
       const where = _buildWhereClauseForDS(iLMObjectEntityDef, dataSubjectID, dataSubjectRole)
@@ -123,6 +136,14 @@ module.exports = class TableHeaderBlockingService extends DPIRetentionService {
     this.on('dataSubjectILMObjectInstanceBlocking', async req => {
       const { applicationName, dataSubjectId: dataSubjectID, dataSubjectRoleName: dataSubjectRole, maxDeletionDate,
         iLMObjectName } = req.data
+
+      //validate application name
+      let package_json = path.join(cds.root, 'package.json')
+      let { appName, description } = require(package_json)
+      if (applicationName !== appName) {
+        return new ResponseMesssage(400, { message: 'Application name does not match the service application name.' });
+      }
+
       LOG.info(`dataSubjectILMObjectInstanceBlocking request for the iLMObject ${iLMObjectName}, the data subject role ${dataSubjectRole}`,
         ` with the data subject ID ${dataSubjectID}.`,
         `App is ${applicationName}`,
@@ -166,6 +187,13 @@ module.exports = class TableHeaderBlockingService extends DPIRetentionService {
 
     this.on(['dataSubjectsILMObjectInstancesDestroying'], async req => {
       const { applicationName, dataSubjectRoleName: dataSubjectRole, iLMObjectName: iLMObject } = req.data
+      //validate application name
+      let package_json = path.join(cds.root, 'package.json')
+      let { appName, description } = require(package_json)
+      if (applicationName !== appName) {
+        return new ResponseMesssage(400, { message: 'Application name does not match the service application name.' });
+      }
+
       LOG.info(`Destroy iLMObjects request for role ${dataSubjectRole} and iLMObject ${iLMObject} where end of retention is reached for app ${applicationName}.`)
       const iLMObjectEntityDef = _getEntityForILMObject(iLMObject, this)
       if (!iLMObjectEntityDef) {
@@ -186,6 +214,14 @@ module.exports = class TableHeaderBlockingService extends DPIRetentionService {
 
     this.on('dataSubjectBlocking', async req => {
       const { applicationName, dataSubjectRoleName: dataSubjectRole, dataSubjectId: dataSubjectID, maxDeletionDate } = req.data
+
+
+      let package_json = path.join(cds.root, 'package.json')
+      let { appName, description } = require(package_json)
+      if (applicationName !== appName) {
+        return new ResponseMesssage(400, { message: 'Application name does not match the service application name.' });
+      }
+
       LOG.info(`Delete data subject request for role ${dataSubjectRole}, ID ${dataSubjectID} and application group ${applicationName} with end of retention ${maxDeletionDate}.`)
       const dsEntities = _getDataSubjectEntities(dataSubjectRole, this); //Ensures that data subject details are also retrived
       const model = cds.context?.model ?? cds.model;
@@ -230,6 +266,12 @@ module.exports = class TableHeaderBlockingService extends DPIRetentionService {
 
     this.on('dataSubjectsDestroying', async req => {
       const { applicationName, dataSubjectRoleName: dataSubjectRole } = req.data
+      //validate application name
+      let package_json = path.join(cds.root, 'package.json')
+      let { appName, description } = require(package_json)
+      if (applicationName !== appName) {
+        return new ResponseMesssage(400, { message: 'Application name does not match the service application name.' });
+      }
       LOG.info(`Destroy data subjects request for role ${dataSubjectRole} and application group ${applicationName} where end of retention is reached.`)
       //Delete only possible if all iLMObjects also reached end of blocking
 
@@ -285,6 +327,12 @@ module.exports = class TableHeaderBlockingService extends DPIRetentionService {
      */
     this.on(['dataSubjectsEndOfResidence'], async req => {
       const { applicationName, iLMObjectName, dataSubjectRoleName, referenceDates } = req.data
+      //validate application name
+      let package_json = path.join(cds.root, 'package.json')
+      let { appName, description } = require(package_json)
+      if (applicationName !== appName) {
+        return new ResponseMesssage(400, { message: 'Application name does not match the service application name.' });
+      }
 
       LOG.info(`Requested dataSubjectsEndOfResidence for ${dataSubjectRoleName} and iLM object ${iLMObjectName} and app ${applicationName}`,
         `Reference dates:`, JSON.stringify(referenceDates))
@@ -323,6 +371,12 @@ module.exports = class TableHeaderBlockingService extends DPIRetentionService {
 
     this.on(['dataSubjectsEndOfResidenceConfirmation'], async req => {
       const { applicationName, iLMObjectName, dataSubjectRoleName, dataSubjects = [], referenceDates } = req.data
+      //validate application name
+      let package_json = path.join(cds.root, 'package.json')
+      let { appName, description } = require(package_json)
+      if (applicationName !== appName) {
+        return new ResponseMesssage(400, { message: 'Application name does not match the service application name.' });
+      }
       LOG.info(`Requested end of residence data subject confirmation for ${dataSubjectRoleName} and iLM object ${iLMObjectName} and app ${applicationName}`,
         `Reference dates:`, JSON.stringify(referenceDates))
       LOG.debug(`dataSubjectsEndOfResidenceConfirmation, data subject IDs`, dataSubjects)
@@ -355,7 +409,12 @@ module.exports = class TableHeaderBlockingService extends DPIRetentionService {
 
     this.on('dataSubjectInformation', async req => {
       const { applicationName, dataSubjectRoleName, dataSubjects } = req.data
-
+      //validate application name
+      let package_json = path.join(cds.root, 'package.json')
+      let { appName, description } = require(package_json)
+      if (applicationName !== appName) {
+        return new ResponseMesssage(400, { message: 'Application name does not match the service application name.' });
+      }
       LOG.info(`Requested data subject information for ${dataSubjectRoleName} and application ${applicationName}`)
       LOG.debug(`Data subject info, data subject IDs`, dataSubjects.map(d => d.dataSubjectId))
 
