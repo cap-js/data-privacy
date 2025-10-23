@@ -1,14 +1,9 @@
 const cds = require('@sap/cds');
+const enhanceModel = require('./lib/model/enhanceModel');
 
-if (process.env.NODE_ENV !== 'production') {
-    const dpiSrvGeneration = require('./lib/model/srv-generation')
-    //Else model is loaded in build and included in generated csn.json for deployed apps?
-    //Also used during build
-    //TODO: For npm run build / cds.compile via cli this somehow has to be disabled
-    cds.on('loaded', m => {
-        dpiSrvGeneration(m);
-    });
-}
+cds.on('compile.for.runtime', csn => { enhanceModel(csn) })
+//cds.on('compile.to.edmx', csn => { enhanceModel(csn) })
+cds.on('compile.to.dbx', csn => { enhanceModel(csn) })
 
 cds.add?.register?.('data-privacy', require('./lib/add'))
 cds.build?.register?.('data-privacy', require('./lib/build'))

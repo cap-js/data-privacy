@@ -49,8 +49,7 @@ module.exports = class TableHeaderBlockingService extends DPIRetentionService {
         dataSubjectNotExpiredReason: !expired ? await getNotExpiredReason(result.endOfBusiness) : ''
       }
       LOG.info(`dataSubjectEndOfBusiness outgoing response`, response)
-      return response
-
+      return response;
     })
 
     this.on('dataSubjectOrganizationAttributeValues', async req => {
