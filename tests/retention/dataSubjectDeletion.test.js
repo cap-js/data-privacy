@@ -1,5 +1,4 @@
 const cds = require('@sap/cds');
-const dayjs = require('dayjs');
 
 let { POST: _POST } = cds.test().in(__dirname)
 const POST = async function() {
@@ -33,7 +32,9 @@ describe('data subject deletion', () => {
 
       test('dataSubjectEndOfBusiness returns false if >0 objects have not reached end of business', async () => {
         const {Orders} = cds.entities('sap.capire.bookshop')
-        await UPDATE.entity(Orders).set({endOfWarrantyDate: dayjs().add(1, 'year').format('YYYY-MM-DD')})
+        const endOfWarrantyDate = new Date()
+        endOfWarrantyDate.setFullYear(endOfWarrantyDate.getFullYear() + 1)
+        await UPDATE.entity(Orders).set({endOfWarrantyDate: endOfWarrantyDate.toISOString()})
         const {status, data} = await POST('/drm/dataSubjectEndOfBusiness', {
           applicationName: 'ABC_TEST', 
           iLMObjectName: 'DPIRetentionService.Orders', 
@@ -77,7 +78,7 @@ describe('data subject deletion', () => {
         expect(data.error.code).toEqual('ORG_ATTRIBUTE_NOT_EXISTING');
       })
 
-      test('dataSubjectOrganizationAttributeValues returns error if org attribute is not annotated as LegalEntityID', async () => {
+      test('dataSubjectOrganizationAttributeValues returns error if org attribute is not annotated as DataControllerID', async () => {
         const {status, data} = await POST('/drm/dataSubjectOrganizationAttributeValues', {
           applicationName: 'ABC_TEST', 
           iLMObjectName: 'DPIRetentionService.Orders', 
@@ -167,12 +168,14 @@ describe('data subject deletion', () => {
 
       test('dataSubjectsILMObjectInstancesDestroying not destroyed if deletion date in future', async () => {
         const {BlockingStore} = cds.entities('sap.capire.blocking');
+        const maxDeletionDate = new Date()
+        maxDeletionDate.setFullYear(maxDeletionDate.getFullYear() + 1)
         await POST('/drm/dataSubjectILMObjectInstanceBlocking', {
           applicationName: 'ABC_TEST', 
           iLMObjectName: 'DPIRetentionService.Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
-          maxDeletionDate: dayjs().add(1, 'year').format('YYYY-MM-DD')
+          maxDeletionDate: maxDeletionDate.toISOString()
         }, { auth: DPI_Service });
         const blockingBefore = await SELECT.from(BlockingStore).where({objectKey: '5e2f2640-6866-4dcf-8f4d-3027aa831cad'});
         expect(blockingBefore.length).toEqual(1);
@@ -206,11 +209,13 @@ describe('data subject deletion', () => {
         await DELETE.from(Orders).where({Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'})
         await DELETE.from(Marketing).where({Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'})
         const {BlockingStore} = cds.entities('sap.capire.blocking');
+        const maxDeletionDate = new Date()
+        maxDeletionDate.setFullYear(maxDeletionDate.getFullYear() + 1)
         const {status} = await POST('/drm/dataSubjectBlocking', {
           applicationName: 'ABC_TEST', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
-          maxDeletionDate: dayjs().add(1, 'year').format('YYYY-MM-DD')
+          maxDeletionDate: maxDeletionDate.toISOString()
         }, { auth: DPI_Service });
     
         expect(status).toEqual(204);      
@@ -244,11 +249,13 @@ describe('data subject deletion', () => {
         await DELETE.from(Orders).where({Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'})
         await DELETE.from(Marketing).where({Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'})
         const {BlockingStore} = cds.entities('sap.capire.blocking');
+        const maxDeletionDate = new Date()
+        maxDeletionDate.setFullYear(maxDeletionDate.getFullYear() + 1)
         await POST('/drm/dataSubjectBlocking', {
           applicationName: 'ABC_TEST', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
-          maxDeletionDate: dayjs().add(1, 'year').format('YYYY-MM-DD')
+          maxDeletionDate: maxDeletionDate.toISOString()
         }, { auth: DPI_Service });
     
         const blockingBefore = await SELECT.from(BlockingStore).where({objectKey: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'});

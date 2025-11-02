@@ -28,8 +28,8 @@ You can use the repository https://github.tools.sap/cap/drm-test to quickly test
     - If you define "@Communication.Contact.fn" it is used instead
     - Only "@Communication.Contact.n.surname" is expected
     - Email of type #preferred is preferred, else #home is used and if both types are not given, the first one is used. 
-3. Your transactional entities, like Orders, require three property annotations: `@PersonalData.FieldSemantics: 'EndOfBusinessDate' | 'LegalEntityID' | 'DataSubjectID'`
-4. Your LegalEntity, which is referred to by an association annotated with `@PersonalData.FieldSemantics: 'LegalEntityID'` requires the `@UI.HeaderInfo` annotation with the properties "TypeName", "Title", and "Description". Title and Descripton are the values we serve to DRM, hence the requirement.
+3. Your transactional entities, like Orders, require three property annotations: `@PersonalData.FieldSemantics: 'EndOfBusinessDate' | 'DataControllerID' | 'DataSubjectID'`
+4. Your LegalEntity, which is referred to by an association annotated with `@PersonalData.FieldSemantics: 'DataControllerID'` requires the `@UI.HeaderInfo` annotation with the properties "TypeName", "Title", and "Description". Title and Descripton are the values we serve to DRM, hence the requirement.
 
 [Optional]
 

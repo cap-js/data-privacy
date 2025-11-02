@@ -14,7 +14,7 @@ annotate bookshop.Customers with @(
   lastName     @PersonalData.IsPotentiallyPersonal;
 //  creditCardNo @PersonalData.IsPotentiallySensitive;
   dateOfBirth  @PersonalData.IsPotentiallyPersonal;
-  legalEntity  @PersonalData.FieldSemantics : 'LegalEntityID';
+  legalEntity  @PersonalData.FieldSemantics : 'DataControllerID';
 }
 
 annotate bookshop.CustomerBillingData with @PersonalData : {
@@ -44,7 +44,7 @@ annotate bookshop.Orders with @(
 {
   Customer          @PersonalData.FieldSemantics : 'DataSubjectID';
   endOfWarrantyDate @PersonalData.FieldSemantics : 'EndOfBusinessDate';
-  legalEntity       @PersonalData.FieldSemantics : 'LegalEntityID';
+  legalEntity       @PersonalData.FieldSemantics : 'DataControllerID';
 }
 
 annotate bookshop.OrderItems with {
@@ -57,7 +57,7 @@ annotate bookshop.Marketing with @(
 ) {
   Customer      @PersonalData.FieldSemantics : 'DataSubjectID';
   marketingDate @PersonalData.FieldSemantics : 'EndOfBusinessDate';
-  legalEntity   @PersonalData.FieldSemantics : 'LegalEntityID';
+  legalEntity   @PersonalData.FieldSemantics : 'DataControllerID';
 };
 
 // UI annotation for DRM

@@ -18,36 +18,28 @@
   ],
   "dependencies": {
     "@sap/textbundle": "^4.2.0",
-    "dayjs": "^1.11.5",
     "js-yaml": "^4.1.0"
   },
   "peerDependencies": {
-    "@sap/cds": ">=8.6",
+    "@sap/cds": ">=9",
     "@cap-js/audit-logging": "^1.1.0"
   },
   "devDependencies": {
-    "@cap-js/sqlite": "^1",
+    "@cap-js/sqlite": "^2",
     "@sap/cds-common-content": "*",
-    "@sap/cds-dk": "^7",
-    "@sap/cds-dpi": "file:.",
-    "@sap/cds-foss": "*",
-    "axios": "^1",
+    "@sap/cds-dk": "^9",
     "eslint": "^9",
-    "express": "^4.17.1",
-    "jest": "^29",
-    "sqlite3": "^5.1.7"
+    "jest": "^29"
   },
   "engines": {
-    "node": "^18.16.0"
+    "node": "^20"
   },
   "scripts": {
     "lint": "npx eslint .",
-    "test": "npm run test-new-db && npm run test-old-db",
-    "test-new-db": "CDS_ENV='better-sqlite' npx jest --silent",
-    "test-old-db": "CDS_ENV='legacy-sqlite' npx jest --silent"
+    "test": "npx jest --silent"
   },
   "workspaces": [
-    "tests/integration/bookshop-app"
+    "tests/bookshop-app"
   ],
   "cds": {
     "requires": {

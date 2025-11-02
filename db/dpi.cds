@@ -1,18 +1,8 @@
-using { managed, cuid } from '@sap/cds/common';
-
 namespace sap.dpi;
 
-
-entity ILMObjectV2 : cuid, managed {
-  iLMObjectName    : String;
-  iLMObjectVersion : Integer;
-  configVersion    : Integer;
-  configuration    : LargeString;
-}
-
 aspect dppFlags {
-  dppBlockingDate : Date            @UI.HiddenFilter;
-  dppEarliestDestructionDate : Date @UI.HiddenFilter;
+  dppBlockingDate : Date            @UI.HiddenFilter @PersonalData.FieldSemantics : 'BlockingDate';
+  dppEarliestDestructionDate : Date @UI.HiddenFilter @PersonalData.FieldSemantics : 'EndOfRetentionDate';
 }
 
 type Condition : {

@@ -8,10 +8,8 @@ module.exports = class DPIRetentionService extends cds.ApplicationService {
     //Attaching iLMObjects to model to make sure that extensions are also considered in MTX scenario
     const result = getDPIentities(cds.model, this);
     cds.model._iLMObjects = result.iLMObjects;
-    //Attached to model because keys can vary in extensibility scenarios
-    cds.model._drm_i18nKeys = [...new Set(result.usedI18Nkeys)];
 
-    const {iLMObjects} = this.entities     
+    const { iLMObjects } = this.entities
 
     for (const handler of result.handlersToRegister) {
       this.entities[handler.name] = handler.entity;
@@ -25,7 +23,7 @@ module.exports = class DPIRetentionService extends cds.ApplicationService {
       const DPIRetentionService = model.definitions.find(n => {
         let def = model.definitions[n]
         if (
-          def.kind === 'service' && 
+          def.kind === 'service' &&
           !def['@cds.provided'] && (n === 'DPIRetentionService' || (def['@path'] && (def['@path'] === '/drm' || def['@path'] === 'drm')))
         )
           return n;
@@ -35,14 +33,9 @@ module.exports = class DPIRetentionService extends cds.ApplicationService {
       }
     })
 
-    const buildBaseUrl = (req) => {
-      let url = ''
-      if (process.env.NODE_ENV === 'production') url += 'https://'
-      url += req._req ? req._req.get('host') : req.req.get('host')
-      return url
-    }
     this.on('READ', iLMObjects, async req => {
       const model = cds.context.model ?? cds.model
+      LOG.info(`cds.server.url upon calling iLMObjects: `, cds.server.url);
       if (!model._iLMObjects) {
         const result = getDPIentities(model, this);
         model._iLMObjects = result.iLMObjects;
@@ -58,17 +51,13 @@ module.exports = class DPIRetentionService extends cds.ApplicationService {
     })
 
     this.on('READ', this.entities['i18n-files'], async (req) => {
-      const model = cds.context.model ?? cds.model;
-      if (!model._drm_i18nKeys) {
-        const result = getDPIentities(model, this);
-        model._drm_i18nKeys = [...new Set(result.usedI18Nkeys)];
-      }
+      const bundle = cds.i18n.bundle4(this.definition);
       const getFile = (language) => {
         let file = ''
-        model._drm_i18nKeys.forEach(key => {
+        for (const key in bundle.defaults) {
           const translation = cds.i18n.labels.for(key, language);
           file += `${key}=${translation}\n`;
-        });
+        };
         return file;
       }
       let file = ''
@@ -89,5 +78,28 @@ module.exports = class DPIRetentionService extends cds.ApplicationService {
       req.res.end(file);
     });
 
+    /**
+     * Validations for all DPI Retention actions
+     */
+    this.before('*', req => {
+
+      if (req.data.applicationName && req.data.applicationName !== cds.env.requires['data-privacy-retention'].applicationName) {
+        return req.error(400, 'Application name does not match the service application name.');
+      }
+
+      if (req.data.iLMObjectName && !this.entities[req.data.iLMObjectName]) {
+        return req.error(400, `The ILM object ${req.data.iLMObjectName} does not exist!`);
+      } else if (req.data.iLMObjectName && this.entities[req.data.iLMObjectName]) {
+        req.data.iLMObject = this.entities[req.data.iLMObjectName]
+      }
+    })
+
   }
+}
+
+const buildBaseUrl = (req) => {
+  let url = ''
+  if (process.env.NODE_ENV === 'production') url += 'https://'
+  url += req._req ? req._req.get('host') : req.req.get('host')
+  return url
 }
