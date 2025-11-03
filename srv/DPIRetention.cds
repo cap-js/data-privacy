@@ -12,6 +12,6 @@ service DPIRetentionService @(path: '/drm') {
     @readonly
     entity iLMObjects : dppFlags {
         //dppFlags just being used to have in m.definitions
-        key ID: UUID //Just empty facet for handler to return iLMObjects
+        key iLMObjectName: String;
     }
 };

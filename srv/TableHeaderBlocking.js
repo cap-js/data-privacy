@@ -1,6 +1,6 @@
 const cds = require('@sap/cds');
 const LOG = cds.log('data-privacy-retention');
-const { _buildWhereClauseForDS, _buildWhereClauseForDSsArr, whereForConditionSet } = require('../lib/utils');
+const { _buildWhereClauseForDS, whereForConditionSet } = require('../lib/utils');
 
 module.exports = class TableHeaderBlockingService extends require('./DPIRetention') {
   async init() {
@@ -125,7 +125,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
         req.res.statusCode = 204
         return
       }
-    
+
       req.res.status(200)
       return updated //We return something because returning nothng would cause 204 and 204 means we did not find any data
     })
@@ -135,17 +135,17 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
 
       LOG.debug(`Destroy iLMObjects request for role ${dataSubjectRole} and iLMObject ${iLMObject.name} where end of retention is reached for app ${applicationName}.`)
       const whereCondition = [
-        {ref: ['dppEarliestDestructionDate']},
+        { ref: ['dppEarliestDestructionDate'] },
         '<=',
-        {val: new Date().toISOString()}
+        { val: new Date().toISOString() }
       ];
       if (iLMObject['@PersonalData.DataSubjectRole']['=']) {
-          whereCondition.push(
-            'and',
-            {ref: [iLMObject['@PersonalData.DataSubjectRole']['='].split('.')]},
-            '=',
-            {val: dataSubjectRole}
-          );
+        whereCondition.push(
+          'and',
+          { ref: [iLMObject['@PersonalData.DataSubjectRole']['='].split('.')] },
+          '=',
+          { val: dataSubjectRole }
+        );
       }
       LOG.debug(`Where condition for destroy blocked ILM objects which reached end of blocking:`, whereCondition)
       const deleted = await this.run(DELETE.from(iLMObject).where(whereCondition));
@@ -228,7 +228,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       }
       if (dataSubjectIDsToDestroy.length > 0) {
         LOG.info(`Destroy data subjects with the ID`, dataSubjectIDsToDestroy)
-        const deleted = await this.run(DELETE.from(dataSubjectEntity).where({ [dataSubjectEntity._dpi.dataSubjectIdReference]: { in: dataSubjectIDsToDestroy }, dppEarliestDestructionDate: {'<=': new Date().toISOString()} }));
+        const deleted = await this.run(DELETE.from(dataSubjectEntity).where({ [dataSubjectEntity._dpi.dataSubjectIdReference]: { in: dataSubjectIDsToDestroy }, dppEarliestDestructionDate: { '<=': new Date().toISOString() } }));
         LOG.debug(`Destroyed ${deleted} data subjects, with ${dataSubjectIDsToDestroy.length} data subject IDs being provided.`)
         req.res.statusCode = 200
         return `Destroyed ${deleted} records`
@@ -242,7 +242,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
     this.on('dataSubjectsEndOfResidence', async req => {
       const { applicationName, iLMObject, dataSubjectRoleName, referenceDates } = req.data
       LOG.debug(`Requested dataSubjectsEndOfResidence for ${dataSubjectRoleName} and iLM object ${iLMObject.name} and app ${applicationName}`,
-        `Reference dates:`, JSON.stringify(referenceDates))      
+        `Reference dates:`, JSON.stringify(referenceDates))
 
       //Second condition for case that role is dynamic
       if (!Object.keys(this._dpi.dataSubjectsForRole(dataSubjectRoleName)) && !iLMObject['@PersonalData.DataSubjectRole']['=']) {
@@ -277,11 +277,15 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
         `Reference dates:`, JSON.stringify(referenceDates))
       LOG.debug(`dataSubjectsEndOfResidenceConfirmation, data subject IDs`, dataSubjects)
       const dataSubjectIDs = dataSubjects.map(m => m.dataSubjectId)
-      const where = dataSubjectIDs.length > 0 ? _buildWhereClauseForDSsArr(iLMObject, dataSubjectIDs) : []
+      const where = dataSubjectIDs.length > 0 ? [
+          { ref: [iLMObject.dataSubjectIdReference] },
+          'in',
+          { list: dataSubjectIDs.map(d => ({ val: d })) }
+        ] : []
 
       //Second condition for case that role is dynamic
       if (!Object.keys(this._dpi.dataSubjectsForRole(dataSubjectRoleName)) && !iLMObject['@PersonalData.DataSubjectRole']?.['=']) {
-        return req.error({ 
+        return req.error({
           code: 'DATA_SUBJECT_ROLE_NOT_EXISTING',
           status: 400
         })

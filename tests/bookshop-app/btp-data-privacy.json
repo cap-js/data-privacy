@@ -1,0 +1,23 @@
+{
+  "dataPrivacyConfiguration": {
+    "retentionConfiguration": {
+      "dataSubjectRoles": [
+        {
+          "dataSubjectRoleName": "Customer",
+          "dataSubjectBaseURL": "~{srv-api/srv-url}",
+          "dataSubjectBlockingEndPoint": "/drm/dataSubjectBlocking",
+          "dataSubjectInformationEndPoint": "/drm/dataSubjectInformation",
+          "dataSubjectsDestroyingEndPoint": "/drm/dataSubjectsDestroying"
+        }
+      ],
+      "organizationAttributes": [
+        {
+          "organizationAttributeName": "legalEntity",
+          "organizationAttributeDescription": "LegalEntity",
+          "organizationAttributeBaseURL": "~{srv-api/srv-url}",
+          "organizationAttributeValueHelpEndPoint": "/drm/valueHelp_orgAttribute_sap_capire_bookshop_LegalEntities"
+        }
+      ]
+    }
+  }
+}

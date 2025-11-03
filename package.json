@@ -16,10 +16,7 @@
     "db",
     "CHANGELOG.md"
   ],
-  "dependencies": {
-    "@sap/textbundle": "^4.2.0",
-    "js-yaml": "^4.1.0"
-  },
+  "dependencies": {},
   "peerDependencies": {
     "@sap/cds": ">=9",
     "@cap-js/audit-logging": "^1.1.0"
