@@ -1,6 +1,7 @@
 const cds = require('@sap/cds');
+const path = require('path');
 
-let { GET } = cds.test().in(__dirname)
+let { GET } = cds.test().in(path.join(__dirname, '../bookshop-app'))
 const DPI_Service = { username: 'dpi', password: '1234' }
 
 describe('iLMObject discovery', () => {
@@ -14,7 +15,7 @@ describe('iLMObject discovery', () => {
         const {status, data} = await GET('/drm/iLMObjects', { auth: DPI_Service });
         expect(status).toEqual(200);
         for (const iLMObject of data) {
-            for (const selectionCriteria of iLMObject.archivingConfiguration.selectionCriteria.concat(iLMObject.destructionConfiguration.selectionCriteria)) {
+            for (const selectionCriteria of iLMObject.destructionConfiguration.selectionCriteria.concat(iLMObject.archivingConfiguration?.selectionCriteria ?? [])) {
                 if (selectionCriteria.selectionCriteriaValueHelpEndPoint) {
                     const {status, data} = await GET(selectionCriteria.selectionCriteriaValueHelpEndPoint, { auth: DPI_Service })
                     expect(status).toEqual(200);
@@ -46,11 +47,10 @@ describe('iLMObject discovery', () => {
     });
 
     test('test org attribute endpoints', async () => {
-        const { getDPIentities } = require('../../lib/model/get-dpi-entities');
-        const DRMSRV = await cds.connect.to('DPIRetentionService')
-        const {organizationAttributes} = getDPIentities(cds.model, DRMSRV);
+        const organizationAttributes = Object.keys(cds.model.definitions).filter(n => n.startsWith('DPIRetentionService.valueHelp_orgAttribute'))
         for (const attribute of organizationAttributes) {
-            const {status, data} = await GET(attribute.organizationAttributeValueHelpEndPoint, { auth: DPI_Service })
+            const attributeDefinition = cds.model.definitions[attribute]
+            const {status, data} = await GET(attributeDefinition['@ILM.ValueHelp.Path'], { auth: DPI_Service })
             expect(status).toEqual(200);
             expect(data.length).toBeGreaterThan(0)
             expect(data[0]).toMatchObject({

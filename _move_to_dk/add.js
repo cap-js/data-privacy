@@ -3,7 +3,6 @@ const { readProject, merge, registries } = cds.add
 const { srv4 } = registries.mta
 
 const log = cds.log('data-privacy');
-const yaml = require('@sap/cds-foss').yaml
 const fs = require('fs/promises');
 const fsSync = require('fs');
 const { path } = cds.utils;
@@ -11,8 +10,8 @@ const { path } = cds.utils;
 module.exports = class extends cds.add.Plugin {
   async run() {
 
-    const { isJava } = readProject()
-    const { mvn } = cds.add
+    // const { isJava } = readProject()
+    // const { mvn } = cds.add
 
     // Create drm/sidecar folder in the root repository and copy package.json template
     const root = process.cwd();
@@ -28,7 +27,7 @@ module.exports = class extends cds.add.Plugin {
     const processPath = process.cwd();
 
     let package_json = path.join(cds.root, 'package.json');
-    let { appName, description } = require(package_json);
+    let { appName } = require(package_json);
 
     const packageJsonTemplate = path.join(__dirname, 'templates', 'sidecar-package.json');
 

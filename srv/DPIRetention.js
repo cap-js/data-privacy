@@ -9,8 +9,8 @@ module.exports = class DPIRetentionService extends cds.ApplicationService {
 
     this.on('READ', iLMObjects, async req => {
       LOG.info(`cds.server.url upon calling iLMObjects: `, cds.server.url);
-      const iLMObjects = Object.keys(this.definition.iLMObjects).map(iLMObject => {
-        const entity = this.definition.iLMObjects[iLMObject];
+      const iLMObjects = Object.keys(this.definition._dpi.iLMObjects).map(iLMObject => {
+        const entity = this.definition._dpi.iLMObjects[iLMObject];
         const selectionCriteria = getSelectionCriteria(entity);
         return {
           iLMObjectName: iLMObject,
@@ -54,7 +54,7 @@ module.exports = class DPIRetentionService extends cds.ApplicationService {
           }, []),
           dataSubjectBlockingConfiguration: {
             dataSubjectEndOfBusinessEndPoint: `${this.path}/dataSubjectEndOfBusiness`,
-            dataSubjectOrganizationAttributesEndPoint: entity.elements[entity.orgAttributeReference]['@ILM.ValueHelp.Path'],
+            dataSubjectOrganizationAttributesEndPoint: entity.elements[entity._dpi.orgAttributeReference]['@ILM.ValueHelp.Path'],
             dataSubjectLastRetentionStartDatesEndPoint: `${this.path}/retentionStartDate`,
             dataSubjectsEndOfResidenceEndPoint: `${this.path}/dataSubjectsEndOfResidence`,
             dataSubjectsEndOfResidenceConfirmationEndPoint: `${this.path}/dataSubjectsEndOfResidenceConfirmation`,
@@ -117,6 +117,7 @@ module.exports = class DPIRetentionService extends cds.ApplicationService {
       }
     })
 
+    return super.init();
   }
 }
 

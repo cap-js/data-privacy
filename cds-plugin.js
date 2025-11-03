@@ -11,7 +11,7 @@ cds.on('compile.to.dbx', csn => { enhanceModel(csn) })
 
 cds.on('loaded', csn => { cds.cli.command === 'build' && enhanceModel(csn) })
 
-cds.on('listening', async app => {
+cds.on('listening', async () => {
     if (!cds.env.requires['data-privacy-retention'].applicationName) {
         const {name} = JSON.parse(await fs.readFile(path.join(cds.root, 'package.json')));
         LOG.debug

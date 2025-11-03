@@ -116,18 +116,19 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
         `The maxDeletionDate is ${maxDeletionDate}`)
       const where = _buildWhereClauseForDS(iLMObject, dataSubjectId, dataSubjectRole)
       LOG.info(`Where clause: `, where)
-      const updated = await this.run(UPDATE.entity(iLMObject).where(where).set({
-        dppBlockingDate: new Date().toISOString(),
-        dppEarliestDestructionDate: maxDeletionDate
-      }));
+      const toUpdate = await this.run(SELECT.one.from(iLMObject).where(where).columns([{func: 'count', as: '$count', args: [{val: 1}]}]));
       //Return 204 if no records where found
-      if (updated.length === 0) {
+      if (toUpdate.$count === 0) {
         req.res.statusCode = 204
         return
       }
+      await this.run(UPDATE.entity(iLMObject).where(where).set({
+        dppBlockingDate: new Date().toISOString().substring(0,10),
+        dppEarliestDestructionDate: new Date(maxDeletionDate).toISOString().substring(0, 10)
+      }));
 
       req.res.status(200)
-      return updated //We return something because returning nothng would cause 204 and 204 means we did not find any data
+      return toUpdate.$count //We return something because returning nothing would cause 204 and 204 means we did not find any data
     })
 
     this.on('dataSubjectsILMObjectInstancesDestroying', async req => {
@@ -137,7 +138,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       const whereCondition = [
         { ref: ['dppEarliestDestructionDate'] },
         '<=',
-        { val: new Date().toISOString() }
+        { val: new Date().toISOString().substring(0, 10) }
       ];
       if (iLMObject['@PersonalData.DataSubjectRole']['=']) {
         whereCondition.push(
@@ -156,13 +157,13 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
     this.on('dataSubjectBlocking', async req => {
       const { applicationName, dataSubjectRoleName, dataSubjectId, maxDeletionDate } = req.data
       LOG.debug(`Delete data subject request for role ${dataSubjectRoleName}, ID ${dataSubjectId} and application group ${applicationName} with end of retention ${maxDeletionDate}.`)
-      const dsEntities = this._dpi.dataSubjectsForRole(dataSubjectRoleName); //Ensures that data subject details are also retrived
+      const dsEntities = this.definition._dpi.dataSubjectsForRole(dataSubjectRoleName); //Ensures that data subject details are also retrived
       if (dsEntities.length === 0) {
         return req.error('Non existing data subject')
       }
       //Delete if there are no active iLMObjects for the data subject
-      for (const iLMObjectName in this._dpi.iLMObjects) {
-        const iLMObject = this._dpi.iLMObjects[iLMObjectName];
+      for (const iLMObjectName in this.definition._dpi.iLMObjects) {
+        const iLMObject = this.definition._dpi.iLMObjects[iLMObjectName];
         LOG.debug(`Where clause for getting active entities`, _buildWhereClauseForDS(iLMObject, dataSubjectId, dataSubjectRoleName))
         const activeRecords = await cds.db.exists(iLMObject).where(_buildWhereClauseForDS(iLMObject, dataSubjectId, dataSubjectRoleName))
         if (activeRecords) {
@@ -171,33 +172,42 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
         }
       }
 
+      let modifiedRecords = 0;
       //Check if there are blocked records
       for (const singleEntity of dsEntities) {
-        const updates = await this.run(UPDATE.entity(singleEntity).where(_buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName)).set({
-          dppBlockingDate: new Date().toISOString(),
-          dppEarliestDestructionDate: maxDeletionDate
-        }))
-        LOG.debug(`Where clause for updating ${singleEntity.name}`, _buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName), `with blocking details. Blocked ${updates} entities.`);
+        if (new Date(maxDeletionDate).toISOString() > new Date().toISOString()) {
+          const updates = await this.run(UPDATE.entity(singleEntity).where(_buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName)).set({
+            dppBlockingDate: new Date().toISOString().substring(0,10),
+            dppEarliestDestructionDate: new Date(maxDeletionDate).toISOString().substring(0, 10)
+          }))
+          LOG.debug(`Where clause for updating ${singleEntity.name}`, _buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName), `with blocking details. Blocked ${updates} entities.`);
+          modifiedRecords += updates;
+        } else {
+          const deleted = await this.run(DELETE.from(singleEntity).where(_buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName)))
+          LOG.debug(`Where clause for deleting ${singleEntity.name}`, _buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName), `with blocking details. Deleted ${deleted} entities. Delete happened on dataSubjectBlocking because maxDeletionDate was in the past/today.`);
+          modifiedRecords += deleted;
+        }
       }
+      return modifiedRecords;
     })
 
     this.on('dataSubjectsDestroying', async req => {
       const { applicationName, dataSubjectRoleName } = req.data
       LOG.debug(`Destroy data subjects request for role ${dataSubjectRoleName} and application group ${applicationName} where end of retention is reached.`)
       //Delete only possible if all iLMObjects also reached end of blocking
-      const dataSubjectsEntities = this._dpi.dataSubjectsForRole(dataSubjectRoleName);
+      const dataSubjectsEntities = this.definition._dpi.dataSubjectsForRole(dataSubjectRoleName);
 
       //REVISIT: Support multiple entities
-      const dataSubjectEntity = dataSubjectsEntities[0];
+      const dataSubjectEntity = dataSubjectsEntities[Object.keys(dataSubjectsEntities)[0]];
       const dataSubjectIDs = await SELECT.from(dataSubjectEntity)
         .groupBy(dataSubjectEntity._dpi.dataSubjectIdReference)
-        .columns('max(dppEarliestDestructionDate) as lastEndOfRetention', dataSubjectEntity._dpi.dataSubjectIdReference)
-        .having(`dppEarliestDestructionDate <= '${new Date().toISOString()}'`)
+        .columns('max(dppEarliestDestructionDate) as lastEndOfRetention', `${dataSubjectEntity._dpi.dataSubjectIdReference} as dataSubjectID`)
+        .having(`dppEarliestDestructionDate <= '${new Date().toISOString().substring(0, 10)}'`)
       if (dataSubjectIDs.length === 0) return
       const dataSubjectIDsToDestroy = []
       for (const { dataSubjectID } of dataSubjectIDs) {
         let hasActiveRecords = false
-        for (const entityName in this.entities) {
+        for (const entityName in this.definition._dpi.iLMObjects) {
           const entity = this.entities[entityName]
           if (entity && entity['@PersonalData.EntitySemantics'] === 'Other') {
             if (!dataSubjectEntity._dpi.dataSubjectIdReference) continue
@@ -228,7 +238,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       }
       if (dataSubjectIDsToDestroy.length > 0) {
         LOG.info(`Destroy data subjects with the ID`, dataSubjectIDsToDestroy)
-        const deleted = await this.run(DELETE.from(dataSubjectEntity).where({ [dataSubjectEntity._dpi.dataSubjectIdReference]: { in: dataSubjectIDsToDestroy }, dppEarliestDestructionDate: { '<=': new Date().toISOString() } }));
+        const deleted = await this.run(DELETE.from(dataSubjectEntity).where({ [dataSubjectEntity._dpi.dataSubjectIdReference]: { in: dataSubjectIDsToDestroy }, dppEarliestDestructionDate: { '<=': new Date().toISOString().substring(0,10) } }));
         LOG.debug(`Destroyed ${deleted} data subjects, with ${dataSubjectIDsToDestroy.length} data subject IDs being provided.`)
         req.res.statusCode = 200
         return `Destroyed ${deleted} records`
@@ -245,7 +255,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
         `Reference dates:`, JSON.stringify(referenceDates))
 
       //Second condition for case that role is dynamic
-      if (!Object.keys(this._dpi.dataSubjectsForRole(dataSubjectRoleName)) && !iLMObject['@PersonalData.DataSubjectRole']['=']) {
+      if (!Object.keys(this.definition._dpi.dataSubjectsForRole(dataSubjectRoleName)) && !iLMObject['@PersonalData.DataSubjectRole']['=']) {
         return req.error({
           code: 'DATA_SUBJECT_ROLE_NOT_EXISTING',
           status: 400
@@ -278,13 +288,13 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       LOG.debug(`dataSubjectsEndOfResidenceConfirmation, data subject IDs`, dataSubjects)
       const dataSubjectIDs = dataSubjects.map(m => m.dataSubjectId)
       const where = dataSubjectIDs.length > 0 ? [
-          { ref: [iLMObject.dataSubjectIdReference] },
+          { ref: [iLMObject._dpi.dataSubjectIdReference] },
           'in',
           { list: dataSubjectIDs.map(d => ({ val: d })) }
         ] : []
 
       //Second condition for case that role is dynamic
-      if (!Object.keys(this._dpi.dataSubjectsForRole(dataSubjectRoleName)) && !iLMObject['@PersonalData.DataSubjectRole']?.['=']) {
+      if (!Object.keys(this.definition._dpi.dataSubjectsForRole(dataSubjectRoleName)) && !iLMObject['@PersonalData.DataSubjectRole']?.['=']) {
         return req.error({
           code: 'DATA_SUBJECT_ROLE_NOT_EXISTING',
           status: 400
@@ -404,5 +414,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       LOG.debug(`Wheres result: ${JSON.stringify(result)}`)
       return result;
     }
+
+    return super.init();
   }
 }

@@ -5,8 +5,6 @@
   "dependencies": {
     "@cap-js/audit-logging": "^1.0.0",
     "@cap-js/hana": "^2",
-    "@cap-js/telemetry": "^0.2.0",
-    "@dynatrace/oneagent-sdk": "^1.5.0",
     "@sap/cds": "^9",
     "@sap/cds-common-content": "^1.0.1",
     "@sap/cds-dpi": "file:../../.",
@@ -41,7 +39,28 @@
         "auth": {
           "strategy": "dummy",
           "users": {
+            "dpi": {
+              "password": "1234",
+              "roles": [
+                "PersonalDataManagerUser",
+                "DataRetentionManagerUser"
+              ]
+            },
             "alice": {
+              "password": "1234",
+              "roles": [
+                "PersonalDataManagerUser",
+                "DataRetentionManagerUser"
+              ]
+            }
+          }
+        }
+      },
+      "[test]": {
+        "auth": {
+          "strategy": "dummy",
+          "users": {
+            "dpi": {
               "password": "1234",
               "roles": [
                 "PersonalDataManagerUser",

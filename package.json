@@ -16,12 +16,14 @@
     "db",
     "CHANGELOG.md"
   ],
-  "dependencies": {},
-  "peerDependencies": {
-    "@sap/cds": ">=9",
+  "dependencies": {
     "@cap-js/audit-logging": "^1.1.0"
   },
+  "peerDependencies": {
+    "@sap/cds": ">=9"
+  },
   "devDependencies": {
+    "@cap-js/cds-test": "^0.4.0",
     "@cap-js/sqlite": "^2",
     "@sap/cds-common-content": "*",
     "@sap/cds-dk": "^9",
@@ -41,7 +43,7 @@
   "cds": {
     "requires": {
       "data-privacy-retention": {
-        "kind": "data-privacy-retention-TableHeader"
+        "kind": "TableHeader"
       },
       "data-privacy-information": {
         "model": "@sap/cds-dpi/srv/DPIInformation"
