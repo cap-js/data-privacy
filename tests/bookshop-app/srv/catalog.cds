@@ -16,4 +16,6 @@ service CatalogService {
   ]
   entity Orders         as projection on db.Orders;
 
+  entity Configuration         as projection on db.Configuration;
+
 };

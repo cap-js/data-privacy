@@ -11,6 +11,41 @@ describe('iLMObject discovery', () => {
         expect(data.length).toBeGreaterThan(0);
     });
 
+    describe('iLMObject enabled', () => {
+        test('ILM Object check endpoint is served', async () => {
+            const {status, data} = await GET('/drm/iLMObjects', { auth: DPI_Service });
+            expect(status).toEqual(200);
+            for (const iLMObject of data) {
+                const {status: statusCheck, data: resultCheck} = await GET(iLMObject.iLMObjectCheckEndPoint, { auth: DPI_Service })
+                expect(statusCheck).toEqual(200);
+                expect(resultCheck.isILMObjectEnabled).toEqual(expect.any(Boolean))
+            }
+        });
+        test('ILMObject is enabled by default', async () => {
+            const {status, data} = await GET('/drm/iLMObjects/Orders/isILMObjectEnabled', { auth: DPI_Service })
+            expect(status).toEqual(200);
+            expect(data.isILMObjectEnabled).toEqual(true)
+        });
+
+        test('ILMObject enablement considers boolean value for @ILM.BlockingEnabled annotation', async () => {
+            const {status, data} = await GET('/drm/iLMObjects/ILMObjectWithStaticBlockingDisabled/isILMObjectEnabled', { auth: DPI_Service })
+            expect(status).toEqual(200);
+            expect(data.isILMObjectEnabled).toEqual(false)
+        });
+
+        test('ILMObject enablement considers edmJson path & pointing to different service for @ILM.BlockingEnabled annotation', async () => {
+            const {status, data} = await GET('/drm/iLMObjects/ILMObjectWithEDMJSONBlockingEnabled/isILMObjectEnabled', { auth: DPI_Service })
+            expect(status).toEqual(200);
+            expect(data.isILMObjectEnabled).toEqual(false)
+        });
+
+        test('ILMObject enablement considers xpr path for @ILM.BlockingEnabled annotation', async () => {
+            const {status, data} = await GET('/drm/iLMObjects/ILMObjectWithXPRBlockingEnabled/isILMObjectEnabled', { auth: DPI_Service })
+            expect(status).toEqual(200);
+            expect(data.isILMObjectEnabled).toEqual(true)
+        });
+    })
+
     test('Selection criteria are correctly determined', async () => {
         const {status, data} = await GET('/drm/iLMObjects', { auth: DPI_Service });
         expect(status).toEqual(200);

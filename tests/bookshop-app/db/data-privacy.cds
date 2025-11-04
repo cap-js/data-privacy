@@ -60,6 +60,36 @@ annotate bookshop.Marketing with @(
   legalEntity   @PersonalData.FieldSemantics : 'DataControllerID';
 };
 
+annotate bookshop.ILMObjectWithStaticBlockingDisabled with @(
+  PersonalData.DataSubjectRole : 'Customer',
+  PersonalData.EntitySemantics : 'Other',
+  ILM.BlockingEnabled : false
+) {
+  Customer      @PersonalData.FieldSemantics : 'DataSubjectID';
+  marketingDate @PersonalData.FieldSemantics : 'EndOfBusinessDate';
+  legalEntity   @PersonalData.FieldSemantics : 'DataControllerID';
+};
+
+annotate bookshop.ILMObjectWithEDMJSONBlockingEnabled with @(
+  PersonalData.DataSubjectRole : 'Customer',
+  PersonalData.EntitySemantics : 'Other',
+  ILM.BlockingEnabled : {$edmJson: {$Path: '/CatalogService.EntityContainer/Configuration/isBlockingEnabled'}}
+) {
+  Customer      @PersonalData.FieldSemantics : 'DataSubjectID';
+  marketingDate @PersonalData.FieldSemantics : 'EndOfBusinessDate';
+  legalEntity   @PersonalData.FieldSemantics : 'DataControllerID';
+};
+
+annotate bookshop.ILMObjectWithXPRBlockingEnabled with @(
+  PersonalData.DataSubjectRole : 'Customer',
+  PersonalData.EntitySemantics : 'Other',
+  ILM.BlockingEnabled : '(SELECT isBlockingEnabled FROM sap.capire.bookshop.Configuration)'
+) {
+  Customer      @PersonalData.FieldSemantics : 'DataSubjectID';
+  marketingDate @PersonalData.FieldSemantics : 'EndOfBusinessDate';
+  legalEntity   @PersonalData.FieldSemantics : 'DataControllerID';
+};
+
 // UI annotation for DRM
 annotate bookshop.Marketing with @(
   UI.SelectionFields : [

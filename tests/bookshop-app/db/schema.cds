@@ -93,6 +93,33 @@ entity Marketing : cuid, managed {
   legalEntity   : Association to one LegalEntities @title : 'Legal entity';
 }
 
+entity ILMObjectWithStaticBlockingDisabled : cuid {
+  Customer      : Association to Customers @title : 'Customer'; 
+  text          : String @title : 'Text';
+  marketingDate : Date @title : 'Marketing date';
+  legalEntity   : Association to one LegalEntities @title : 'Legal entity';
+}
+
+entity ILMObjectWithEDMJSONBlockingEnabled : cuid {
+  Customer      : Association to Customers @title : 'Customer'; 
+  text          : String @title : 'Text';
+  marketingDate : Date @title : 'Marketing date';
+  legalEntity   : Association to one LegalEntities @title : 'Legal entity';
+}
+
+entity ILMObjectWithXPRBlockingEnabled : cuid {
+  Customer      : Association to Customers @title : 'Customer'; 
+  text          : String @title : 'Text';
+  marketingDate : Date @title : 'Marketing date';
+  legalEntity   : Association to one LegalEntities @title : 'Legal entity';
+}
+
+@odata.singleton
+entity Configuration {
+  key ID: Integer default 1;
+    isBlockingEnabled: Boolean default true;
+}
+
 @Core.Description : 'Customer'
 entity Customers : cuid, managed {
   email          : String @title : 'Email';

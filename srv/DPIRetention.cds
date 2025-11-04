@@ -13,5 +13,6 @@ service DPIRetentionService @(path: '/drm') {
     entity iLMObjects : dppFlags {
         //dppFlags just being used to have in m.definitions
         key iLMObjectName: String;
+        isILMObjectEnabled: Boolean;
     }
 };

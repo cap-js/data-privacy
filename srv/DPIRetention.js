@@ -18,6 +18,7 @@ module.exports = class DPIRetentionService extends cds.ApplicationService {
           iLMObjectDescription: cds.i18n.labels.for(getTranslationKey(entity['@Core.Description'])) || cds.i18n.labels.for(entity),
           iLMObjectDescriptionKey: getTranslationKey(entity['@Core.Description']) ?? undefined,
           iLMObjectBaseURL: buildBaseUrl(req),
+          iLMObjectCheckEndPoint: `${this.path}/iLMObjects/${iLMObject}/isILMObjectEnabled`,
           organizationAttributeName: entity.orgAttributeReference,
           referenceDates: (Object.entries(entity.elements)).reduce((acc, [name, value]) => {
             if (value['@PersonalData.FieldSemantics'] === 'EndOfBusinessDate' && value.type !== 'cds.Association' && value.type !== 'cds.Composition') {
@@ -71,7 +72,29 @@ module.exports = class DPIRetentionService extends cds.ApplicationService {
       })
       LOG.debug('Transactional data discovery:', iLMObjects)
       req.reply(iLMObjects)
-    })
+    });
+
+    //Handle ILMObjectCheckEndpoint
+    this.prepend(() =>
+      this.on('READ', iLMObjects, async (req, next) => {
+        if (req.query.SELECT.columns && req.query.SELECT.columns.length === 2 && req.query.SELECT.columns[0].ref?.[0] === 'isILMObjectEnabled' && req.query.SELECT.one && req.query.SELECT.from?.ref?.[0].where?.[2]) {
+          const entity = this.definition._dpi.iLMObjects[req.query.SELECT.from.ref[0].where[2].val];
+          if (entity['@ILM.BlockingEnabled']?.xpr) {
+            const SRV = entity['@ILM.BlockingEnabled']._service ? await cds.connect.to(entity['@ILM.BlockingEnabled']._service) : cds;
+            const res = await SRV.run(entity['@ILM.BlockingEnabled'].xpr[0]);
+            return {
+              isILMObjectEnabled: Array.isArray(res) && res.length ? res[0][Object.keys(res[0])[0]] : res[Object.keys(res)[0]]
+            }
+          } else {
+            return {
+              isILMObjectEnabled: entity['@ILM.BlockingEnabled'] !== false
+            }
+          }
+        } else {
+          return next();
+        }
+      })
+    );
 
     this.on('READ', this.entities['i18n-files'], async (req) => {
       const bundle = cds.i18n.bundle4(this.definition);
