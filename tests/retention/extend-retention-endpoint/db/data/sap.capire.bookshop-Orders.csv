@@ -1,0 +1,10 @@
+ID;modifiedAt;createdAt;createdBy;modifiedBy;OrderNo;currency_code;Customer_ID;endOfWarrantyDate;legalEntity_title
+5e2f2640-6866-4dcf-8f4d-3027aa831cad;2019-04-04;2019-01-31;john.doe@test.com;john.doe@test.com;1;USD;8e2f2640-6866-4dcf-8f4d-3027aa831cad;2020-04-04;SAP Ltd
+5e3f2640-6866-4dcf-8f4d-3027aa831cad;2019-04-04;2019-01-31;peter.doe@test.com;peter.doe@test.com;1;USD;9e2f2640-6866-4dcf-8f4d-3027aa831cad;2020-04-04;SAP Ltd
+44e718c9-ff99-47f1-8ca3-950c850777d4;2019-04-04;2019-01-30;jane.doe@test.com;jane.doe@test.com;2;USD;74e718c9-ff99-47f1-8ca3-950c850777d4;2020-04-04;SAP Ltd
+45e718c9-ff99-47f1-8ca3-950c850777d4;2020-04-04;2020-01-30;jane.doe@test.com;jane.doe@test.com;3;USD;74e718c9-ff99-47f1-8ca3-950c850777d4;2021-04-04;SAP Ltd
+46e718c9-ff99-47f1-8ca3-950c850777d4;2021-04-04;2021-01-30;jane.doe@test.com;jane.doe@test.com;4;USD;74e718c9-ff99-47f1-8ca3-950c850777d4;2022-04-04;SAP Ltd
+47e718c9-ff99-47f1-8ca3-950c850777d4;2022-04-04;2022-01-30;jane.doe@test.com;jane.doe@test.com;5;USD;74e718c9-ff99-47f1-8ca3-950c850777d4;2023-04-04;SAP Ltd
+48e718c9-ff99-47f1-8ca3-950c850777d4;2023-04-04;2023-01-30;jane.doe@test.com;jane.doe@test.com;6;USD;74e718c9-ff99-47f1-8ca3-950c850777d4;2024-04-04;SAP Ltd
+49e718c9-ff99-47f1-8ca3-950c850777d4;2024-04-04;2024-01-30;jane.doe@test.com;jane.doe@test.com;7;USD;74e718c9-ff99-47f1-8ca3-950c850777d4;2025-04-04;SAP Ltd
+40e718c9-ff99-47f1-8ca3-950c850777d4;2025-04-04;2025-01-30;jane.doe@test.com;jane.doe@test.com;8;USD;74e718c9-ff99-47f1-8ca3-950c850777d4;2026-04-04;SAP Ltd

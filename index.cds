@@ -1,2 +1,4 @@
-namespace sap.capire.gdpr; //> important for reflection
-using from './db/generic_blocking_schema';
+namespace sap.dpp; //> important for reflection
+using from './db/dpi';
+using from './srv/DPIRetention';
+using from './srv/DPIInformation';

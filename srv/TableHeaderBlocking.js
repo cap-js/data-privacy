@@ -116,6 +116,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
         `The maxDeletionDate is ${maxDeletionDate}`)
       const where = _buildWhereClauseForDS(iLMObject, dataSubjectId, dataSubjectRole)
       LOG.info(`Where clause: `, where)
+      req.user._is_privileged = true
       const toUpdate = await this.run(SELECT.one.from(iLMObject).where(where).columns([{func: 'count', as: '$count', args: [{val: 1}]}]));
       //Return 204 if no records where found
       if (toUpdate.$count === 0) {
@@ -149,6 +150,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
         );
       }
       LOG.debug(`Where condition for destroy blocked ILM objects which reached end of blocking:`, whereCondition)
+      req.user._is_privileged = true
       const deleted = await this.run(DELETE.from(iLMObject).where(whereCondition));
       LOG.info(`Deleted ${deleted} ${iLMObject} for the data subject role ${dataSubjectRole} as they reached end of blocking`);
       req.res.statusCode = 202
@@ -176,6 +178,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       }
 
       let modifiedRecords = 0;
+      req.user._is_privileged = true
       //Check if there are blocked records
       for (const singleEntity of dsEntities) {
         if (new Date(maxDeletionDate).toISOString() > new Date().toISOString()) {
@@ -241,6 +244,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       }
       if (dataSubjectIDsToDestroy.length > 0) {
         LOG.info(`Destroy data subjects with the ID`, dataSubjectIDsToDestroy)
+        req.user._is_privileged = true
         const deleted = await this.run(DELETE.from(dataSubjectEntity).where({ [dataSubjectEntity._dpi.dataSubjectIdReference]: { in: dataSubjectIDsToDestroy }, dppEarliestDestructionDate: { '<=': new Date().toISOString().substring(0,10) } }));
         LOG.debug(`Destroyed ${deleted} data subjects, with ${dataSubjectIDsToDestroy.length} data subject IDs being provided.`)
         req.res.statusCode = 200

@@ -1,4 +1,4 @@
-using {sap.dpi.dppFlags} from '../db/dpi';
+using {sap.dpp.dppFlags} from '../db/dpi';
 
 @requires: 'DataRetentionManagerUser'
 @protocol: 'rest'

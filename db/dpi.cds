@@ -1,4 +1,4 @@
-namespace sap.dpi;
+namespace sap.dpp;
 
 aspect dppFlags {
   dppBlockingDate            : Date  @UI.HiddenFilter  @PersonalData.FieldSemantics: 'BlockingDate';

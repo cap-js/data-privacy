@@ -1,5 +1,5 @@
 using DPIRetentionService from './DPIRetention';
-using {sap.dpi.Condition, sap.dpi.ReferenceDate} from '../db/dpi';
+using {sap.dpp.Condition, sap.dpp.ReferenceDate} from '../db/dpi';
 
 @impl : './TableHeaderBlocking.js'
 extend service DPIRetentionService with {
