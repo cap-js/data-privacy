@@ -17,7 +17,7 @@ describe('data subject deletion', () => {
   describe('deletion', () => {
       test('dataSubjectEndOfBusiness returns true if all objects have reached end of business', async () => {
         const {status, data} = await POST('/drm/dataSubjectEndOfBusiness', {
-          applicationName: '@capire/gdpr', 
+          applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'
@@ -36,7 +36,7 @@ describe('data subject deletion', () => {
         endOfWarrantyDate.setFullYear(endOfWarrantyDate.getFullYear() + 1)
         await UPDATE.entity(Orders).set({endOfWarrantyDate: endOfWarrantyDate.toISOString()})
         const {status, data} = await POST('/drm/dataSubjectEndOfBusiness', {
-          applicationName: '@capire/gdpr', 
+          applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'
@@ -51,7 +51,7 @@ describe('data subject deletion', () => {
     
       test('dataSubjectOrganizationAttributeValues returns attribute values', async () => {
         const {status, data} = await POST('/drm/dataSubjectOrganizationAttributeValues', {
-          applicationName: '@capire/gdpr', 
+          applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -67,7 +67,7 @@ describe('data subject deletion', () => {
 
       test('dataSubjectOrganizationAttributeValues returns error if org attribute does not exist', async () => {
         const {status, data} = await POST('/drm/dataSubjectOrganizationAttributeValues', {
-          applicationName: '@capire/gdpr', 
+          applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -80,7 +80,7 @@ describe('data subject deletion', () => {
 
       test('dataSubjectOrganizationAttributeValues returns error if org attribute is not annotated as DataControllerID', async () => {
         const {status, data} = await POST('/drm/dataSubjectOrganizationAttributeValues', {
-          applicationName: '@capire/gdpr', 
+          applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -93,7 +93,7 @@ describe('data subject deletion', () => {
 
       test('dataSubjectLatestRetentionStartDates', async () => {
         const {status, data} = await POST('/drm/dataSubjectLatestRetentionStartDates', {
-          applicationName: '@capire/gdpr', 
+          applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -110,14 +110,14 @@ describe('data subject deletion', () => {
         expect(data.length).toEqual(1);
         expect(data[0]).toMatchObject({
           retentionSetId: 'ABC',
-          retentionStartDate: '2020-04-04T00:00:00.000Z'
+          retentionStartDate: '2020-04-04T00:00:00'
         });
       })
 
       test('dataSubjectILMObjectInstanceBlocking returns amount of blocked instances', async () => {
         const {Orders} = cds.entities('sap.capire.bookshop');
         const {status, data} = await POST('/drm/dataSubjectILMObjectInstanceBlocking', {
-          applicationName: '@capire/gdpr', 
+          applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -136,7 +136,7 @@ describe('data subject deletion', () => {
         const {Orders} = cds.entities('sap.capire.bookshop')
         await DELETE.from(Orders);
         const {status} = await POST('/drm/dataSubjectILMObjectInstanceBlocking', {
-          applicationName: '@capire/gdpr', 
+          applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -149,7 +149,7 @@ describe('data subject deletion', () => {
       test('dataSubjectsILMObjectInstancesDestroying', async () => {
         const {Orders} = cds.entities('sap.capire.bookshop');
         await POST('/drm/dataSubjectILMObjectInstanceBlocking', {
-          applicationName: '@capire/gdpr', 
+          applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -161,7 +161,7 @@ describe('data subject deletion', () => {
         expect(blockingBeforeDelete[0].dppEarliestDestructionDate).toEqual('2020-04-04');
 
         await POST('/drm/dataSubjectsILMObjectInstancesDestroying', {
-          applicationName: '@capire/gdpr', 
+          applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
         }, { auth: DPI_Service });
@@ -175,7 +175,7 @@ describe('data subject deletion', () => {
         const maxDeletionDate = new Date()
         maxDeletionDate.setFullYear(maxDeletionDate.getFullYear() + 1)
         await POST('/drm/dataSubjectILMObjectInstanceBlocking', {
-          applicationName: '@capire/gdpr', 
+          applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -187,7 +187,7 @@ describe('data subject deletion', () => {
         expect(blockingBeforeDelete[0].dppEarliestDestructionDate).toEqual(maxDeletionDate.toISOString().substring(0,10));
 
         await POST('/drm/dataSubjectsILMObjectInstancesDestroying', {
-          applicationName: '@capire/gdpr', 
+          applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
         }, { auth: DPI_Service });
@@ -200,7 +200,7 @@ describe('data subject deletion', () => {
 
       test('dataSubjectBlocking returns 400 if active records exist', async () => {
         const {status} = await POST('/drm/dataSubjectBlocking', {
-          applicationName: '@capire/gdpr', 
+          applicationName: 'bookshop-retention', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
           maxDeletionDate: '2020-04-04T22:00:00'
@@ -214,12 +214,18 @@ describe('data subject deletion', () => {
 
       test('dataSubjectBlocking blocks if maxDeletion date is in future', async () => {
         const {Orders, Marketing, Customers} = cds.entities('sap.capire.bookshop')
-        await DELETE.from(Orders).where({Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'})
-        await DELETE.from(Marketing).where({Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'})
+        await UPDATE.entity(Orders).where({Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'}).set({
+          dppBlockingDate: new Date().toISOString().substring(0,10),
+          dppEarliestDestructionDate: "2020-01-02T00:00:00Z"
+        });
+        await UPDATE.entity(Marketing).where({Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'}).set({
+          dppBlockingDate: new Date().toISOString().substring(0,10),
+          dppEarliestDestructionDate: "2020-01-02T00:00:00Z"
+        });
         const maxDeletionDate = new Date()
         maxDeletionDate.setFullYear(maxDeletionDate.getFullYear() + 1)
         const {status} = await POST('/drm/dataSubjectBlocking', {
-          applicationName: '@capire/gdpr', 
+          applicationName: 'bookshop-retention', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
           maxDeletionDate: maxDeletionDate.toISOString()
@@ -237,7 +243,7 @@ describe('data subject deletion', () => {
         await DELETE.from(Orders).where({Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'})
         await DELETE.from(Marketing).where({Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'})
         const {status} = await POST('/drm/dataSubjectBlocking', {
-          applicationName: '@capire/gdpr', 
+          applicationName: 'bookshop-retention', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
           maxDeletionDate: '2020-01-01'
@@ -255,7 +261,7 @@ describe('data subject deletion', () => {
         const maxDeletionDate = new Date()
         maxDeletionDate.setFullYear(maxDeletionDate.getFullYear() + 1)
         await POST('/drm/dataSubjectBlocking', {
-          applicationName: '@capire/gdpr', 
+          applicationName: 'bookshop-retention', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
           maxDeletionDate: maxDeletionDate.toISOString()
@@ -267,7 +273,7 @@ describe('data subject deletion', () => {
         expect(blockingBefore[0].dppEarliestDestructionDate).toEqual(maxDeletionDate.toISOString().substring(0,10));
         
         const {status} = await POST('/drm/dataSubjectsDestroying', {
-          applicationName: '@capire/gdpr', 
+          applicationName: 'bookshop-retention', 
           dataSubjectRoleName: 'Customer', 
         }, { auth: DPI_Service });
         expect(status).toEqual(204);
@@ -286,7 +292,7 @@ describe('data subject deletion', () => {
         })
         
         const {status} = await POST('/drm/dataSubjectsDestroying', {
-          applicationName: '@capire/gdpr', 
+          applicationName: 'bookshop-retention', 
           dataSubjectRoleName: 'Customer', 
         }, { auth: DPI_Service });
         expect(status).toEqual(200);
@@ -296,11 +302,43 @@ describe('data subject deletion', () => {
       })
   });
 
+  describe('Validate applicationName', () => {
+    test('dataSubjectsEndOfResidenceEndPoint', async () => {
+      const {status, data} = await POST('/drm/dataSubjectsEndOfResidence', {
+        applicationName: 'ABCDEFG', 
+        iLMObjectName: 'Orders',
+        dataSubjectRoleName: 'Customer', 
+        referenceDates: [
+          {
+            referenceDateName: 'endOfWarrantyDate',
+            organizationAttributeResidenceSet: [{
+                organizationAttributeName: 'legalEntity_title',
+                organizationAttributeValue: 'SAP Ltd',
+                residenceSet: [{
+                    retentionStartDate: '2024-12-20',
+                    conditionSet: []
+                }]
+            }]
+          }
+        ]
+      }, { auth: DPI_Service });
+  
+      expect(status).toEqual(400);
+      expect(data).toMatchObject({
+        error: {
+          code: 'WRONG_APPLICATION_NAME',
+          message: expect.any(String),
+          target: 'applicationName'
+        }
+      });
+    })
+  })
+
   describe('eligible for deletion', () => {
 
     test('dataSubjectsEndOfResidence returns eligible data subjects for deletion', async () => {
       const {status, data} = await POST('/drm/dataSubjectsEndOfResidence', {
-        applicationName: '@capire/gdpr', 
+        applicationName: 'bookshop-retention', 
         iLMObjectName: 'Orders',
         dataSubjectRoleName: 'Customer', 
         referenceDates: [
@@ -331,7 +369,7 @@ describe('data subject deletion', () => {
 
     test('dataSubjectsEndOfResidence properly considers org attribute', async () => {
       const {status, data} = await POST('/drm/dataSubjectsEndOfResidence', {
-        applicationName: '@capire/gdpr', 
+        applicationName: 'bookshop-retention', 
         iLMObjectName: 'Orders',
         dataSubjectRoleName: 'Customer', 
         referenceDates: [
@@ -358,7 +396,7 @@ describe('data subject deletion', () => {
 
     test('dataSubjectsEndOfResidenceConfirmation confirms data subjects end of residence', async () => {
       const {status, data} = await POST('/drm/dataSubjectsEndOfResidenceConfirmation', {
-        applicationName: '@capire/gdpr', 
+        applicationName: 'bookshop-retention', 
         iLMObjectName: 'Orders', 
         dataSubjectRoleName: 'Customer', 
         referenceDates: [
@@ -386,9 +424,80 @@ describe('data subject deletion', () => {
       });
     })
 
+    test('dataSubjectsEndOfResidenceConfirmation returns no data subjects if no data subjects are passed', async () => {
+      const { ILMObjectWithXPRBlockingEnabled } = cds.entities('sap.capire.bookshop');
+      await DELETE.from(ILMObjectWithXPRBlockingEnabled).where('1 = 1')
+
+      const {status, data} = await POST('/drm/dataSubjectsEndOfResidenceConfirmation', {
+        applicationName: 'bookshop-retention', 
+        iLMObjectName: 'ILMObjectWithXPRBlockingEnabled', 
+        dataSubjectRoleName: 'Customer', 
+        referenceDates: [
+          {
+            referenceDateName: 'marketingDate',
+            organizationAttributeResidenceSet: [{
+                organizationAttributeName: 'legalEntity_title',
+                organizationAttributeValue: 'SAP Ltd',
+                residenceSet: [{
+                    retentionStartDate: '2024-12-20',
+                    conditionSet: []
+                }]
+            }]
+          }
+        ],
+        dataSubjects: [
+          
+        ]
+      }, { auth: DPI_Service });
+  
+      expect(status).toEqual(200);
+      expect(data.length).toEqual(0);
+    })
+
+    test('dataSubjectsEndOfResidenceConfirmation returns the data subjects if they do not have any business with the specified ILMObject', async () => {
+      const { ILMObjectWithXPRBlockingEnabled } = cds.entities('sap.capire.bookshop');
+      await DELETE.from(ILMObjectWithXPRBlockingEnabled).where('1 = 1')
+
+      const {status, data} = await POST('/drm/dataSubjectsEndOfResidenceConfirmation', {
+        applicationName: 'bookshop-retention', 
+        iLMObjectName: 'ILMObjectWithXPRBlockingEnabled', 
+        dataSubjectRoleName: 'Customer', 
+        referenceDates: [
+          {
+            referenceDateName: 'marketingDate',
+            organizationAttributeResidenceSet: [{
+                organizationAttributeName: 'legalEntity_title',
+                organizationAttributeValue: 'SAP Ltd',
+                residenceSet: [{
+                    retentionStartDate: '2024-12-20',
+                    conditionSet: []
+                }]
+            }]
+          }
+        ],
+        dataSubjects: [
+          { dataSubjectId: '9e2f2640-6866-4dcf-8f4d-3027aa831cad' },
+          { dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad' },
+          { dataSubjectId: '74e718c9-ff99-47f1-8ca3-950c850777d4' }
+        ]
+      }, { auth: DPI_Service });
+  
+      expect(status).toEqual(200);
+      expect(data.length).toEqual(3);
+      expect(data[0]).toMatchObject({
+        dataSubjectId: '9e2f2640-6866-4dcf-8f4d-3027aa831cad',
+      });
+      expect(data[1]).toMatchObject({
+        dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
+      });
+      expect(data[2]).toMatchObject({
+        dataSubjectId: '74e718c9-ff99-47f1-8ca3-950c850777d4',
+      });
+    })
+
     test('dataSubjectsEndOfResidence properly considers org attribute', async () => {
       const {status, data} = await POST('/drm/dataSubjectsEndOfResidenceConfirmation', {
-        applicationName: '@capire/gdpr', 
+        applicationName: 'bookshop-retention', 
         iLMObjectName: 'Orders',
         dataSubjectRoleName: 'Customer', 
         referenceDates: [
@@ -415,7 +524,7 @@ describe('data subject deletion', () => {
 
     test('dataSubjectsEndOfResidenceConfirmation with empty reference dates still works', async () => {
       const {status, data} = await POST('/drm/dataSubjectsEndOfResidenceConfirmation', {
-        applicationName: '@capire/gdpr', 
+        applicationName: 'bookshop-retention', 
         iLMObjectName: 'Orders', 
         dataSubjectRoleName: 'Customer', 
         referenceDates: [],
@@ -434,7 +543,7 @@ describe('data subject deletion', () => {
     //Used for Value helps
     test('dataSubjectInformation retrieval returns data subject information', async () => {
       const {status, data} = await POST('/drm/dataSubjectInformation', {
-        applicationName: '@capire/gdpr', 
+        applicationName: 'bookshop-retention', 
         dataSubjectRoleName: 'Customer', 
         dataSubjects: [
           {dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'}

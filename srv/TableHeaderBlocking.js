@@ -58,7 +58,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       LOG.debug(`dataSubjectLatestRetentionStartDates request for the iLMObject ${iLMObject.name}, the data subject role ${dataSubjectRoleName}`,
         ` with the data subject ID ${dataSubjectID}.`,
         `Application: ${applicationName}`,
-        `The refernece date name field is ${referenceDateName} and the org attribute ${organizationAttributeName} with value ${organizationAttributeValue}`,
+        `The reference date name field is ${referenceDateName} and the org attribute ${organizationAttributeName} with value ${organizationAttributeValue}`,
         `The retention condition set is`, retentionSet)
 
       const referenceDate = referenceDateName ?? iLMObject._dpi.endOfBusinessReference
@@ -100,7 +100,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       const result = results.map((response, idx) => {
         return {
           retentionSetId: retentionSet[idx].retentionSetId,
-          retentionStartDate: new Date(response[0].retentionStartDate).toISOString()
+          retentionStartDate: new Date(response[0].retentionStartDate).toISOString().substring(0, 19)
         }
       })
       LOG.debug(`retentionStartDate result`, result)
@@ -156,18 +156,21 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
 
     this.on('dataSubjectBlocking', async req => {
       const { applicationName, dataSubjectRoleName, dataSubjectId, maxDeletionDate } = req.data
-      LOG.debug(`Delete data subject request for role ${dataSubjectRoleName}, ID ${dataSubjectId} and application group ${applicationName} with end of retention ${maxDeletionDate}.`)
-      const dsEntities = this.definition._dpi.dataSubjectsForRole(dataSubjectRoleName); //Ensures that data subject details are also retrived
+      LOG.debug(`Block data subject request for role ${dataSubjectRoleName}, ID ${dataSubjectId} and application group ${applicationName} with end of retention ${maxDeletionDate}.`)
+      const dsEntities = this.definition._dpi.dataSubjectsForRole(dataSubjectRoleName); //Ensures that data subject details are also retrieved
       if (dsEntities.length === 0) {
         return req.error('Non existing data subject')
       }
       //Delete if there are no active iLMObjects for the data subject
+      //Active entities are the ones with no blocking date or a blocking date in the future
+      const wherePart1 = {xpr: [{ref: ['dppBlockingDate']}, 'is', 'null', 'or', {ref: ['dppBlockingDate']}, '>', {val: new Date().toISOString().substring(0,10)}]}
       for (const iLMObjectName in this.definition._dpi.iLMObjects) {
         const iLMObject = this.definition._dpi.iLMObjects[iLMObjectName];
-        LOG.debug(`Where clause for getting active entities`, _buildWhereClauseForDS(iLMObject, dataSubjectId, dataSubjectRoleName))
-        const activeRecords = await cds.db.exists(iLMObject).where(_buildWhereClauseForDS(iLMObject, dataSubjectId, dataSubjectRoleName))
+        const wherePart2 = _buildWhereClauseForDS(iLMObject, dataSubjectId, dataSubjectRoleName)
+        LOG.debug(`Where clause for getting active entities`, JSON.stringify(wherePart1), 'and', wherePart2)
+        const activeRecords = await cds.db.exists(iLMObject).where([wherePart1, 'and', {xpr: wherePart2}])
         if (activeRecords) {
-          LOG.warn(`Delete data subject for ${dataSubjectRoleName}, ID ${dataSubjectId} does not work due to active entities in ${iLMObject.name}.`)
+          LOG.warn(`Block data subject for ${dataSubjectRoleName}, ID ${dataSubjectId} does not work due to active entities in ${iLMObject.name}.`)
           return req.error({ message: 'Active records still exist for the entity', code: 400 })
         }
       }
@@ -261,14 +264,14 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
           status: 400
         })
       }
-      const wheres = whereClauseForRetentionSets(referenceDates, iLMObject, dataSubjectRoleName);
+      const whereStmts = whereClauseForRetentionSets(referenceDates, iLMObject, dataSubjectRoleName);
 
       const [dataSubjectsMatchingConditions, dataSubjectsNotMatchingConditions] = await Promise.all([
         SELECT.distinct.from(iLMObject)
-          .where(wheres.wheresWithCondition)
+          .where(whereStmts.whereWithCondition)
           .columns(`${iLMObject._dpi.dataSubjectIdReference} as dataSubjectId`, `count(${iLMObject._dpi.orgAttributeReference}) as sumRecords`).groupBy(iLMObject._dpi.dataSubjectIdReference).orderBy(iLMObject._dpi.dataSubjectIdReference),
         SELECT.distinct.from(iLMObject)
-          .where(wheres.wheresWithNegConditions)
+          .where(whereStmts.whereWithNegConditions)
           .columns(`${iLMObject._dpi.dataSubjectIdReference} as dataSubjectId`, `count(${iLMObject._dpi.orgAttributeReference}) as sumRecords`).groupBy(iLMObject._dpi.dataSubjectIdReference)
       ])
 
@@ -287,11 +290,17 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
         `Reference dates:`, JSON.stringify(referenceDates))
       LOG.debug(`dataSubjectsEndOfResidenceConfirmation, data subject IDs`, dataSubjects)
       const dataSubjectIDs = dataSubjects.map(m => m.dataSubjectId)
-      const where = dataSubjectIDs.length > 0 ? [
+      
+      if (dataSubjectIDs.length === 0) {
+        LOG.debug(`No data subject IDs passed to dataSubjectsEndOfResidenceConfirmation. Early exit returning no data subjects at end of residence`);
+        return []
+      }
+
+      const where = [
           { ref: [iLMObject._dpi.dataSubjectIdReference] },
           'in',
           { list: dataSubjectIDs.map(d => ({ val: d })) }
-        ] : []
+      ];
 
       //Second condition for case that role is dynamic
       if (!Object.keys(this.definition._dpi.dataSubjectsForRole(dataSubjectRoleName)) && !iLMObject['@PersonalData.DataSubjectRole']?.['=']) {
@@ -300,17 +309,30 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
           status: 400
         })
       }
-      const wheres = whereClauseForRetentionSets(referenceDates, iLMObject, dataSubjectRoleName);
-      if (wheres.wheresWithCondition.length > 0) where.push('and')
-      const [dataSubjectsMatchingConditions] = await Promise.all([
+      const {whereWithCondition} = whereClauseForRetentionSets(referenceDates, iLMObject, dataSubjectRoleName);
+      const [dataSubjectsMatchingConditions, dataSubjectsForThisEntity] = await Promise.all([
         SELECT.distinct.from(iLMObject)
-          .where(where.concat(wheres.wheresWithCondition))
+          .where(whereWithCondition.length ? where.concat('and', whereWithCondition) : where.concat(whereWithCondition))
+          .columns(`${iLMObject._dpi.dataSubjectIdReference} as dataSubjectId`, `count(${iLMObject._dpi.orgAttributeReference}) as sumRecords`).groupBy(iLMObject._dpi.dataSubjectIdReference).orderBy(iLMObject._dpi.dataSubjectIdReference),
+        SELECT.distinct.from(iLMObject)
+          .where(where)
           .columns(`${iLMObject._dpi.dataSubjectIdReference} as dataSubjectId`, `count(${iLMObject._dpi.orgAttributeReference}) as sumRecords`).groupBy(iLMObject._dpi.dataSubjectIdReference).orderBy(iLMObject._dpi.dataSubjectIdReference)
       ])
 
       LOG.debug(`Successful requests`, dataSubjectsMatchingConditions)
 
-      return dataSubjectsMatchingConditions.map(d => ({ dataSubjectId: d.dataSubjectId }))
+      // An ILM object might not have records at all for a given data subject. Make sure that the data subjects passed to this function, 
+      // who do not have any records for this ILM object are again returned to mark them as eligible for blocking for this entity as they don't have any business with this entity
+      const dataSubjectsAtTheEndOfResidence = dataSubjectsMatchingConditions.map(d => ({ dataSubjectId: d.dataSubjectId }));
+      for (const dataSubjectID of dataSubjectIDs) {
+        if (!dataSubjectsForThisEntity.some(d => d.dataSubjectId === dataSubjectID)) {
+          dataSubjectsAtTheEndOfResidence.push({
+            dataSubjectId: dataSubjectID
+          })
+        }
+      }
+
+      return dataSubjectsAtTheEndOfResidence;
     })
 
     this.on('dataSubjectInformation', async req => {
@@ -353,8 +375,8 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
     })
 
     function whereClauseForRetentionSets(referenceDates, iLMObjectEntity, dataSubjectRoleName) {
-      const wheresWithCondition = []
-      const wheresWithNegConditions = []
+      const whereWithCondition = []
+      const whereWithNegConditions = []
 
       for (const ref of referenceDates) {
         for (const orgAttrRef of ref.organizationAttributeResidenceSet) {
@@ -389,29 +411,29 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
             const conditionWhere = whereForConditionSet(residenceSet.conditionSet)
             if (conditionWhere.length > 0) {
               LOG.debug(`Add condition in whereClauseForRetentionSets for residence set with start date ${residenceSet.retentionStartDate} `, conditionWhere)
-              wheresWithCondition.push(residenceSetWhere.concat('and', conditionWhere))
-              wheresWithNegConditions.push(residenceSetWhere.concat('and', 'not', { xpr: conditionWhere }))
+              whereWithCondition.push(residenceSetWhere.concat('and', conditionWhere))
+              whereWithNegConditions.push(residenceSetWhere.concat('and', 'not', { xpr: conditionWhere }))
             } else {
-              wheresWithCondition.push(residenceSetWhere)
+              whereWithCondition.push(residenceSetWhere)
               //If we do not have a conditionSet the not case has to be a wrong condition so that this does not return the same DP, IDs
-              wheresWithNegConditions.push(residenceSetWhere.concat(['and', { val: true }, '=', { val: false }]))
+              whereWithNegConditions.push(residenceSetWhere.concat(['and', { val: true }, '=', { val: false }]))
             }
           }
         }
       }
       const result = {
-        wheresWithCondition: wheresWithCondition.reduce((acc, w) => {
+        whereWithCondition: whereWithCondition.reduce((acc, w) => {
           if (acc.length > 0) acc.push('or');
           acc.push({ xpr: w });
           return acc;
         }, []),
-        wheresWithNegConditions: wheresWithNegConditions.reduce((acc, w) => {
+        whereWithNegConditions: whereWithNegConditions.reduce((acc, w) => {
           if (acc.length > 0) acc.push('or');
           acc.push({ xpr: w });
           return acc;
         }, [])
       }
-      LOG.debug(`Wheres result: ${JSON.stringify(result)}`)
+      LOG.debug(`Where statements result: ${JSON.stringify(result)}`)
       return result;
     }
 

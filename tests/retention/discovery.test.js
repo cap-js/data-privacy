@@ -46,7 +46,8 @@ describe('iLMObject discovery', () => {
         });
     })
 
-    test('Selection criteria are correctly determined', async () => {
+    // REVISIT: Only relevant once archiving/destruction is added
+    test.skip('Selection criteria are correctly determined', async () => {
         const {status, data} = await GET('/drm/iLMObjects', { auth: DPI_Service });
         expect(status).toEqual(200);
         for (const iLMObject of data) {

@@ -7,26 +7,24 @@ cds._dpi.log = function log(module, options) {
         if (cds.cli.command === 'build') {
             const {BuildMessage} = require('@sap/cds-dk/lib/build/util');
             return {
-                error: (...parts) => cds._dpi.buildMessages.push(new BuildMessage(parts.join(' '), 'Error')),
-                info: (...parts) => cds._dpi.buildMessages.push(new BuildMessage(parts.join(' '), 'Info')),
-                warn: (...parts) => cds._dpi.buildMessages.push(new BuildMessage(parts.join(' '), 'Warning')),
-                debug: (...parts) => cds._dpi.buildMessages.push(new BuildMessage(parts.join(' '), 'Debug'))
+                error: (...parts) => cds._dpi.buildMessages.push(new BuildMessage(parts.map(p => typeof p === 'object' ? JSON.stringify(p) : `${p}`).join(' '), 'Error')),
+                info: (...parts) => cds._dpi.buildMessages.push(new BuildMessage(parts.map(p => typeof p === 'object' ? JSON.stringify(p) : `${p}`).join(' '), 'Info')),
+                warn: (...parts) => cds._dpi.buildMessages.push(new BuildMessage(parts.map(p => typeof p === 'object' ? JSON.stringify(p) : `${p}`).join(' '), 'Warning')),
+                debug: (...parts) => cds._dpi.buildMessages.push(new BuildMessage(parts.map(p => typeof p === 'object' ? JSON.stringify(p) : `${p}`).join(' '), 'Debug'))
             }
         } else {
             return cds.log(module, options)
         }
 }
 
-const enhanceModel = require('./lib/csn-enhancements/enhanceModel');
+const enhanceModel = require('./lib/csn-enhancements');
 const path = require('path');
 const fs = require('fs/promises');
 require('./lib/csn-runtime-extensions');
 
 cds.on('compile.for.runtime', csn => { enhanceModel(csn) })
-//cds.on('compile.to.edmx', csn => { enhanceModel(csn) })
+cds.on('compile.to.edmx', csn => { enhanceModel(csn) })
 cds.on('compile.to.dbx', csn => { enhanceModel(csn) })
-
-cds.on('loaded', csn => { cds.cli.command === 'build' && enhanceModel(csn) })
 
 cds.on('listening', async () => {
     if (!cds.env.requires['data-privacy-retention'].applicationName) {

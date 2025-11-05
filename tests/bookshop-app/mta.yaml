@@ -1,16 +1,26 @@
 _schema-version: '3.1'
 ID: capire.gdpr
 version: 1.0.0
-description: gdpr
+description: bookshop
 parameters:
   enable-parallel-deployments: true
 build-parameters:
   before-all:
     - builder: custom
       commands:
+        - npm unlink @sap/cds-dpi
+        - npm pack ../../
+        - npm install sap-cds-dpi-1.0.0.tgz
+        - npm ci
         - npx -p @sap/cds-dk cds build --production
+        - cp sap-cds-dpi-1.0.0.tgz ./gen/srv
+  after-all:
+    - builder: custom
+      commands:
+        - npm link ../../
+        - rm -rf ./node_modules/@sap/cds
 modules:
-  - name: gdpr-srv
+  - name: bookshop-srv
     type: nodejs
     path: gen/srv
     parameters:
@@ -22,109 +32,109 @@ modules:
         properties:
           srv-url: ${default-url}
     requires:
-      - name: gdpr-db
-      - name: gdpr-auth
-      - name: gdpr-cf-logging
-      - name: gdpr-auditlog
-      - name: gdpr-information
-      - name: gdpr-retention
-  - name: gdpr-db-deployer
+      - name: bookshop-db
+      - name: bookshop-auth
+      - name: bookshop-cf-logging
+      - name: bookshop-auditlog
+      - name: bookshop-information
+      - name: bookshop-retention
+  - name: bookshop-db-deployer
     type: hdb
     path: gen/db
     parameters:
       buildpack: nodejs_buildpack
     requires:
-      - name: gdpr-db
-      - name: gdpr-auth
-      - name: gdpr-cf-logging
+      - name: bookshop-db
+      - name: bookshop-auth
+      - name: bookshop-cf-logging
 resources:
-  - name: gdpr-db
+  - name: bookshop-db
     type: com.sap.xs.hdi-container
     parameters:
       service: hana
       service-plan: hdi-shared
-  - name: gdpr-auth
+  - name: bookshop-auth
     type: org.cloudfoundry.managed-service
     parameters:
       service: xsuaa
       service-plan: application
       path: ./xs-security.json
       config:
-        xsappname: gdpr-${org}-${space}
+        xsappname: bookshop-${org}-${space}
         tenant-mode: dedicated
         scopes:
           - name: $XSAPPNAME.PersonalDataManagerUser
             description: Technial scope to restrict access to information endpoint
             grant-as-authority-to-apps:
-              - $XSSERVICENAME(gdpr-information)
+              - $XSSERVICENAME(bookshop-information)
           - name: $XSAPPNAME.DataRetentionManagerUser
             description: Technial scope to restrict access to retention endpoint
             grant-as-authority-to-apps:
-              - $XSSERVICENAME(gdpr-retention)
-  - name: gdpr-cf-logging
+              - $XSSERVICENAME(bookshop-retention)
+  - name: bookshop-cf-logging
     type: org.cloudfoundry.managed-service
     parameters:
       service: application-logs
       service-plan: lite
-  - name: gdpr-information
+  - name: bookshop-information
     type: org.cloudfoundry.managed-service
     requires:
       - name: srv-api
     parameters:
-      service-name: gdpr-information
+      service-name: bookshop-information
       service: data-privacy-integration-service
       service-plan: data-privacy-internal
       config:
         xs-security:
-          xsappname: gdpr-information-${org}-${space}
+          xsappname: bookshop-information-${org}-${space}
           authorities:
             - $ACCEPT_GRANTED_AUTHORITIES
         dataPrivacyConfiguration:
           configType: information
           applicationConfiguration:
-            applicationName: gdpr-information
-            applicationTitle: gdpr
+            applicationName: bookshop-information
+            applicationTitle: bookshop
             enableAutoSubscription: true
           informationConfiguration:
             applicationConfiguration:
               dataSubjectDeletionAgent: retention-manager
-              retentionApplicationName: gdpr-retention
+              retentionApplicationName: bookshop-retention
               disableDataSubjectCorrection: true
               cacheControl: no-cache
             components:
-              - componentName: gdpr-srv
+              - componentName: bookshop-srv
                 componentBaseURL: ~{srv-api/srv-url}
                 serviceEndPoints:
-                  - serviceName: gdpr-service
+                  - serviceName: bookshop-service
                     serviceFormat: odata-v4
                     annotationFormat: v4
                     serviceEndPoint: /pdm
                     appPaginationEnabled: true
                     cacheControl: no-cache
-  - name: gdpr-retention
+  - name: bookshop-retention
     type: org.cloudfoundry.managed-service
     requires:
       - name: srv-api
     parameters:
-      service-name: gdpr-retention
+      service-name: bookshop-retention
       service: data-privacy-integration-service
       service-plan: data-privacy-internal
       config:
         xs-security:
-          xsappname: gdpr-retention-${org}-${space}
+          xsappname: bookshop-retention-${org}-${space}
           authorities:
             - $ACCEPT_GRANTED_AUTHORITIES
         dataPrivacyConfiguration:
           configType: retention
           applicationConfiguration:
-            applicationName: gdpr-retention
-            applicationDescription: gdpr-retention
+            applicationName: bookshop-retention
+            applicationDescription: bookshop-retention
+            applicationDescriptionKey: APPLICATION_NAME
             applicationBaseURL: ~{srv-api/srv-url}
-            applicationTitle: gdpr
+            applicationTitle: bookshop
             enableAutoSubscription: true
           translationConfiguration:
-            textBundleBaseURL: ~{srv-api/srv-url}
-            textBundleEndPoint: /data-privacy-i18n
+            textBundleEndPoint: /drm/i18n-files/i18n.properties
             defaultLanguage: en
             supportedLanguages:
               - de
@@ -134,12 +144,13 @@ resources:
           retentionConfiguration:
             applicationConfiguration:
               applicationType: TransactionMaster
-              simulationSupportedForArchiving: true
-              simulationSupportedForDestruction: true
+              # simulationSupportedForArchiving: true
+              # simulationSupportedForDestruction: true
               iLMObjectDiscoveryEndPoint: /drm/iLMObjects
             dataSubjectRoles:
               - dataSubjectRoleName: Customer
                 dataSubjectDescription: Customer
+                dataSubjectDescriptionKey: CUSTOMER
                 dataSubjectBaseURL: ~{srv-api/srv-url}
                 dataSubjectBlockingEndPoint: /drm/dataSubjectBlocking
                 dataSubjectInformationEndPoint: /drm/dataSubjectInformation
@@ -147,10 +158,11 @@ resources:
             organizationAttributes:
               - organizationAttributeName: legalEntity_title
                 organizationAttributeDescription: Legal entity
+                organizationAttributeDescriptionKey: LEGAL_ENTITY
                 organizationAttributeBaseURL: ~{srv-api/srv-url}
-                organizationAttributeValueHelpEndPoint: /drm/valueHelp_orgAttribute_DPIRetentionService_LegalEntities
-  - name: gdpr-auditlog
+                organizationAttributeValueHelpEndPoint: /drm/valueHelp_orgAttribute_sap_capire_bookshop_LegalEntities
+  - name: bookshop-auditlog
     type: org.cloudfoundry.managed-service
     parameters:
       service: auditlog
-      service-plan: standard
+      service-plan: oauth2

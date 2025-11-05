@@ -82,7 +82,7 @@ resources:
 {{/hasMultitenancy}}
           translationConfiguration:
             textBundleBaseURL: ~{srv-api/srv-url}
-            textBundleEndPoint: /drm/i18n-files/i18n.properties
+            textBundleEndPoint: /drm/i18n-files
             defaultLanguage: en
             supportedLanguages:
               - de
@@ -92,6 +92,6 @@ resources:
           retentionConfiguration:
             applicationConfiguration:
               applicationType: TransactionMaster
-              simulationSupportedForArchiving: true
-              simulationSupportedForDestruction: true
+              # simulationSupportedForArchiving: true
+              # simulationSupportedForDestruction: true
               iLMObjectDiscoveryEndPoint: /drm/iLMObjects

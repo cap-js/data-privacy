@@ -5,11 +5,15 @@ using {sap.dpi.dppFlags} from '../db/dpi';
 @cds.provided
 service DPIRetentionService @(path: '/drm') {
 
+    @cds.persistence.exists
+    @cds.persistence.skip
     entity ![i18n-files] {
         key file: String;
     }
 
     @readonly
+    @cds.persistence.exists
+    @cds.persistence.skip
     entity iLMObjects : dppFlags {
         //dppFlags just being used to have in m.definitions
         key iLMObjectName: String;

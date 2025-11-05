@@ -8,26 +8,26 @@ module.exports = class DPIRetentionService extends cds.ApplicationService {
     const { iLMObjects } = this.entities
 
     this.on('READ', iLMObjects, async req => {
-      LOG.info(`cds.server.url upon calling iLMObjects: `, cds.server.url);
       const iLMObjects = Object.keys(this.definition._dpi.iLMObjects).map(iLMObject => {
         const entity = this.definition._dpi.iLMObjects[iLMObject];
-        const selectionCriteria = getSelectionCriteria(entity);
+        //const selectionCriteria = getSelectionCriteria(entity);
         return {
           iLMObjectName: iLMObject,
           iLMObjectType: 'Transaction',
-          iLMObjectDescription: cds.i18n.labels.for(getTranslationKey(entity['@Core.Description'])) || cds.i18n.labels.for(entity),
+          // Mandatory property - if not given DPI crashes
+          iLMObjectDescription: cds.i18n.labels.for(getTranslationKey(entity['@Core.Description'])) || cds.i18n.labels.for(entity) || `Generated description for ${entity.name}`,
           iLMObjectDescriptionKey: getTranslationKey(entity['@Core.Description']) ?? undefined,
           iLMObjectBaseURL: buildBaseUrl(req),
           iLMObjectCheckEndPoint: `${this.path}/iLMObjects/${iLMObject}/isILMObjectEnabled`,
-          organizationAttributeName: entity.orgAttributeReference,
+          organizationAttributeName: entity._dpi.orgAttributeReference,
           referenceDates: (Object.entries(entity.elements)).reduce((acc, [name, value]) => {
             if (value['@PersonalData.FieldSemantics'] === 'EndOfBusinessDate' && value.type !== 'cds.Association' && value.type !== 'cds.Composition') {
               const startTime = {
                 referenceDateName: name,
-                referenceDateDescription: cds.i18n.labels.for(value),
+                referenceDateDescription: cds.i18n.labels.for(value) ?? cds.i18n.labels.key4(value),
                 referenceDateDescriptionKey: undefined,
               }
-              const descriptionI18nKey = cds.i18n.labels.key4(value)
+              const descriptionI18nKey = getTranslationKey(value['@Common.Label'])
               if (descriptionI18nKey) {
                 startTime.referenceDateDescriptionKey = descriptionI18nKey;
               }
@@ -55,22 +55,22 @@ module.exports = class DPIRetentionService extends cds.ApplicationService {
           }, []),
           dataSubjectBlockingConfiguration: {
             dataSubjectEndOfBusinessEndPoint: `${this.path}/dataSubjectEndOfBusiness`,
-            dataSubjectOrganizationAttributesEndPoint: entity.elements[entity._dpi.orgAttributeReference]['@ILM.ValueHelp.Path'],
-            dataSubjectLastRetentionStartDatesEndPoint: `${this.path}/retentionStartDate`,
+            dataSubjectOrganizationAttributesEndPoint: `${this.path}/dataSubjectOrganizationAttributeValues`,
+            dataSubjectLastRetentionStartDatesEndPoint: `${this.path}/dataSubjectLatestRetentionStartDates`,
             dataSubjectsEndOfResidenceEndPoint: `${this.path}/dataSubjectsEndOfResidence`,
             dataSubjectsEndOfResidenceConfirmationEndPoint: `${this.path}/dataSubjectsEndOfResidenceConfirmation`,
-            dataSubjectILMObjectBlockingEndPoint: `${this.path}/deleteILMObjectInstances`,
-            dataSubjectsILMObjectDestroyingEndPoint: `${this.path}/destroyILMObjectInstances`,
+            dataSubjectILMObjectBlockingEndPoint: `${this.path}/dataSubjectILMObjectInstanceBlocking`,
+            dataSubjectsILMObjectDestroyingEndPoint: `${this.path}/dataSubjectsILMObjectInstancesDestroying`,
           },
-          destructionConfiguration: {
-            iLMObjectDestructionEndPoint: `${this.path}/destruction`,
-            iLMObjectDestructionSimulationEndPoint: `${this.path}/simulateDestruction`,
-            selectionCriteria: selectionCriteria
-          },
+          // destructionConfiguration: {
+          //   iLMObjectDestructionEndPoint: `${this.path}/destruction`,
+          //   iLMObjectDestructionSimulationEndPoint: `${this.path}/simulateDestruction`,
+          //   selectionCriteria: selectionCriteria
+          // },
           dataSubjectRoles: entity['@PersonalData.DataSubjectRole']['=']?.enum ? Object.keys(entity.elements[entity['@PersonalData.DataSubjectRole']['=']].enum).map(ds => ({ dataSubjectRoleName: ds })) : [{ dataSubjectRoleName: entity['@PersonalData.DataSubjectRole'] }]
         }
       })
-      LOG.debug('Transactional data discovery:', iLMObjects)
+      LOG.debug('Transactional data discovery:', JSON.stringify(iLMObjects))
       req.reply(iLMObjects)
     });
 
@@ -106,6 +106,15 @@ module.exports = class DPIRetentionService extends cds.ApplicationService {
         };
         return file;
       }
+      if (!req.data.file) {
+        return [
+          {file: 'i18n.properties'},
+          {file: 'i18n_en.properties'},
+          {file: 'i18n_de.properties'},
+          {file: 'i18n_fr.properties'},
+          {file: 'i18n_es.properties'}
+        ]
+      }
       let file = ''
       if (req.data.file.startsWith('i18n_en')) {
         file = getFile('en');
@@ -130,7 +139,16 @@ module.exports = class DPIRetentionService extends cds.ApplicationService {
     this.before('*', req => {
 
       if (req.data.applicationName && req.data.applicationName !== cds.env.requires['data-privacy-retention'].applicationName) {
-        return req.error(400, 'Application name does not match the service application name.');
+        return req.error({
+          status: 400, 
+          code: 'WRONG_APPLICATION_NAME',
+          message: 'Application name does not match the service application name.',
+          target: 'applicationName',
+          args: [
+            req.data.applicationName,
+            cds.env.requires['data-privacy-retention'].applicationName
+          ]
+        });
       }
 
       if (req.data.iLMObjectName && !this.entities[req.data.iLMObjectName]) {
@@ -151,44 +169,44 @@ const buildBaseUrl = (req) => {
   return url
 }
 
-function getSelectionCriteria(entity) {
-  return Object.keys(entity.elements).reduce((selectionCriteria, elementName) => {
-    const element = entity.elements[elementName];
-    if (element['@ILM.ValueHelp.Type'] === 'selection') {
-      const type = mapCDStoDRMtype(element.type);
-      const nextSelectionCriteria = {
-        selectionCriteriaName: elementName,
-        selectionCriteriaDisplayName: cds.i18n.labels.for(element),
-        selectionCriteriaDisplayNameKey: undefined,
-        selectionCriteriaDescription: undefined,
-        selectionCriteriaDescriptionKey: undefined,
-        selectionCriteriaType: type, //String, Integer, Decimal, Boolean, Timestamp
-        isRangeEnabled: fieldIsAllowedForRange(elementName, type, entity),
-        selectionCriteriaValueHelpEndPoint: type !== 'Boolean' && type !== 'String' && element['@ILM.ValueHelp.Path']
-      }
-      const labelI18nKey = getTranslationKey(element["@Common.Label"]);
-      if (labelI18nKey) {
-        nextSelectionCriteria.selectionCriteriaDisplayNameKey = labelI18nKey
-      }
-      if (element['@Core.Description']) {
-        const descriptionI18nKey = getTranslationKey(element['@Core.Description']);
-        selectionCriteria.selectionCriteriaDescription = cds.i18n.labels.for(descriptionI18nKey) ?? element['@Core.Description']
-        if (descriptionI18nKey) {
-          selectionCriteria.selectionCriteriaDescriptionKey = descriptionI18nKey;
-        }
-      }
-      selectionCriteria.push(nextSelectionCriteria);
-    }
-    return selectionCriteria;
-  }, [])
-}
+// function getSelectionCriteria(entity) {
+//   return Object.keys(entity.elements).reduce((selectionCriteria, elementName) => {
+//     const element = entity.elements[elementName];
+//     if (element['@ILM.ValueHelp.Type'] === 'selection') {
+//       const type = mapCDStoDRMtype(element.type);
+//       const nextSelectionCriteria = {
+//         selectionCriteriaName: elementName,
+//         selectionCriteriaDisplayName: cds.i18n.labels.for(element),
+//         selectionCriteriaDisplayNameKey: undefined,
+//         selectionCriteriaDescription: undefined,
+//         selectionCriteriaDescriptionKey: undefined,
+//         selectionCriteriaType: type, //String, Integer, Decimal, Boolean, Timestamp
+//         isRangeEnabled: fieldIsAllowedForRange(elementName, type, entity),
+//         selectionCriteriaValueHelpEndPoint: type !== 'Boolean' && type !== 'String' ? element['@ILM.ValueHelp.Path'] : undefined
+//       }
+//       const labelI18nKey = getTranslationKey(element["@Common.Label"]);
+//       if (labelI18nKey) {
+//         nextSelectionCriteria.selectionCriteriaDisplayNameKey = labelI18nKey
+//       }
+//       if (element['@Core.Description']) {
+//         const descriptionI18nKey = getTranslationKey(element['@Core.Description']);
+//         selectionCriteria.selectionCriteriaDescription = cds.i18n.labels.for(descriptionI18nKey) ?? element['@Core.Description']
+//         if (descriptionI18nKey) {
+//           selectionCriteria.selectionCriteriaDescriptionKey = descriptionI18nKey;
+//         }
+//       }
+//       selectionCriteria.push(nextSelectionCriteria);
+//     }
+//     return selectionCriteria;
+//   }, [])
+// }
 
-function fieldIsAllowedForRange(field, type, entity) {
-  const filterExprRestriction = entity['@Capabilities.FilterRestrictions.FilterExpressionRestrictions'] && entity['@Capabilities.FilterRestrictions.FilterExpressionRestrictions'].some(restriction =>
-    restriction.Property['='] === field && restriction.AllowedExpressions === 'SingleValue'
-  ) //Range not allowed if there is a Filter Expression existing allowing only SingleValue
-  const filterRangeWanted = entity['@Capabilities.FilterRestrictions.FilterExpressionRestrictions'] && entity['@Capabilities.FilterRestrictions.FilterExpressionRestrictions'].some(restriction =>
-    restriction.Property['='] === field && restriction.AllowedExpressions === 'SingleRange'
-  )
-  return filterRangeWanted || (type !== 'String' && type !== 'Boolean' && !filterExprRestriction) //by default false - should be true when Integer, Decimal, Timestamp
-}
+// function fieldIsAllowedForRange(field, type, entity) {
+//   const filterExprRestriction = entity['@Capabilities.FilterRestrictions.FilterExpressionRestrictions'] && entity['@Capabilities.FilterRestrictions.FilterExpressionRestrictions'].some(restriction =>
+//     restriction.Property['='] === field && restriction.AllowedExpressions === 'SingleValue'
+//   ) //Range not allowed if there is a Filter Expression existing allowing only SingleValue
+//   const filterRangeWanted = entity['@Capabilities.FilterRestrictions.FilterExpressionRestrictions'] && entity['@Capabilities.FilterRestrictions.FilterExpressionRestrictions'].some(restriction =>
+//     restriction.Property['='] === field && restriction.AllowedExpressions === 'SingleRange'
+//   )
+//   return filterRangeWanted || (type !== 'String' && type !== 'Boolean' && !filterExprRestriction) //by default false - should be true when Integer, Decimal, Timestamp
+// }
