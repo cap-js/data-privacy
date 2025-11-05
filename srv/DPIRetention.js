@@ -142,7 +142,7 @@ module.exports = class DPIRetentionService extends cds.ApplicationService {
         return req.error({
           status: 400, 
           code: 'WRONG_APPLICATION_NAME',
-          message: 'Application name does not match the service application name.',
+          message: 'WRONG_APPLICATION_NAME',
           target: 'applicationName',
           args: [
             req.data.applicationName,

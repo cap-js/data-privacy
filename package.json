@@ -41,6 +41,9 @@
   },
   "scripts": {
     "lint": "npx eslint .",
+    "test-setup": "npm run setupBookshopTest && npm run setupExtendDPIBookshop",
+    "setupBookshopTest": "cd ./tests/bookshop-app && npm pack ../../ && rm -rf package-lock.json && rm -rf ./node_modules/ && npm i && rm -rf ./node_modules/@sap/cds",
+    "setupExtendDPIBookshop": "cd ./tests/retention/extend-retention-endpoint && npm i && rm -rf ./node_modules/@sap/cds",
     "test": "npx jest --silent"
   },
   "cds": {
