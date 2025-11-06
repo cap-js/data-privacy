@@ -1,8 +1,8 @@
 const cds = require('@sap/cds');
-const { getTranslationKey, mapCDStoDRMtype } = require('../lib/utils');
-const LOG = cds.log('data-privacy-retention')
+const { getTranslationKey, mapCDStoRetentionDataType } = require('../lib/utils');
+const LOG = cds.log('data-privacy')
 
-module.exports = class DPIRetentionService extends cds.ApplicationService {
+module.exports = class RetentionService extends cds.ApplicationService {
   async init() {
 
     const { iLMObjects } = this.entities
@@ -40,7 +40,7 @@ module.exports = class DPIRetentionService extends cds.ApplicationService {
             if (element['@ILM.ValueHelp.Type'] === 'condition') {
               const condition = {
                 conditionFieldName: elementName,
-                conditionFieldType: mapCDStoDRMtype(element.type),
+                conditionFieldType: mapCDStoRetentionDataType(element.type),
                 conditionFieldDescription: cds.i18n.labels.for(element),
                 conditionFieldDescriptionKey: undefined,
                 conditionFieldValueHelpEndPoint: element['@ILM.ValueHelp.Path'],
@@ -138,7 +138,7 @@ module.exports = class DPIRetentionService extends cds.ApplicationService {
      */
     this.before('*', req => {
 
-      if (req.data.applicationName && req.data.applicationName !== cds.env.requires['data-privacy-retention'].applicationName) {
+      if (req.data.applicationName && req.data.applicationName !== cds.env.requires['sap.dpp.RetentionService'].applicationName) {
         return req.error({
           status: 400, 
           code: 'WRONG_APPLICATION_NAME',
@@ -146,7 +146,7 @@ module.exports = class DPIRetentionService extends cds.ApplicationService {
           target: 'applicationName',
           args: [
             req.data.applicationName,
-            cds.env.requires['data-privacy-retention'].applicationName
+            cds.env.requires['sap.dpp.RetentionService'].applicationName
           ]
         });
       }
@@ -173,7 +173,7 @@ const buildBaseUrl = (req) => {
 //   return Object.keys(entity.elements).reduce((selectionCriteria, elementName) => {
 //     const element = entity.elements[elementName];
 //     if (element['@ILM.ValueHelp.Type'] === 'selection') {
-//       const type = mapCDStoDRMtype(element.type);
+//       const type = mapCDStoRetentionDataType(element.type);
 //       const nextSelectionCriteria = {
 //         selectionCriteriaName: elementName,
 //         selectionCriteriaDisplayName: cds.i18n.labels.for(element),

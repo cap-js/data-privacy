@@ -78,7 +78,7 @@
         },
         "auth": "xsuaa"
       },
-      "data-privacy-retention": {
+      "sap.dpp.RetentionService": {
         "applicationName": "bookshop-retention"
       }
     },

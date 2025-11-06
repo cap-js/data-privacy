@@ -108,7 +108,7 @@ resources:
                   - serviceName: bookshop-service
                     serviceFormat: odata-v4
                     annotationFormat: v4
-                    serviceEndPoint: /pdm
+                    serviceEndPoint: /dpp/information
                     appPaginationEnabled: true
                     cacheControl: no-cache
   - name: bookshop-retention
@@ -134,7 +134,7 @@ resources:
             applicationTitle: bookshop
             enableAutoSubscription: true
           translationConfiguration:
-            textBundleEndPoint: /drm/i18n-files/i18n.properties
+            textBundleEndPoint: /dpp/retention/i18n-files/i18n.properties
             defaultLanguage: en
             supportedLanguages:
               - de
@@ -144,191 +144,19 @@ resources:
           retentionConfiguration:
             applicationConfiguration:
               applicationType: TransactionMaster
-              iLMObjectDiscoveryEndPoint: /drm/iLMObjects
+              iLMObjectDiscoveryEndPoint: /dpp/retention/iLMObjects
             dataSubjectRoles:
               - dataSubjectRoleName: Customer
-                dataSubjectDescription:
-                  kind: entity
-                  "@Core.Description": Customer
-                  "@PersonalData.DataSubjectRole": Customer
-                  "@PersonalData.EntitySemantics": DataSubject
-                  "@Communication.Contact.n.surname":
-                    =: lastName
-                  "@Communication.Contact.n.given":
-                    =: firstName
-                  "@Communication.Contact.bday":
-                    =: dateOfBirth
-                  "@Communication.Contact.email":
-                    - address:
-                        =: email
-                      type:
-                        "#": preferred
-                  "@Communication.Contact.gender":
-                    =: gender
-                  "@AuditLog.Operation.Read": true
-                  "@AuditLog.Operation.Insert": true
-                  "@AuditLog.Operation.Update": true
-                  "@AuditLog.Operation.Delete": true
-                  elements:
-                    - "@PersonalData.FieldSemantics": DataSubjectID
-                      key: true
-                      type: cds.UUID
-                    - "@cds.on.insert":
-                        =: $now
-                      "@UI.HiddenFilter": true
-                      "@UI.ExcludeFromNavigationContext": true
-                      "@Core.Immutable": true
-                      "@title": "{i18n>CreatedAt}"
-                      "@readonly": true
-                      type: cds.Timestamp
-                      "@Core.Computed": true
-                      "@Common.Label": "{i18n>CreatedAt}"
-                    - "@cds.on.insert":
-                        =: $user
-                      "@UI.HiddenFilter": true
-                      "@UI.ExcludeFromNavigationContext": true
-                      "@Core.Immutable": true
-                      "@title": "{i18n>CreatedBy}"
-                      "@readonly": true
-                      "@description": "{i18n>UserID.Description}"
-                      type: cds.String
-                      length: 255
-                      "@Core.Computed": true
-                      "@Common.Label": "{i18n>CreatedBy}"
-                      "@Core.Description": "{i18n>UserID.Description}"
-                    - "@cds.on.insert":
-                        =: $now
-                      "@cds.on.update":
-                        =: $now
-                      "@UI.HiddenFilter": true
-                      "@UI.ExcludeFromNavigationContext": true
-                      "@title": "{i18n>ChangedAt}"
-                      "@readonly": true
-                      type: cds.Timestamp
-                      "@Core.Computed": true
-                      "@Common.Label": "{i18n>ChangedAt}"
-                    - "@cds.on.insert":
-                        =: $user
-                      "@cds.on.update":
-                        =: $user
-                      "@UI.HiddenFilter": true
-                      "@UI.ExcludeFromNavigationContext": true
-                      "@title": "{i18n>ChangedBy}"
-                      "@readonly": true
-                      "@description": "{i18n>UserID.Description}"
-                      type: cds.String
-                      length: 255
-                      "@Core.Computed": true
-                      "@Common.Label": "{i18n>ChangedBy}"
-                      "@Core.Description": "{i18n>UserID.Description}"
-                    - "@title": Email
-                      "@PersonalData.IsPotentiallyPersonal": true
-                      type: cds.String
-                      "@Communication.IsEmailAddress": true
-                      "@ILM.ValueHelp.Path": /drm/valueHelp_selection_DPIRetentionService_Customers_email
-                      "@ILM.ValueHelp.Type": selection
-                      "@ILM.ValueHelp.Entity": DPIRetentionService.valueHelp_selection_DPIRetentionService_Customers_email
-                      "@Common.Label": Email
-                    - "@title": First name
-                      "@PersonalData.IsPotentiallyPersonal": true
-                      type: cds.String
-                      "@ILM.ValueHelp.Path": /drm/valueHelp_selection_DPIRetentionService_Customers_firstName
-                      "@ILM.ValueHelp.Type": selection
-                      "@ILM.ValueHelp.Entity": DPIRetentionService.valueHelp_selection_DPIRetentionService_Customers_firstName
-                      "@Common.Label": First name
-                    - "@title": Last name
-                      "@PersonalData.IsPotentiallyPersonal": true
-                      type: cds.String
-                      "@ILM.ValueHelp.Path": /drm/valueHelp_selection_DPIRetentionService_Customers_lastName
-                      "@ILM.ValueHelp.Type": selection
-                      "@ILM.ValueHelp.Entity": DPIRetentionService.valueHelp_selection_DPIRetentionService_Customers_lastName
-                      "@Common.Label": Last name
-                    - "@title": Gender
-                      type: cds.String
-                      "@PersonalData.IsPotentiallySensitive": true
-                      "@ILM.ValueHelp.Path": /drm/valueHelp_selection_DPIRetentionService_Customers_gender
-                      "@ILM.ValueHelp.Type": selection
-                      "@ILM.ValueHelp.Entity": DPIRetentionService.valueHelp_selection_DPIRetentionService_Customers_gender
-                      "@Common.Label": Gender
-                    - "@title": Date of birth
-                      "@PersonalData.IsPotentiallyPersonal": true
-                      type: cds.Date
-                      "@PersonalData.IsPotentiallySensitive": true
-                      "@ILM.ValueHelp.Path": /drm/valueHelp_selection_DPIRetentionService_Customers_dateOfBirth
-                      "@ILM.ValueHelp.Type": selection
-                      "@ILM.ValueHelp.Entity": DPIRetentionService.valueHelp_selection_DPIRetentionService_Customers_dateOfBirth
-                      "@Common.Label": Date of birth
-                    - "@title": Postal address
-                      type: cds.Composition
-                      cardinality:
-                        max: 1
-                      target: DPIRetentionService.CustomerPostalAddress
-                      on:
-                        - ref:
-                            - postalAddress
-                            - Customer
-                        - =
-                        - ref:
-                            - $self
-                      "@Common.Label": Postal address
-                    - "@title": Billing data
-                      type: cds.Composition
-                      cardinality:
-                        max: 1
-                      target: DPIRetentionService.CustomerBillingData
-                      on:
-                        - ref:
-                            - billingData
-                            - Customer
-                        - =
-                        - ref:
-                            - $self
-                      "@Common.Label": Billing data
-                    - "@UI.HiddenFilter": true
-                      "@PersonalData.FieldSemantics": BlockingDate
-                      type: cds.Date
-                    - "@UI.HiddenFilter": true
-                      "@PersonalData.FieldSemantics": EndOfRetentionDate
-                      type: cds.Date
-                    - "@PersonalData.FieldSemantics": EndOfBusinessDate
-                      type: cds.Date
-                    - key: true
-                      type: cds.String
-                      "@title": Legal entity
-                      "@PersonalData.FieldSemantics": DataControllerID
-                      "@ILM.ValueHelp.Path": /drm/valueHelp_orgAttribute_sap_capire_bookshop_LegalEntities
-                      "@ILM.ValueHelp.Type": orgAttribute
-                      "@ILM.ValueHelp.Entity": DPIRetentionService.valueHelp_orgAttribute_sap_capire_bookshop_LegalEntities
-                      "@Common.Label": Legal entity
-                  "@cds.drm.rootEntity": true
-                  "@cds.api.ignore": true
-                  query:
-                    SELECT:
-                      from:
-                        ref:
-                          - sap.capire.bookshop.Customers
-                      columns:
-                        - "*"
-                        - ref:
-                            - postalAddress
-                            - endOfCustomer
-                          as: postalAddress_endOfCustomer
-                        - ref:
-                            - legalEntity
-                            - title
-                          as: legalEntity_title
-                      excluding:
-                        - legalEntity
-                  "@cds.redirection.target": true
+                dataSubjectDescription: Customer
                 dataSubjectBaseURL: ~{srv-api/srv-url}
-                dataSubjectBlockingEndPoint: /drm/dataSubjectBlocking
-                dataSubjectInformationEndPoint: /drm/dataSubjectInformation
-                dataSubjectsDestroyingEndPoint: /drm/dataSubjectsDestroying
+                dataSubjectBlockingEndPoint: /dpp/retention/dataSubjectBlocking
+                dataSubjectInformationEndPoint: /dpp/retention/dataSubjectInformation
+                dataSubjectsDestroyingEndPoint: /dpp/retention/dataSubjectsDestroying
             organizationAttributes:
               - organizationAttributeName: legalEntity_title
                 organizationAttributeDescription: LegalEntity
                 organizationAttributeBaseURL: ~{srv-api/srv-url}
-                organizationAttributeValueHelpEndPoint: /drm/valueHelp_orgAttribute_sap_capire_bookshop_LegalEntities
+                organizationAttributeValueHelpEndPoint: /dpp/retention/valueHelp_orgAttribute_sap_capire_bookshop_LegalEntities
   - name: bookshop-auditlog
     type: org.cloudfoundry.managed-service
     parameters:

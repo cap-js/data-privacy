@@ -1,5 +1,5 @@
 const cds = require('@sap/cds');
-const LOG = cds.log('data-privacy-retention');
+const LOG = cds.log('data-privacy');
 const { _buildWhereClauseForDS, whereForConditionSet } = require('../lib/utils');
 
 module.exports = class TableHeaderBlockingService extends require('./DPIRetention') {
@@ -12,7 +12,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       LOG.debug(`Where clause`, where)
       const result = await SELECT.one.from(iLMObject).where(where).columns(`max(${iLMObject._dpi.endOfBusinessReference}) as endOfBusiness`)
       if (!result || (result && !result.endOfBusiness)) {
-        req.res.statusCode = 204 //DRM defines to respond with 204 when no transactional item was found
+        req.res.statusCode = 204 //DPI Retention defines to respond with 204 when no transactional item was found
         return
       }
       LOG.debug(`Result of select`, result)

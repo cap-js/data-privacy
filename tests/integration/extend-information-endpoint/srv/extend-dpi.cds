@@ -1,7 +1,7 @@
-using {DPIInformationService} from '@sap/cds-dpi';
+using {sap.dpp.InformationService} from '@sap/cds-dpi';
 using {sap.capire.bookshop as db} from '../db/schema';
 
-extend service DPIInformationService with {
+extend service InformationService with {
     entity Orders as projection on db.Orders {
         ID,
         legalEntity,

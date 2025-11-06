@@ -63,7 +63,7 @@
       "uaa": {
         "kind": "xsuaa"
       },
-      "data-privacy-retention": {
+      "sap.dpp.RetentionService": {
         "applicationName": "bookshop-retention"
       }
     },

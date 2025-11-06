@@ -27,10 +27,10 @@ cds.on('compile.to.edmx', csn => { enhanceModel(csn) })
 cds.on('compile.to.dbx', csn => { enhanceModel(csn) })
 
 cds.on('listening', async () => {
-    if (!cds.env.requires['data-privacy-retention'].applicationName) {
+    if (!cds.env.requires['sap.dpp.RetentionService'].applicationName) {
         const {name} = JSON.parse(await fs.readFile(path.join(cds.root, 'package.json')));
         LOG.debug
-        cds.env.requires['data-privacy-retention'].applicationName = name;
+        cds.env.requires['sap.dpp.RetentionService'].applicationName = name;
     }
 })
 

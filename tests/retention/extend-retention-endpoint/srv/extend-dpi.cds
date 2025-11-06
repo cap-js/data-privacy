@@ -1,7 +1,7 @@
-using {DPIRetentionService} from '@sap/cds-dpi';
+using {sap.dpp.RetentionService} from '@sap/cds-dpi';
 using {sap.capire.bookshop as db} from '../db/schema';
 
-extend service DPIRetentionService with {
+extend service RetentionService with {
     entity Orders as projection on db.Orders {
         ID,
         legalEntity,

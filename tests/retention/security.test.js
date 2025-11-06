@@ -19,10 +19,10 @@ const GET = async function () {
 cds.test.data.autoReset(true);
 //TODO: Test that entities of DPIRetention service are not exposed via API
 
-describe('DRM endpoints cannot be accessed with an unauthorized user', () => {
+describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized user', () => {
   const DPI_Service = { username: 'abc', password: '1234' }
   test('dataSubjectEndOfBusiness', async () => {
-    const { status } = await POST('/drm/dataSubjectEndOfBusiness', {
+    const { status } = await POST('/dpp/retention/dataSubjectEndOfBusiness', {
       applicationName: 'bookshop-retention',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
@@ -32,7 +32,7 @@ describe('DRM endpoints cannot be accessed with an unauthorized user', () => {
   });
 
   test('dataSubjectOrganizationAttributeValues', async () => {
-    const { status } = await POST('/drm/dataSubjectOrganizationAttributeValues', {
+    const { status } = await POST('/dpp/retention/dataSubjectOrganizationAttributeValues', {
       applicationName: 'bookshop-retention',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
@@ -43,7 +43,7 @@ describe('DRM endpoints cannot be accessed with an unauthorized user', () => {
   });
 
   test('dataSubjectLatestRetentionStartDates', async () => {
-    const { status } = await POST('/drm/dataSubjectLatestRetentionStartDates', {
+    const { status } = await POST('/dpp/retention/dataSubjectLatestRetentionStartDates', {
       applicationName: 'bookshop-retention',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
@@ -60,7 +60,7 @@ describe('DRM endpoints cannot be accessed with an unauthorized user', () => {
   })
 
   test('dataSubjectILMObjectInstanceBlocking', async () => {
-    const { status } = await POST('/drm/dataSubjectILMObjectInstanceBlocking', {
+    const { status } = await POST('/dpp/retention/dataSubjectILMObjectInstanceBlocking', {
       applicationName: 'bookshop-retention',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
@@ -71,7 +71,7 @@ describe('DRM endpoints cannot be accessed with an unauthorized user', () => {
   })
 
   test('dataSubjectBlocking', async () => {
-    const { status } = await POST('/drm/dataSubjectBlocking', {
+    const { status } = await POST('/dpp/retention/dataSubjectBlocking', {
       applicationName: 'bookshop-retention',
       dataSubjectRoleName: 'Customer',
       dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -81,7 +81,7 @@ describe('DRM endpoints cannot be accessed with an unauthorized user', () => {
   })
 
   test('dataSubjectsILMObjectInstancesDestroying', async () => {
-    const { status } = await POST('/drm/dataSubjectsILMObjectInstancesDestroying', {
+    const { status } = await POST('/dpp/retention/dataSubjectsILMObjectInstancesDestroying', {
       applicationName: 'bookshop-retention',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
@@ -90,7 +90,7 @@ describe('DRM endpoints cannot be accessed with an unauthorized user', () => {
   })
 
   test('dataSubjectsDestroying', async () => {
-    const { status } = await POST('/drm/dataSubjectsDestroying', {
+    const { status } = await POST('/dpp/retention/dataSubjectsDestroying', {
       applicationName: 'bookshop-retention',
       dataSubjectRoleName: 'Customer',
     }, { auth: DPI_Service });
@@ -98,7 +98,7 @@ describe('DRM endpoints cannot be accessed with an unauthorized user', () => {
   })
 
   test('dataSubjectsEndOfResidence', async () => {
-    const { status } = await POST('/drm/dataSubjectsEndOfResidence', {
+    const { status } = await POST('/dpp/retention/dataSubjectsEndOfResidence', {
       applicationName: 'bookshop-retention',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
@@ -120,7 +120,7 @@ describe('DRM endpoints cannot be accessed with an unauthorized user', () => {
   })
 
   test('dataSubjectsEndOfResidenceConfirmation', async () => {
-    const { status } = await await POST('/drm/dataSubjectsEndOfResidenceConfirmation', {
+    const { status } = await await POST('/dpp/retention/dataSubjectsEndOfResidenceConfirmation', {
       applicationName: 'bookshop-retention',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
@@ -145,7 +145,7 @@ describe('DRM endpoints cannot be accessed with an unauthorized user', () => {
   })
 
   test('dataSubjectInformation', async () => {
-    const { status } = await POST('/drm/dataSubjectInformation', {
+    const { status } = await POST('/dpp/retention/dataSubjectInformation', {
       applicationName: 'bookshop-retention',
       dataSubjectRoleName: 'Customer',
       dataSubjects: [
@@ -156,17 +156,17 @@ describe('DRM endpoints cannot be accessed with an unauthorized user', () => {
   })
 
   test('i18n files', async () => {
-    const { status } = await GET('/drm/i18n-files', { auth: DPI_Service });
+    const { status } = await GET('/dpp/retention/i18n-files', { auth: DPI_Service });
     expect(status).toEqual(403);
 
-    const { status: status2 } = await GET('/drm/i18n-files/i18n.properties', { auth: DPI_Service });
+    const { status: status2 } = await GET('/dpp/retention/i18n-files/i18n.properties', { auth: DPI_Service });
     expect(status2).toEqual(403);
   })
 });
 
 test('DPIRetention entities are not accessible on the API', async () => {
-  for (const entity of Object.keys(cds.entities('DPIRetentionService')).filter(e => e !== 'iLMObjects' && e !== 'i18n-files' && !e.startsWith('valueHelp') && !e.endsWith('.texts'))) {
-    const {status} = await GET(`/drm/${entity}`, { auth: { username: 'dpi', password: '1234' }});
+  for (const entity of Object.keys(cds.entities('sap.dpp.RetentionService')).filter(e => e !== 'iLMObjects' && e !== 'i18n-files' && !e.startsWith('valueHelp') && !e.endsWith('.texts'))) {
+    const {status} = await GET(`/dpp/retention/${entity}`, { auth: { username: 'dpi', password: '1234' }});
     expect(status).toEqual(403);
   }
 })

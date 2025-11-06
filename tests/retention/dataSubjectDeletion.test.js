@@ -16,7 +16,7 @@ describe('data subject deletion', () => {
 
   describe('deletion', () => {
       test('dataSubjectEndOfBusiness returns true if all objects have reached end of business', async () => {
-        const {status, data} = await POST('/drm/dataSubjectEndOfBusiness', {
+        const {status, data} = await POST('/dpp/retention/dataSubjectEndOfBusiness', {
           applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
@@ -35,7 +35,7 @@ describe('data subject deletion', () => {
         const endOfWarrantyDate = new Date()
         endOfWarrantyDate.setFullYear(endOfWarrantyDate.getFullYear() + 1)
         await UPDATE.entity(Orders).set({endOfWarrantyDate: endOfWarrantyDate.toISOString()})
-        const {status, data} = await POST('/drm/dataSubjectEndOfBusiness', {
+        const {status, data} = await POST('/dpp/retention/dataSubjectEndOfBusiness', {
           applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
@@ -50,7 +50,7 @@ describe('data subject deletion', () => {
       })
     
       test('dataSubjectOrganizationAttributeValues returns attribute values', async () => {
-        const {status, data} = await POST('/drm/dataSubjectOrganizationAttributeValues', {
+        const {status, data} = await POST('/dpp/retention/dataSubjectOrganizationAttributeValues', {
           applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
@@ -66,7 +66,7 @@ describe('data subject deletion', () => {
       })
 
       test('dataSubjectOrganizationAttributeValues returns error if org attribute does not exist', async () => {
-        const {status, data} = await POST('/drm/dataSubjectOrganizationAttributeValues', {
+        const {status, data} = await POST('/dpp/retention/dataSubjectOrganizationAttributeValues', {
           applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
@@ -79,7 +79,7 @@ describe('data subject deletion', () => {
       })
 
       test('dataSubjectOrganizationAttributeValues returns error if org attribute is not annotated as DataControllerID', async () => {
-        const {status, data} = await POST('/drm/dataSubjectOrganizationAttributeValues', {
+        const {status, data} = await POST('/dpp/retention/dataSubjectOrganizationAttributeValues', {
           applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
@@ -92,7 +92,7 @@ describe('data subject deletion', () => {
       })
 
       test('dataSubjectLatestRetentionStartDates', async () => {
-        const {status, data} = await POST('/drm/dataSubjectLatestRetentionStartDates', {
+        const {status, data} = await POST('/dpp/retention/dataSubjectLatestRetentionStartDates', {
           applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
@@ -116,7 +116,7 @@ describe('data subject deletion', () => {
 
       test('dataSubjectILMObjectInstanceBlocking returns amount of blocked instances', async () => {
         const {Orders} = cds.entities('sap.capire.bookshop');
-        const {status, data} = await POST('/drm/dataSubjectILMObjectInstanceBlocking', {
+        const {status, data} = await POST('/dpp/retention/dataSubjectILMObjectInstanceBlocking', {
           applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
@@ -135,7 +135,7 @@ describe('data subject deletion', () => {
       test('dataSubjectILMObjectInstanceBlocking returns 204 when no instances where active', async () => {
         const {Orders} = cds.entities('sap.capire.bookshop')
         await DELETE.from(Orders);
-        const {status} = await POST('/drm/dataSubjectILMObjectInstanceBlocking', {
+        const {status} = await POST('/dpp/retention/dataSubjectILMObjectInstanceBlocking', {
           applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
@@ -148,7 +148,7 @@ describe('data subject deletion', () => {
 
       test('dataSubjectsILMObjectInstancesDestroying', async () => {
         const {Orders} = cds.entities('sap.capire.bookshop');
-        await POST('/drm/dataSubjectILMObjectInstanceBlocking', {
+        await POST('/dpp/retention/dataSubjectILMObjectInstanceBlocking', {
           applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
@@ -160,7 +160,7 @@ describe('data subject deletion', () => {
         expect(blockingBeforeDelete[0].dppBlockingDate).toBeTruthy();
         expect(blockingBeforeDelete[0].dppEarliestDestructionDate).toEqual('2020-04-04');
 
-        await POST('/drm/dataSubjectsILMObjectInstancesDestroying', {
+        await POST('/dpp/retention/dataSubjectsILMObjectInstancesDestroying', {
           applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
@@ -174,7 +174,7 @@ describe('data subject deletion', () => {
         const {Orders} = cds.entities('sap.capire.bookshop');
         const maxDeletionDate = new Date()
         maxDeletionDate.setFullYear(maxDeletionDate.getFullYear() + 1)
-        await POST('/drm/dataSubjectILMObjectInstanceBlocking', {
+        await POST('/dpp/retention/dataSubjectILMObjectInstanceBlocking', {
           applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
@@ -186,7 +186,7 @@ describe('data subject deletion', () => {
         expect(blockingBeforeDelete[0].dppBlockingDate).toBeTruthy();
         expect(blockingBeforeDelete[0].dppEarliestDestructionDate).toEqual(maxDeletionDate.toISOString().substring(0,10));
 
-        await POST('/drm/dataSubjectsILMObjectInstancesDestroying', {
+        await POST('/dpp/retention/dataSubjectsILMObjectInstancesDestroying', {
           applicationName: 'bookshop-retention', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
@@ -199,7 +199,7 @@ describe('data subject deletion', () => {
       })
 
       test('dataSubjectBlocking returns 400 if active records exist', async () => {
-        const {status} = await POST('/drm/dataSubjectBlocking', {
+        const {status} = await POST('/dpp/retention/dataSubjectBlocking', {
           applicationName: 'bookshop-retention', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -224,7 +224,7 @@ describe('data subject deletion', () => {
         });
         const maxDeletionDate = new Date()
         maxDeletionDate.setFullYear(maxDeletionDate.getFullYear() + 1)
-        const {status} = await POST('/drm/dataSubjectBlocking', {
+        const {status} = await POST('/dpp/retention/dataSubjectBlocking', {
           applicationName: 'bookshop-retention', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -242,7 +242,7 @@ describe('data subject deletion', () => {
         const {Orders, Marketing, Customers} = cds.entities('sap.capire.bookshop')
         await DELETE.from(Orders).where({Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'})
         await DELETE.from(Marketing).where({Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'})
-        const {status} = await POST('/drm/dataSubjectBlocking', {
+        const {status} = await POST('/dpp/retention/dataSubjectBlocking', {
           applicationName: 'bookshop-retention', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -260,7 +260,7 @@ describe('data subject deletion', () => {
         await DELETE.from(Marketing).where({Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'})
         const maxDeletionDate = new Date()
         maxDeletionDate.setFullYear(maxDeletionDate.getFullYear() + 1)
-        await POST('/drm/dataSubjectBlocking', {
+        await POST('/dpp/retention/dataSubjectBlocking', {
           applicationName: 'bookshop-retention', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -272,7 +272,7 @@ describe('data subject deletion', () => {
         expect(blockingBefore[0].dppBlockingDate).toBeTruthy();
         expect(blockingBefore[0].dppEarliestDestructionDate).toEqual(maxDeletionDate.toISOString().substring(0,10));
         
-        const {status} = await POST('/drm/dataSubjectsDestroying', {
+        const {status} = await POST('/dpp/retention/dataSubjectsDestroying', {
           applicationName: 'bookshop-retention', 
           dataSubjectRoleName: 'Customer', 
         }, { auth: DPI_Service });
@@ -291,7 +291,7 @@ describe('data subject deletion', () => {
           dppEarliestDestructionDate: "2020-01-02T00:00:00Z"
         })
         
-        const {status} = await POST('/drm/dataSubjectsDestroying', {
+        const {status} = await POST('/dpp/retention/dataSubjectsDestroying', {
           applicationName: 'bookshop-retention', 
           dataSubjectRoleName: 'Customer', 
         }, { auth: DPI_Service });
@@ -304,7 +304,7 @@ describe('data subject deletion', () => {
 
   describe('Validate applicationName', () => {
     test('dataSubjectsEndOfResidenceEndPoint', async () => {
-      const {status, data} = await POST('/drm/dataSubjectsEndOfResidence', {
+      const {status, data} = await POST('/dpp/retention/dataSubjectsEndOfResidence', {
         applicationName: 'ABCDEFG', 
         iLMObjectName: 'Orders',
         dataSubjectRoleName: 'Customer', 
@@ -337,7 +337,7 @@ describe('data subject deletion', () => {
   describe('eligible for deletion', () => {
 
     test('dataSubjectsEndOfResidence returns eligible data subjects for deletion', async () => {
-      const {status, data} = await POST('/drm/dataSubjectsEndOfResidence', {
+      const {status, data} = await POST('/dpp/retention/dataSubjectsEndOfResidence', {
         applicationName: 'bookshop-retention', 
         iLMObjectName: 'Orders',
         dataSubjectRoleName: 'Customer', 
@@ -368,7 +368,7 @@ describe('data subject deletion', () => {
     })
 
     test('dataSubjectsEndOfResidence properly considers org attribute', async () => {
-      const {status, data} = await POST('/drm/dataSubjectsEndOfResidence', {
+      const {status, data} = await POST('/dpp/retention/dataSubjectsEndOfResidence', {
         applicationName: 'bookshop-retention', 
         iLMObjectName: 'Orders',
         dataSubjectRoleName: 'Customer', 
@@ -395,7 +395,7 @@ describe('data subject deletion', () => {
     })
 
     test('dataSubjectsEndOfResidenceConfirmation confirms data subjects end of residence', async () => {
-      const {status, data} = await POST('/drm/dataSubjectsEndOfResidenceConfirmation', {
+      const {status, data} = await POST('/dpp/retention/dataSubjectsEndOfResidenceConfirmation', {
         applicationName: 'bookshop-retention', 
         iLMObjectName: 'Orders', 
         dataSubjectRoleName: 'Customer', 
@@ -428,7 +428,7 @@ describe('data subject deletion', () => {
       const { ILMObjectWithXPRBlockingEnabled } = cds.entities('sap.capire.bookshop');
       await DELETE.from(ILMObjectWithXPRBlockingEnabled).where('1 = 1')
 
-      const {status, data} = await POST('/drm/dataSubjectsEndOfResidenceConfirmation', {
+      const {status, data} = await POST('/dpp/retention/dataSubjectsEndOfResidenceConfirmation', {
         applicationName: 'bookshop-retention', 
         iLMObjectName: 'ILMObjectWithXPRBlockingEnabled', 
         dataSubjectRoleName: 'Customer', 
@@ -458,7 +458,7 @@ describe('data subject deletion', () => {
       const { ILMObjectWithXPRBlockingEnabled } = cds.entities('sap.capire.bookshop');
       await DELETE.from(ILMObjectWithXPRBlockingEnabled).where('1 = 1')
 
-      const {status, data} = await POST('/drm/dataSubjectsEndOfResidenceConfirmation', {
+      const {status, data} = await POST('/dpp/retention/dataSubjectsEndOfResidenceConfirmation', {
         applicationName: 'bookshop-retention', 
         iLMObjectName: 'ILMObjectWithXPRBlockingEnabled', 
         dataSubjectRoleName: 'Customer', 
@@ -496,7 +496,7 @@ describe('data subject deletion', () => {
     })
 
     test('dataSubjectsEndOfResidence properly considers org attribute', async () => {
-      const {status, data} = await POST('/drm/dataSubjectsEndOfResidenceConfirmation', {
+      const {status, data} = await POST('/dpp/retention/dataSubjectsEndOfResidenceConfirmation', {
         applicationName: 'bookshop-retention', 
         iLMObjectName: 'Orders',
         dataSubjectRoleName: 'Customer', 
@@ -523,7 +523,7 @@ describe('data subject deletion', () => {
     })
 
     test('dataSubjectsEndOfResidenceConfirmation with empty reference dates still works', async () => {
-      const {status, data} = await POST('/drm/dataSubjectsEndOfResidenceConfirmation', {
+      const {status, data} = await POST('/dpp/retention/dataSubjectsEndOfResidenceConfirmation', {
         applicationName: 'bookshop-retention', 
         iLMObjectName: 'Orders', 
         dataSubjectRoleName: 'Customer', 
@@ -542,7 +542,7 @@ describe('data subject deletion', () => {
 
     //Used for Value helps
     test('dataSubjectInformation retrieval returns data subject information', async () => {
-      const {status, data} = await POST('/drm/dataSubjectInformation', {
+      const {status, data} = await POST('/dpp/retention/dataSubjectInformation', {
         applicationName: 'bookshop-retention', 
         dataSubjectRoleName: 'Customer', 
         dataSubjects: [

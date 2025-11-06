@@ -1,8 +1,8 @@
-using DPIRetentionService from './DPIRetention';
+using sap.dpp.RetentionService from './DPIRetention';
 using {sap.dpp.Condition, sap.dpp.ReferenceDate} from '../db/dpi';
 
 @impl : './TableHeaderBlocking.js'
-extend service DPIRetentionService with {
+extend service sap.dpp.RetentionService with {
 
     /**
      * The application must implement this endpoint that checks the state of the business for a given data subject in the context of a data subject role for a given ILM object. 
@@ -195,7 +195,7 @@ extend service DPIRetentionService with {
         /**
          * Maximum retention date that is calculated based on the provided retention start dates and the configured retention rules for the provided ILM object for the provided data subject
          */
-        maxDeletionDate: String, //REVISIT: String instead of DateTime because DRM sends data in wrong format
+        maxDeletionDate: String, //REVISIT: String instead of DateTime because SAP DPI Retention sends data in wrong format
     ) returns Integer;
 
     /**
@@ -225,7 +225,7 @@ extend service DPIRetentionService with {
         /**
          * Maximum retention date that is calculated based on the provided retention start dates and the configured retention rules for the provided data subject
          */
-        maxDeletionDate: String //String instead of DateTime because DRM sends data in wrong format
+        maxDeletionDate: String //String instead of DateTime because SAP DPI Retention sends data in wrong format
     ) returns String;
 
     //TODO: Async blocking must be implemented - and check if we have to provide these 4 properties / when DPI would provide them

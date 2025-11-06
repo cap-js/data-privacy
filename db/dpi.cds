@@ -44,7 +44,7 @@ type ReferenceDate {
        * The latest start date of the retention or the end of business date calculated by DPI NextGen Retention Management based on the configured rules for data subjects
        * to be eligible for blocking or deletion
        */
-      retentionStartDate : String; //REVISIT: String instead of DateTime because DRM sends data in wrong format
+      retentionStartDate : String; //REVISIT: String instead of DateTime because SAP DPI Retention sends data in wrong format
       /**
        * List of condition field name and value that is configured as part of the business purpose
        */

@@ -4,22 +4,22 @@ const path = require('path');
 let { GET, POST } = cds.test().in(path.join(__dirname, './extend-retention-endpoint'))
 const DPI_Service = { username: 'dpi', password: '1234' }
 
-describe('Extending DPIRetentionService to customize the endpoint', () => {
+describe('Extending sap.dpp.RetentionService to customize the endpoint', () => {
   test('discovery endpoint is still served', async () => {
-    const { status, data } = await GET('/drm/iLMObjects', { auth: DPI_Service });
+    const { status, data } = await GET('/dpp/retention/iLMObjects', { auth: DPI_Service });
     expect(status).toEqual(200);
     expect(data.length).toBeGreaterThan(0);
   });
 
   test('discovery endpoint exposes aliased property names', async () => {
-    const { status, data } = await GET('/drm/iLMObjects', { auth: DPI_Service });
+    const { status, data } = await GET('/dpp/retention/iLMObjects', { auth: DPI_Service });
     expect(status).toEqual(200);
     const ORDER = data.find(d => d.iLMObjectName === 'Orders');
     expect(ORDER.referenceDates[0].referenceDateName).toEqual('aliasEndOfBusiness')
   });
 
-  test('DPIRetentionService can be extended to add own entity exposures', async () => {
-    const {Orders} = cds.entities('DPIRetentionService')
+  test('sap.dpp.RetentionService can be extended to add own entity exposures', async () => {
+    const {Orders} = cds.entities('sap.dpp.RetentionService')
 
     expect(Orders.elements.ID).toBeTruthy();
     expect(Orders.elements.legalEntity_title).toBeTruthy();
@@ -34,7 +34,7 @@ describe('Extending DPIRetentionService to customize the endpoint', () => {
   });
 
   test('DPI Retention handlers can be intercepted', async () => {
-    const { status, data } = await POST('/drm/dataSubjectInformation', {
+    const { status, data } = await POST('/dpp/retention/dataSubjectInformation', {
       applicationName: 'bookshop-retention',
       dataSubjectRoleName: 'Customer',
       dataSubjects: [

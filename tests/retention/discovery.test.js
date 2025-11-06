@@ -6,14 +6,14 @@ const DPI_Service = { username: 'dpi', password: '1234' }
 
 describe('iLMObject discovery', () => {
     test('discovery endpoint is served', async () => {
-        const {status, data} = await GET('/drm/iLMObjects', { auth: DPI_Service });
+        const {status, data} = await GET('/dpp/retention/iLMObjects', { auth: DPI_Service });
         expect(status).toEqual(200);
         expect(data.length).toBeGreaterThan(0);
     });
 
     describe('iLMObject enabled', () => {
         test('ILM Object check endpoint is served', async () => {
-            const {status, data} = await GET('/drm/iLMObjects', { auth: DPI_Service });
+            const {status, data} = await GET('/dpp/retention/iLMObjects', { auth: DPI_Service });
             expect(status).toEqual(200);
             for (const iLMObject of data) {
                 const {status: statusCheck, data: resultCheck} = await GET(iLMObject.iLMObjectCheckEndPoint, { auth: DPI_Service })
@@ -22,25 +22,25 @@ describe('iLMObject discovery', () => {
             }
         });
         test('ILMObject is enabled by default', async () => {
-            const {status, data} = await GET('/drm/iLMObjects/Orders/isILMObjectEnabled', { auth: DPI_Service })
+            const {status, data} = await GET('/dpp/retention/iLMObjects/Orders/isILMObjectEnabled', { auth: DPI_Service })
             expect(status).toEqual(200);
             expect(data.isILMObjectEnabled).toEqual(true)
         });
 
         test('ILMObject enablement considers boolean value for @ILM.BlockingEnabled annotation', async () => {
-            const {status, data} = await GET('/drm/iLMObjects/ILMObjectWithStaticBlockingDisabled/isILMObjectEnabled', { auth: DPI_Service })
+            const {status, data} = await GET('/dpp/retention/iLMObjects/ILMObjectWithStaticBlockingDisabled/isILMObjectEnabled', { auth: DPI_Service })
             expect(status).toEqual(200);
             expect(data.isILMObjectEnabled).toEqual(false)
         });
 
         test('ILMObject enablement considers edmJson path & pointing to different service for @ILM.BlockingEnabled annotation', async () => {
-            const {status, data} = await GET('/drm/iLMObjects/ILMObjectWithEDMJSONBlockingEnabled/isILMObjectEnabled', { auth: DPI_Service })
+            const {status, data} = await GET('/dpp/retention/iLMObjects/ILMObjectWithEDMJSONBlockingEnabled/isILMObjectEnabled', { auth: DPI_Service })
             expect(status).toEqual(200);
             expect(data.isILMObjectEnabled).toEqual(false)
         });
 
         test('ILMObject enablement considers xpr path for @ILM.BlockingEnabled annotation', async () => {
-            const {status, data} = await GET('/drm/iLMObjects/ILMObjectWithXPRBlockingEnabled/isILMObjectEnabled', { auth: DPI_Service })
+            const {status, data} = await GET('/dpp/retention/iLMObjects/ILMObjectWithXPRBlockingEnabled/isILMObjectEnabled', { auth: DPI_Service })
             expect(status).toEqual(200);
             expect(data.isILMObjectEnabled).toEqual(true)
         });
@@ -48,7 +48,7 @@ describe('iLMObject discovery', () => {
 
     // REVISIT: Only relevant once archiving/destruction is added
     test.skip('Selection criteria are correctly determined', async () => {
-        const {status, data} = await GET('/drm/iLMObjects', { auth: DPI_Service });
+        const {status, data} = await GET('/dpp/retention/iLMObjects', { auth: DPI_Service });
         expect(status).toEqual(200);
         for (const iLMObject of data) {
             for (const selectionCriteria of iLMObject.destructionConfiguration.selectionCriteria.concat(iLMObject.archivingConfiguration?.selectionCriteria ?? [])) {
@@ -66,11 +66,11 @@ describe('iLMObject discovery', () => {
     });
 
     test('Conditions are correctly determined', async () => {
-        const {status, data} = await GET('/drm/iLMObjects', { auth: DPI_Service });
+        const {status, data} = await GET('/dpp/retention/iLMObjects', { auth: DPI_Service });
         expect(status).toEqual(200);
         for (const iLMObject of data) {
             for (const condition of iLMObject.conditions) {
-                expect(cds.model.definitions[`DPIRetentionService.${iLMObject.iLMObjectName}`].elements[condition.conditionFieldName]['@PersonalData.FieldSemantics']).toBeFalsy();
+                expect(cds.model.definitions[`sap.dpp.RetentionService.${iLMObject.iLMObjectName}`].elements[condition.conditionFieldName]['@PersonalData.FieldSemantics']).toBeFalsy();
                 const {status, data} = await GET(condition.conditionFieldValueHelpEndPoint, { auth: DPI_Service })
                 expect(status).toEqual(200);
                 expect(data.length).toBeGreaterThan(0)
@@ -83,7 +83,7 @@ describe('iLMObject discovery', () => {
     });
 
     test('test org attribute endpoints', async () => {
-        const organizationAttributes = Object.keys(cds.model.definitions).filter(n => n.startsWith('DPIRetentionService.valueHelp_orgAttribute'))
+        const organizationAttributes = Object.keys(cds.model.definitions).filter(n => n.startsWith('sap.dpp.RetentionService.valueHelp_orgAttribute'))
         for (const attribute of organizationAttributes) {
             const attributeDefinition = cds.model.definitions[attribute]
             const {status, data} = await GET(attributeDefinition['@ILM.ValueHelp.Path'], { auth: DPI_Service })

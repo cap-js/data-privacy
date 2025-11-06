@@ -54,7 +54,7 @@ resources:
                   - serviceName: {{appName}}-srv
                     serviceFormat: odata-v4
                     annotationFormat: v4
-                    serviceEndPoint: /pdm
+                    serviceEndPoint: /dpp/information
                     appPaginationEnabled : true  
                     cacheControl: no-cache
   - name: {{appName}}-retention
@@ -82,7 +82,7 @@ resources:
 {{/hasMultitenancy}}
           translationConfiguration:
             textBundleBaseURL: ~{srv-api/srv-url}
-            textBundleEndPoint: /drm/i18n-files
+            textBundleEndPoint: /dpp/retention/i18n-files
             defaultLanguage: en
             supportedLanguages:
               - de
@@ -94,4 +94,4 @@ resources:
               applicationType: TransactionMaster
               # simulationSupportedForArchiving: true
               # simulationSupportedForDestruction: true
-              iLMObjectDiscoveryEndPoint: /drm/iLMObjects
+              iLMObjectDiscoveryEndPoint: /dpp/retention/iLMObjects

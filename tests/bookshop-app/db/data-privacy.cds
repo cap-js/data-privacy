@@ -90,13 +90,13 @@ annotate bookshop.ILMObjectWithXPRBlockingEnabled with @(
   legalEntity   @PersonalData.FieldSemantics : 'DataControllerID';
 };
 
-// UI annotation for DRM
+// UI annotation for SAP DPI Retention
 annotate bookshop.Marketing with @(
   UI.SelectionFields : [
     legalEntity_title
   ]);
 
-// DRM annotations - Capabilities 
+// SAP DPI Retention annotations - Capabilities 
 annotate bookshop.Orders with @(
   Capabilities                 : {
     FilterRestrictions : {
@@ -124,8 +124,8 @@ annotate bookshop.Marketing with @(
   }
 );
 
-// DRM Annotations Communications - needed for Data Subject Information
-//                                - needed for PDM selection screen as well
+// SAP DPI Retention Annotations Communications - needed for Data Subject Information
+//                                - needed for SAP DPI Information selection screen as well
 annotate bookshop.Customers with @Communication.Contact : {
   n    : {
     surname : lastName,

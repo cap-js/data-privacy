@@ -13,7 +13,7 @@ module.exports = class extends cds.add.Plugin {
     // const { isJava } = readProject()
     // const { mvn } = cds.add
 
-    // Create drm/sidecar folder in the root repository and copy package.json template
+    // Create dpp/sidecar folder in the root repository and copy package.json template
     const root = process.cwd();
     const sidecarFolder = path.join(root, 'data-privacy', 'sidecar');
     const sidecarFolderSrv = path.join(sidecarFolder, 'srv');

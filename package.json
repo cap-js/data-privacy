@@ -42,20 +42,20 @@
   "scripts": {
     "lint": "npx eslint .",
     "test-setup": "npm run setupBookshopTest && npm run setupExtendDPIBookshop",
-    "setupBookshopTest": "cd ./tests/bookshop-app && npm pack ../../ && rm -rf package-lock.json && rm -rf ./node_modules/ && npm i && rm -rf ./node_modules/@sap/cds",
+    "setupBookshopTest": "cd ./tests/bookshop-app && rm -rf package-lock.json && rm -rf ./node_modules/ && npm link ../../ && npm i && rm -rf ./node_modules/@sap/cds",
     "setupExtendDPIBookshop": "cd ./tests/retention/extend-retention-endpoint && npm i && rm -rf ./node_modules/@sap/cds",
     "test": "npx jest --silent"
   },
   "cds": {
     "requires": {
-      "data-privacy-retention": {
+      "sap.dpp.RetentionService": {
         "kind": "TableHeader"
       },
-      "data-privacy-information": {
+      "sap.dpp.InformationService": {
         "model": "@sap/cds-dpi/srv/DPIInformation"
       },
       "kinds": {
-        "data-privacy-retention-TableHeader": {
+        "sap.dpp.RetentionService-TableHeader": {
           "impl": "@sap/cds-dpi/srv/TableHeaderBlocking",
           "model": "@sap/cds-dpi/srv/TableHeaderBlocking"
         }

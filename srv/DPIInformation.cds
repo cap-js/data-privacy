@@ -1,5 +1,5 @@
 @requires: 'PersonalDataManagerUser'
 @cds.provided
-service DPIInformationService @(path : '/pdm') {
+service sap.dpp.InformationService @(path : '/dpp/information') {
 
 };

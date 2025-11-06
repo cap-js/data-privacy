@@ -3,7 +3,7 @@ using {sap.dpp.dppFlags} from '../db/dpi';
 @requires: 'DataRetentionManagerUser'
 @protocol: 'rest'
 @cds.provided
-service DPIRetentionService @(path: '/drm') {
+service sap.dpp.RetentionService @(path: '/dpp/retention') {
 
     @cds.persistence.exists
     @cds.persistence.skip
