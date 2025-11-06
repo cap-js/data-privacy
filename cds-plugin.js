@@ -24,7 +24,13 @@ require('./lib/csn-runtime-extensions');
 
 cds.on('compile.for.runtime', csn => { enhanceModel(csn) })
 cds.on('compile.to.edmx', csn => { enhanceModel(csn) })
-cds.on('compile.to.dbx', csn => { enhanceModel(csn) })
+//cds.on('compile.to.dbx', csn => { enhanceModel(csn) })
+
+cds.on('loaded', csn => { 
+    if (cds.cli.command === 'build') {
+        enhanceModel(csn) 
+    }
+})
 
 cds.on('listening', async () => {
     if (!cds.env.requires['sap.dpp.RetentionService'].applicationName) {
