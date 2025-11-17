@@ -1,5 +1,5 @@
 {
-  "name": "@capire/gdpr-extend-retention-srv",
+  "name": "@capire/gdpr-extend-information-srv",
   "description": "My application",
   "version": "1.0.0",
   "dependencies": {
