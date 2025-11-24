@@ -50,13 +50,13 @@
   "cds": {
     "requires": {
       "sap.dpp.RetentionService": {
-        "kind": "TableHeader"
+        "kind": "TableHeaderBlocking"
       },
       "sap.dpp.InformationService": {
         "model": "@sap/cds-dpi/srv/DPIInformation"
       },
       "kinds": {
-        "sap.dpp.RetentionService-TableHeader": {
+        "sap.dpp.RetentionService-TableHeaderBlocking": {
           "impl": "@sap/cds-dpi/srv/TableHeaderBlocking",
           "model": "@sap/cds-dpi/srv/TableHeaderBlocking"
         }

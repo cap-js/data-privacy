@@ -65,34 +65,65 @@ describe('iLMObject discovery', () => {
         }
     });
 
-    test('Conditions are correctly determined', async () => {
-        const {status, data} = await GET('/dpp/retention/iLMObjects', { auth: DPI_Service });
-        expect(status).toEqual(200);
-        for (const iLMObject of data) {
-            for (const condition of iLMObject.conditions) {
-                expect(cds.model.definitions[`sap.dpp.RetentionService.${iLMObject.iLMObjectName}`].elements[condition.conditionFieldName]['@PersonalData.FieldSemantics']).toBeFalsy();
-                const {status, data} = await GET(condition.conditionFieldValueHelpEndPoint, { auth: DPI_Service })
+    describe('Conditions', () => {
+        test('Conditions are correctly determined', async () => {
+            const {status, data} = await GET('/dpp/retention/iLMObjects', { auth: DPI_Service });
+            expect(status).toEqual(200);
+            for (const iLMObject of data) {
+                for (const condition of iLMObject.conditions) {
+                    const iLMObjectDef = cds.model.definitions[`sap.dpp.RetentionService.${iLMObject.iLMObjectName}`];
+                    expect(iLMObjectDef.elements[iLMObjectDef._dpi.elementByVHId(condition.conditionFieldName) ?? condition.conditionFieldName]['@PersonalData.FieldSemantics']).toEqual('PurposeID');
+                    const {status, data} = await GET(condition.conditionFieldValueHelpEndPoint, { auth: DPI_Service })
+                    expect(status).toEqual(200);
+                    expect(data.length).toBeGreaterThan(0)
+                    expect(data[0]).toMatchObject({
+                        conditionFieldValue: expect.any(String),
+                        conditionFieldValueDescription: expect.any(String)
+                    })
+                }
+            }
+        });
+
+        test('Conditions are correctly added to iLMObjects', async () => {
+            const {data} = await GET('/dpp/retention/iLMObjects', { auth: DPI_Service });
+
+            const iLMObjectWithAssocButVHOrgAttr = data.find(iLMObject => iLMObject.iLMObjectName === 'Exams')
+            expect(iLMObjectWithAssocButVHOrgAttr.conditions.some(c => c.conditionFieldName === 'test.dpp.university.ExamTypes')).toBeTruthy()
+        })
+
+    })
+
+    describe('Org attributes', () => {
+        test('test org attribute endpoints', async () => {
+            const organizationAttributes = Object.keys(cds.model.definitions).filter(n => n.startsWith('sap.dpp.RetentionService.valueHelp_orgAttribute'))
+            for (const attribute of organizationAttributes) {
+                const attributeDefinition = cds.model.definitions[attribute]
+                const {status, data} = await GET(attributeDefinition['@ILM.ValueHelp.Path'], { auth: DPI_Service })
                 expect(status).toEqual(200);
                 expect(data.length).toBeGreaterThan(0)
                 expect(data[0]).toMatchObject({
-                    conditionFieldValue: expect.any(String),
-                    conditionFieldValueDescription: expect.any(String)
+                    organizationAttributeValue: expect.any(String),
+                    organizationAttributeValueDescription: expect.any(String)
                 })
             }
-        }
-    });
+        });
 
-    test('test org attribute endpoints', async () => {
-        const organizationAttributes = Object.keys(cds.model.definitions).filter(n => n.startsWith('sap.dpp.RetentionService.valueHelp_orgAttribute'))
-        for (const attribute of organizationAttributes) {
-            const attributeDefinition = cds.model.definitions[attribute]
-            const {status, data} = await GET(attributeDefinition['@ILM.ValueHelp.Path'], { auth: DPI_Service })
-            expect(status).toEqual(200);
-            expect(data.length).toBeGreaterThan(0)
-            expect(data[0]).toMatchObject({
-                organizationAttributeValue: expect.any(String),
-                organizationAttributeValueDescription: expect.any(String)
-            })
-        }
-    });
+        test('Org Attributes are correctly added to iLMObjects', async () => {
+            const {data} = await GET('/dpp/retention/iLMObjects', { auth: DPI_Service });
+
+            const iLMObjectWithAssocOrgAttr = data.find(iLMObject => iLMObject.iLMObjectName === 'TranscriptGrades')
+            expect(iLMObjectWithAssocOrgAttr.organizationAttributeName).toEqual('test.dpp.university.Universities')
+            
+            const iLMObjectWithAssocButVHOrgAttr = data.find(iLMObject => iLMObject.iLMObjectName === 'Exams')
+            expect(iLMObjectWithAssocButVHOrgAttr.organizationAttributeName).toEqual('Universities')
+            
+            const iLMObjectWithStringButVHOrgAttr = data.find(iLMObject => iLMObject.iLMObjectName === 'ConsultingHours')
+            expect(iLMObjectWithStringButVHOrgAttr.organizationAttributeName).toEqual('Universities')
+            
+            const iLMObjectWithStringOrgAttr = data.find(iLMObject => iLMObject.iLMObjectName === 'ErasmusApplications')
+            expect(iLMObjectWithStringOrgAttr.organizationAttributeName).toEqual('universityStr')
+        })
+
+    })
+
 });

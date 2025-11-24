@@ -40,7 +40,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       const { applicationName, organizationAttributeName, iLMObject, dataSubjectRoleName, dataSubjectId } = req.data
       LOG.debug(`dataSubjectOrganizationAttributeValues request for the iLMObject ${iLMObject.name}, the data subject role ${dataSubjectRoleName} with the data subject ID ${dataSubjectId} and app ${applicationName} and org attribute ${organizationAttributeName}`)
       const where = _buildWhereClauseForDS(iLMObject, dataSubjectId, dataSubjectRoleName)
-      const orgAttribute = organizationAttributeName ?? iLMObject._dpi.orgAttributeReference
+      const orgAttribute = iLMObject._dpi.elementByVHId(organizationAttributeName) ?? organizationAttributeName
       LOG.debug(`where clause`, where);
       if (!iLMObject.elements[orgAttribute] || (iLMObject.elements[orgAttribute]?.['@PersonalData.FieldSemantics'] !== 'DataControllerID' && iLMObject.elements[orgAttribute]?.['@ILM.FieldSemantics'] !== 'LineOrganizationAttribute')) {
         return req.error({
@@ -62,7 +62,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
         `The retention condition set is`, retentionSet)
 
       const referenceDate = referenceDateName ?? iLMObject._dpi.endOfBusinessReference
-      const orgAttribute = organizationAttributeName ?? iLMObject._dpi.orgAttributeReference
+      const orgAttribute = iLMObject._dpi.elementByVHId(organizationAttributeName) ?? iLMObject._dpi.orgAttributeReference
 
       const queries = []
 
@@ -81,7 +81,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
         if (rule.conditionSet.length > 0) {
           where.push(
             'and',
-            { xpr: whereForConditionSet(rule.conditionSet) }
+            { xpr: whereForConditionSet(rule.conditionSet, iLMObject) }
           )
         }
         queries.push(
@@ -124,8 +124,8 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
         return
       }
       await this.run(UPDATE.entity(iLMObject).where(where).set({
-        dppBlockingDate: new Date().toISOString().substring(0,10),
-        dppEarliestDestructionDate: new Date(maxDeletionDate).toISOString().substring(0, 10)
+        [iLMObject._dpi.blockingDateReference]: new Date().toISOString().substring(0,10),
+        [iLMObject._dpi.earliestDestructionDateReference]: new Date(maxDeletionDate).toISOString().substring(0, 10)
       }));
 
       req.res.status(200)
@@ -137,7 +137,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
 
       LOG.debug(`Destroy iLMObjects request for role ${dataSubjectRole} and iLMObject ${iLMObject.name} where end of retention is reached for app ${applicationName}.`)
       const whereCondition = [
-        { ref: ['dppEarliestDestructionDate'] },
+        { ref: [iLMObject._dpi.earliestDestructionDateReference] },
         '<=',
         { val: new Date().toISOString().substring(0, 10) }
       ];
@@ -165,9 +165,9 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       }
       //Delete if there are no active iLMObjects for the data subject
       //Active entities are the ones with no blocking date or a blocking date in the future
-      const wherePart1 = {xpr: [{ref: ['dppBlockingDate']}, 'is', 'null', 'or', {ref: ['dppBlockingDate']}, '>', {val: new Date().toISOString().substring(0,10)}]}
-      for (const iLMObjectName in this.definition._dpi.iLMObjects) {
+      for (const iLMObjectName in this.definition._dpi.iLMObjectsForRole(dataSubjectRoleName)) {
         const iLMObject = this.definition._dpi.iLMObjects[iLMObjectName];
+        const wherePart1 = {xpr: [{ref: [iLMObject._dpi.blockingDateReference]}, 'is', 'null', 'or', {ref: [iLMObject._dpi.blockingDateReference]}, '>', {val: new Date().toISOString().substring(0,10)}]}
         const wherePart2 = _buildWhereClauseForDS(iLMObject, dataSubjectId, dataSubjectRoleName)
         LOG.debug(`Where clause for getting active entities`, JSON.stringify(wherePart1), 'and', wherePart2)
         const activeRecords = await cds.db.exists(iLMObject).where([wherePart1, 'and', {xpr: wherePart2}])
@@ -181,17 +181,17 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       req.user._is_privileged = true
       //Check if there are blocked records
       for (const singleEntity of dsEntities) {
+        const {amt} = await this.run(SELECT.one.from(singleEntity).where(_buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName)).columns('count(1) as amt'))
+        modifiedRecords += Number(amt);
         if (new Date(maxDeletionDate).toISOString() > new Date().toISOString()) {
-          const updates = await this.run(UPDATE.entity(singleEntity).where(_buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName)).set({
-            dppBlockingDate: new Date().toISOString().substring(0,10),
-            dppEarliestDestructionDate: new Date(maxDeletionDate).toISOString().substring(0, 10)
+          await this.run(UPDATE.entity(singleEntity).where(_buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName)).set({
+            [singleEntity._dpi.blockingDateReference]: new Date().toISOString().substring(0,10),
+            [singleEntity._dpi.earliestDestructionDateReference]: new Date(maxDeletionDate).toISOString().substring(0, 10)
           }))
-          LOG.debug(`Where clause for updating ${singleEntity.name}`, _buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName), `with blocking details. Blocked ${updates} entities.`);
-          modifiedRecords += updates;
+          LOG.debug(`Where clause for updating ${singleEntity.name}`, _buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName), `with blocking details. Blocked ${amt} entities.`);
         } else {
-          const deleted = await this.run(DELETE.from(singleEntity).where(_buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName)))
-          LOG.debug(`Where clause for deleting ${singleEntity.name}`, _buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName), `with blocking details. Deleted ${deleted} entities. Delete happened on dataSubjectBlocking because maxDeletionDate was in the past/today.`);
-          modifiedRecords += deleted;
+          await this.run(DELETE.from(singleEntity).where(_buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName)))
+          LOG.debug(`Where clause for deleting ${singleEntity.name}`, _buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName), `with blocking details. Deleted ${amt} entities. Delete happened on dataSubjectBlocking because maxDeletionDate was in the past/today.`);
         }
       }
       return modifiedRecords;
@@ -207,8 +207,8 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       const dataSubjectEntity = dataSubjectsEntities[Object.keys(dataSubjectsEntities)[0]];
       const dataSubjectIDs = await SELECT.from(dataSubjectEntity)
         .groupBy(dataSubjectEntity._dpi.dataSubjectIdReference)
-        .columns('max(dppEarliestDestructionDate) as lastEndOfRetention', `${dataSubjectEntity._dpi.dataSubjectIdReference} as dataSubjectID`)
-        .having(`dppEarliestDestructionDate <= '${new Date().toISOString().substring(0, 10)}'`)
+        .where(`${dataSubjectEntity._dpi.earliestDestructionDateReference} <= '${new Date().toISOString().substring(0, 10)}'`)
+        .columns(`max(${dataSubjectEntity._dpi.earliestDestructionDateReference}) as dppEarliestDestructionDate`, `${dataSubjectEntity._dpi.dataSubjectIdReference} as dataSubjectID`)
       if (dataSubjectIDs.length === 0) return
       const dataSubjectIDsToDestroy = []
       for (const { dataSubjectID } of dataSubjectIDs) {
@@ -245,7 +245,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       if (dataSubjectIDsToDestroy.length > 0) {
         LOG.info(`Destroy data subjects with the ID`, dataSubjectIDsToDestroy)
         req.user._is_privileged = true
-        const deleted = await this.run(DELETE.from(dataSubjectEntity).where({ [dataSubjectEntity._dpi.dataSubjectIdReference]: { in: dataSubjectIDsToDestroy }, dppEarliestDestructionDate: { '<=': new Date().toISOString().substring(0,10) } }));
+        const deleted = await this.run(DELETE.from(dataSubjectEntity).where({ [dataSubjectEntity._dpi.dataSubjectIdReference]: { in: dataSubjectIDsToDestroy }, [dataSubjectEntity._dpi.earliestDestructionDateReference]: { '<=': new Date().toISOString().substring(0,10) } }));
         LOG.debug(`Destroyed ${deleted} data subjects, with ${dataSubjectIDsToDestroy.length} data subject IDs being provided.`)
         req.res.statusCode = 200
         return `Destroyed ${deleted} records`
@@ -273,10 +273,10 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       const [dataSubjectsMatchingConditions, dataSubjectsNotMatchingConditions] = await Promise.all([
         SELECT.distinct.from(iLMObject)
           .where(whereStmts.whereWithCondition)
-          .columns(`${iLMObject._dpi.dataSubjectIdReference} as dataSubjectId`, `count(${iLMObject._dpi.orgAttributeReference}) as sumRecords`).groupBy(iLMObject._dpi.dataSubjectIdReference).orderBy(iLMObject._dpi.dataSubjectIdReference),
+          .columns(`${iLMObject._dpi.dataSubjectIdReference} as dataSubjectId`, `count(1) as sumRecords`).groupBy(iLMObject._dpi.dataSubjectIdReference).orderBy(iLMObject._dpi.dataSubjectIdReference),
         SELECT.distinct.from(iLMObject)
           .where(whereStmts.whereWithNegConditions)
-          .columns(`${iLMObject._dpi.dataSubjectIdReference} as dataSubjectId`, `count(${iLMObject._dpi.orgAttributeReference}) as sumRecords`).groupBy(iLMObject._dpi.dataSubjectIdReference)
+          .columns(`${iLMObject._dpi.dataSubjectIdReference} as dataSubjectId`, `count(1) as sumRecords`).groupBy(iLMObject._dpi.dataSubjectIdReference)
       ])
 
       LOG.debug(`Successful requests`, dataSubjectsMatchingConditions)
@@ -317,10 +317,10 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       const [dataSubjectsMatchingConditions, dataSubjectsForThisEntity] = await Promise.all([
         SELECT.distinct.from(iLMObject)
           .where(whereWithCondition.length ? where.concat('and', whereWithCondition) : where.concat(whereWithCondition))
-          .columns(`${iLMObject._dpi.dataSubjectIdReference} as dataSubjectId`, `count(${iLMObject._dpi.orgAttributeReference}) as sumRecords`).groupBy(iLMObject._dpi.dataSubjectIdReference).orderBy(iLMObject._dpi.dataSubjectIdReference),
+          .columns(`${iLMObject._dpi.dataSubjectIdReference} as dataSubjectId`, `count(1) as sumRecords`).groupBy(iLMObject._dpi.dataSubjectIdReference).orderBy(iLMObject._dpi.dataSubjectIdReference),
         SELECT.distinct.from(iLMObject)
           .where(where)
-          .columns(`${iLMObject._dpi.dataSubjectIdReference} as dataSubjectId`, `count(${iLMObject._dpi.orgAttributeReference}) as sumRecords`).groupBy(iLMObject._dpi.dataSubjectIdReference).orderBy(iLMObject._dpi.dataSubjectIdReference)
+          .columns(`${iLMObject._dpi.dataSubjectIdReference} as dataSubjectId`, `count(1) as sumRecords`).groupBy(iLMObject._dpi.dataSubjectIdReference).orderBy(iLMObject._dpi.dataSubjectIdReference)
       ])
 
       LOG.debug(`Successful requests`, dataSubjectsMatchingConditions)
@@ -378,26 +378,26 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       return results.flat();
     })
 
-    function whereClauseForRetentionSets(referenceDates, iLMObjectEntity, dataSubjectRoleName) {
+    function whereClauseForRetentionSets(referenceDates, iLMObject, dataSubjectRoleName) {
       const whereWithCondition = []
       const whereWithNegConditions = []
 
       for (const ref of referenceDates) {
         for (const orgAttrRef of ref.organizationAttributeResidenceSet) {
           for (const residenceSet of orgAttrRef.residenceSet) {
-            const orgAttributeName = iLMObjectEntity.elements[orgAttrRef.organizationAttributeName] ? orgAttrRef.organizationAttributeName : iLMObjectEntity._dpi.orgAttributeReference
-            if (!iLMObjectEntity.elements[orgAttrRef.organizationAttributeName]) {
-              LOG.warn(`data subject deletion triggered with org attribute ${orgAttrRef.organizationAttributeName} not given on entity ${iLMObjectEntity.name}. Using element ${orgAttributeName} instead.`)
+            const orgAttributeName = iLMObject.elements[iLMObject._dpi.elementByVHId(orgAttrRef.organizationAttributeName)] ? iLMObject._dpi.elementByVHId(orgAttrRef.organizationAttributeName) : iLMObject._dpi.orgAttributeReference
+            if (!iLMObject.elements[iLMObject._dpi.elementByVHId(orgAttrRef.organizationAttributeName)]) {
+              LOG.warn(`data subject deletion triggered with org attribute ${orgAttrRef.organizationAttributeName} not given on entity ${iLMObject.name}. Using element ${orgAttributeName} instead.`)
             }
             const residenceSetWhere = [
               { ref: [ref.referenceDateName] },
               '<',
               { val: residenceSet.retentionStartDate },
             ]
-            if (dataSubjectRoleName && iLMObjectEntity['@PersonalData.DataSubjectRole']['=']) {
+            if (dataSubjectRoleName && iLMObject['@PersonalData.DataSubjectRole']['=']) {
               residenceSetWhere.push(
                 'and',
-                { ref: iLMObjectEntity['@PersonalData.DataSubjectRole']['='] },
+                { ref: iLMObject['@PersonalData.DataSubjectRole']['='] },
                 '=',
                 { val: dataSubjectRoleName },
               )
@@ -412,7 +412,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
             } else {
               LOG.warn(`No org attribute given on the entity. Ignoring the condition: ${orgAttrRef.organizationAttributeName} = ${orgAttrRef.organizationAttributeValue}`)
             }
-            const conditionWhere = whereForConditionSet(residenceSet.conditionSet)
+            const conditionWhere = whereForConditionSet(residenceSet.conditionSet, iLMObject)
             if (conditionWhere.length > 0) {
               LOG.debug(`Add condition in whereClauseForRetentionSets for residence set with start date ${residenceSet.retentionStartDate} `, conditionWhere)
               whereWithCondition.push(residenceSetWhere.concat('and', conditionWhere))

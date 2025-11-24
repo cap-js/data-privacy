@@ -1,0 +1,4 @@
+ID;modifiedAt;createdAt;createdBy;modifiedBy;email;firstName;lastName;legalEntity_title
+b16e120e-ac78-4433-ad00-8defdb101c40;2019-04-04;2019-01-31;admin@business.com;admin@business.com;max.mustermann@sap.com;Max;Mustermann;SAP SE
+f391d553-a017-434b-a84f-f973849d57e4;2019-04-04;2019-01-30;admin@business.com;admin@business.com;erika.musterfrau@sap.com;Erika;Musterfrau;SAP LGD
+e872239b-1283-4384-bf14-711e4b18a1b8;2019-04-04;2019-01-31;admin@business.com;admin@business.com;friedrich.ebert@sap.com;Friedrich;Ebert;SAP Ltd

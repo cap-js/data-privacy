@@ -19,7 +19,7 @@ module.exports = class RetentionService extends cds.ApplicationService {
           iLMObjectDescriptionKey: getTranslationKey(entity['@Core.Description']) ?? undefined,
           iLMObjectBaseURL: buildBaseUrl(req),
           iLMObjectCheckEndPoint: `${this.path}/iLMObjects/${iLMObject}/isILMObjectEnabled`,
-          organizationAttributeName: entity._dpi.orgAttributeReference,
+          organizationAttributeName: entity.elements[entity._dpi.orgAttributeReference]['@ILM.ValueHelp.Id'] ?? entity._dpi.orgAttributeReference,
           referenceDates: (Object.entries(entity.elements)).reduce((acc, [name, value]) => {
             if (value['@PersonalData.FieldSemantics'] === 'EndOfBusinessDate' && value.type !== 'cds.Association' && value.type !== 'cds.Composition') {
               const startTime = {
@@ -39,7 +39,7 @@ module.exports = class RetentionService extends cds.ApplicationService {
             const element = entity.elements[elementName];
             if (element['@ILM.ValueHelp.Type'] === 'condition') {
               const condition = {
-                conditionFieldName: elementName,
+                conditionFieldName: entity.elements[elementName]['@ILM.ValueHelp.Id'] ?? elementName,
                 conditionFieldType: mapCDStoRetentionDataType(element.type),
                 conditionFieldDescription: cds.i18n.labels.for(element),
                 conditionFieldDescriptionKey: undefined,

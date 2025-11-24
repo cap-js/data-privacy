@@ -152,6 +152,12 @@ resources:
                 dataSubjectBlockingEndPoint: /dpp/retention/dataSubjectBlocking
                 dataSubjectInformationEndPoint: /dpp/retention/dataSubjectInformation
                 dataSubjectsDestroyingEndPoint: /dpp/retention/dataSubjectsDestroying
+              - dataSubjectRoleName: Employee
+                dataSubjectDescription: Employee
+                dataSubjectBaseURL: ~{srv-api/srv-url}
+                dataSubjectBlockingEndPoint: /dpp/retention/dataSubjectBlocking
+                dataSubjectInformationEndPoint: /dpp/retention/dataSubjectInformation
+                dataSubjectsDestroyingEndPoint: /dpp/retention/dataSubjectsDestroying
             organizationAttributes:
               - organizationAttributeName: legalEntity_title
                 organizationAttributeDescription: LegalEntity

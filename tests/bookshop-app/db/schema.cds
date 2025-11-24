@@ -98,20 +98,24 @@ entity ILMObjectWithStaticBlockingDisabled : cuid {
   text          : String @title : 'Text';
   marketingDate : Date @title : 'Marketing date';
   legalEntity   : Association to one LegalEntities @title : 'Legal entity';
+  legacyBlockingDate : Date @PersonalData.FieldSemantics : 'BlockingDate';
 }
 
 entity ILMObjectWithEDMJSONBlockingEnabled : cuid {
   Customer      : Association to Customers @title : 'Customer'; 
   text          : String @title : 'Text';
   marketingDate : Date @title : 'Marketing date';
-  legalEntity   : Association to one LegalEntities @title : 'Legal entity';
+  legalEntity2   : Association to one LegalEntities @title : 'Legal entity';
+  legacyDestructionDate : Date @PersonalData.FieldSemantics : 'EndOfRetentionDate';
 }
 
 entity ILMObjectWithXPRBlockingEnabled : cuid {
-  Customer      : Association to Customers @title : 'Customer'; 
+  employee      : Association to Employees @title : 'Employee'; 
   text          : String @title : 'Text';
   marketingDate : Date @title : 'Marketing date';
   legalEntity   : Association to one LegalEntities @title : 'Legal entity';
+  legacyBlockingDate : Date @PersonalData.FieldSemantics : 'BlockingDate';
+  legacyDestructionDate : Date @PersonalData.FieldSemantics : 'EndOfRetentionDate';
 }
 
 @odata.singleton
@@ -130,6 +134,17 @@ entity Customers : cuid, managed {
   legalEntity    : Association to one LegalEntities @title : 'Legal entity';
   postalAddress  : Composition of one CustomerPostalAddress on postalAddress.Customer = $self @title : 'Postal address';
   billingData    : Composition of one CustomerBillingData on billingData.Customer = $self @title : 'Billing data';
+}
+
+@Core.Description : 'Employee'
+entity Employees : cuid, managed {
+  email          : String @title : 'Email';
+  firstName      : String @title : 'First name';
+  lastName       : String @title : 'Last name';
+  validTo        : Date @title : 'Valid to';
+  legalEntity    : Association to one LegalEntities @title : 'Legal entity';
+  legacyBlockingDate : Date @PersonalData.FieldSemantics : 'BlockingDate';
+  legacyDestructionDate : Date @PersonalData.FieldSemantics : 'EndOfRetentionDate';
 }
 
 

@@ -17,6 +17,19 @@ annotate bookshop.Customers with @(
   legalEntity  @PersonalData.FieldSemantics : 'DataControllerID';
 }
 
+annotate bookshop.Employees with @(
+  PersonalData : {
+    DataSubjectRole : 'Employee',
+    EntitySemantics : 'DataSubject'
+  })
+{
+  ID           @PersonalData.FieldSemantics : 'DataSubjectID';
+  email        @PersonalData.IsPotentiallyPersonal;
+  firstName    @PersonalData.IsPotentiallyPersonal;
+  lastName     @PersonalData.IsPotentiallyPersonal;
+  legalEntity  @PersonalData.FieldSemantics : 'DataControllerID';
+}
+
 annotate bookshop.CustomerBillingData with @PersonalData : {
   DataSubjectRole : 'Customer',
   EntitySemantics : 'DataSubjectDetails'
@@ -77,15 +90,15 @@ annotate bookshop.ILMObjectWithEDMJSONBlockingEnabled with @(
 ) {
   Customer      @PersonalData.FieldSemantics : 'DataSubjectID';
   marketingDate @PersonalData.FieldSemantics : 'EndOfBusinessDate';
-  legalEntity   @PersonalData.FieldSemantics : 'DataControllerID';
+  legalEntity2   @PersonalData.FieldSemantics : 'DataControllerID';
 };
 
 annotate bookshop.ILMObjectWithXPRBlockingEnabled with @(
-  PersonalData.DataSubjectRole : 'Customer',
+  PersonalData.DataSubjectRole : 'Employee',
   PersonalData.EntitySemantics : 'Other',
   ILM.BlockingEnabled : '(SELECT isBlockingEnabled FROM sap.capire.bookshop.Configuration)'
 ) {
-  Customer      @PersonalData.FieldSemantics : 'DataSubjectID';
+  employee      @PersonalData.FieldSemantics : 'DataSubjectID';
   marketingDate @PersonalData.FieldSemantics : 'EndOfBusinessDate';
   legalEntity   @PersonalData.FieldSemantics : 'DataControllerID';
 };
@@ -140,18 +153,14 @@ annotate bookshop.Customers with @Communication.Contact : {
   gender: gender
 };
 
+annotate bookshop.Employees with @Communication.Contact : {
+  n    : {
+    surname : lastName,
+    given   : firstName,
 
-// annotations for Audit Log
-annotate bookshop.Customers with @AuditLog.Operation : {
-  Read   : true,
-  Insert : true,
-  Update : true,
-  Delete : true
-};
-
-annotate bookshop.CustomerPostalAddress with @AuditLog.Operation : {
-  Read   : true,
-  Insert : true,
-  Update : true,
-  Delete : true
+  },
+  email : [{
+    address : email,
+    type : #preferred,
+  }],
 };
