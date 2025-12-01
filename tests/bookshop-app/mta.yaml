@@ -158,11 +158,29 @@ resources:
                 dataSubjectBlockingEndPoint: /dpp/retention/dataSubjectBlocking
                 dataSubjectInformationEndPoint: /dpp/retention/dataSubjectInformation
                 dataSubjectsDestroyingEndPoint: /dpp/retention/dataSubjectsDestroying
+              - dataSubjectRoleName: Student
+                dataSubjectDescription: Student
+                dataSubjectBaseURL: ~{srv-api/srv-url}
+                dataSubjectBlockingEndPoint: /dpp/retention/dataSubjectBlocking
+                dataSubjectInformationEndPoint: /dpp/retention/dataSubjectInformation
+                dataSubjectsDestroyingEndPoint: /dpp/retention/dataSubjectsDestroying
             organizationAttributes:
-              - organizationAttributeName: legalEntity_title
+              - organizationAttributeName: sap.capire.bookshop.LegalEntities
                 organizationAttributeDescription: LegalEntity
                 organizationAttributeBaseURL: ~{srv-api/srv-url}
                 organizationAttributeValueHelpEndPoint: /dpp/retention/valueHelp_orgAttribute_sap_capire_bookshop_LegalEntities
+              - organizationAttributeName: test.dpp.university.Universities
+                organizationAttributeDescription: sap.dpp.RetentionService.valueHelp_orgAttribute_test_dpp_university_Universities
+                organizationAttributeBaseURL: ~{srv-api/srv-url}
+                organizationAttributeValueHelpEndPoint: /dpp/retention/valueHelp_orgAttribute_test_dpp_university_Universities
+              - organizationAttributeName: Universities
+                organizationAttributeDescription: sap.dpp.RetentionService.valueHelp_orgAttribute_Universities
+                organizationAttributeBaseURL: ~{srv-api/srv-url}
+                organizationAttributeValueHelpEndPoint: /dpp/retention/valueHelp_orgAttribute_Universities
+              - organizationAttributeName: universityStr
+                organizationAttributeDescription: sap.dpp.RetentionService.valueHelp_orgAttribute_sap_dpp_RetentionService_ErasmusApplications_universityStr
+                organizationAttributeBaseURL: ~{srv-api/srv-url}
+                organizationAttributeValueHelpEndPoint: /dpp/retention/valueHelp_orgAttribute_sap_dpp_RetentionService_ErasmusApplications_universityStr
   - name: bookshop-auditlog
     type: org.cloudfoundry.managed-service
     parameters:
