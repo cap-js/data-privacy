@@ -37,7 +37,7 @@ modules:
       - name: bookshop-cf-logging
       - name: bookshop-auditlog
       - name: bookshop-information
-      - name: bookshop-retention
+      - name: bookshop-retention-t5
   - name: bookshop-db-deployer
     type: hdb
     path: gen/db
@@ -58,7 +58,6 @@ resources:
     parameters:
       service: xsuaa
       service-plan: application
-      path: ./xs-security.json
       config:
         xsappname: bookshop-${org}-${space}
         tenant-mode: dedicated
@@ -70,7 +69,7 @@ resources:
           - name: $XSAPPNAME.DataRetentionManagerUser
             description: Technial scope to restrict access to retention endpoint
             grant-as-authority-to-apps:
-              - $XSSERVICENAME(bookshop-retention)
+              - $XSSERVICENAME(bookshop-retention-t5)
   - name: bookshop-cf-logging
     type: org.cloudfoundry.managed-service
     parameters:
@@ -98,7 +97,7 @@ resources:
           informationConfiguration:
             applicationConfiguration:
               dataSubjectDeletionAgent: retention-manager
-              retentionApplicationName: bookshop-retention
+              retentionApplicationName: bookshop-retention-t5
               disableDataSubjectCorrection: true
               cacheControl: no-cache
             components:
@@ -111,24 +110,24 @@ resources:
                     serviceEndPoint: /dpp/information
                     appPaginationEnabled: true
                     cacheControl: no-cache
-  - name: bookshop-retention
+  - name: bookshop-retention-t5
     type: org.cloudfoundry.managed-service
     requires:
       - name: srv-api
     parameters:
-      service-name: bookshop-retention
+      service-name: bookshop-retention-t5
       service: data-privacy-integration-service
       service-plan: data-privacy-internal
       config:
         xs-security:
-          xsappname: bookshop-retention-${org}-${space}
+          xsappname: bookshop-retention-t5-${org}-${space}
           authorities:
             - $ACCEPT_GRANTED_AUTHORITIES
         dataPrivacyConfiguration:
           configType: retention
           applicationConfiguration:
-            applicationName: bookshop-retention
-            applicationDescription: bookshop-retention
+            applicationName: bookshop-retention-t5
+            applicationDescription: bookshop-retention-t5
             applicationDescriptionKey: APPLICATION_NAME
             applicationBaseURL: ~{srv-api/srv-url}
             applicationTitle: bookshop

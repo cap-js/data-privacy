@@ -6,8 +6,11 @@ annotate bookshop.Customers with @(
   PersonalData : {
     DataSubjectRole : 'Customer',
     EntitySemantics : 'DataSubject'
-  })
-{
+  },
+  Common.Auditing.AuditorScopes : [
+    'CUSTOMER_AUDITOR'
+  ]
+) {
   ID           @PersonalData.FieldSemantics : 'DataSubjectID';
   email        @PersonalData.IsPotentiallyPersonal;
   firstName    @PersonalData.IsPotentiallyPersonal;

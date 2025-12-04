@@ -1,7 +1,7 @@
 const cds = require('@sap/cds');
 const path = require('path');
 
-let { POST: _POST, GET: _GET } = cds.test().in(path.join(__dirname, '../bookshop-app'))
+let { POST: _POST, GET: _GET, PATCH, data } = cds.test().in(path.join(__dirname, '../bookshop-app'))
 const POST = async function () {
   try {
     return await _POST(...arguments)
@@ -16,14 +16,21 @@ const GET = async function () {
     return e.response ?? e;
   }
 }
-cds.test.data.autoReset(true);
+
+beforeEach(async () => {
+  const user = new cds.User({ id: 'privileged', roles: {} });
+  user._is_privileged = true;
+  const ctx = cds.EventContext.for({ id: cds.utils.uuid(), http: { req: null, res: null } })
+  ctx.user = user
+  await cds._with(ctx, () => data.reset())
+})
 //TODO: Test that entities of DPIRetention service are not exposed via API
 
 describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized user', () => {
   const DPI_Service = { username: 'abc', password: '1234' }
   test('dataSubjectEndOfBusiness', async () => {
     const { status } = await POST('/dpp/retention/dataSubjectEndOfBusiness', {
-      applicationName: 'bookshop-retention',
+      applicationName: 'bookshop-retention-t5',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
       dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'
@@ -33,7 +40,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
   test('dataSubjectOrganizationAttributeValues', async () => {
     const { status } = await POST('/dpp/retention/dataSubjectOrganizationAttributeValues', {
-      applicationName: 'bookshop-retention',
+      applicationName: 'bookshop-retention-t5',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
       dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -44,7 +51,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
   test('dataSubjectLatestRetentionStartDates', async () => {
     const { status } = await POST('/dpp/retention/dataSubjectLatestRetentionStartDates', {
-      applicationName: 'bookshop-retention',
+      applicationName: 'bookshop-retention-t5',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
       dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -61,7 +68,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
   test('dataSubjectILMObjectInstanceBlocking', async () => {
     const { status } = await POST('/dpp/retention/dataSubjectILMObjectInstanceBlocking', {
-      applicationName: 'bookshop-retention',
+      applicationName: 'bookshop-retention-t5',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
       dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -72,7 +79,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
   test('dataSubjectBlocking', async () => {
     const { status } = await POST('/dpp/retention/dataSubjectBlocking', {
-      applicationName: 'bookshop-retention',
+      applicationName: 'bookshop-retention-t5',
       dataSubjectRoleName: 'Customer',
       dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
       maxDeletionDate: '2020-04-04T22:00:00'
@@ -82,7 +89,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
   test('dataSubjectsILMObjectInstancesDestroying', async () => {
     const { status } = await POST('/dpp/retention/dataSubjectsILMObjectInstancesDestroying', {
-      applicationName: 'bookshop-retention',
+      applicationName: 'bookshop-retention-t5',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
     }, { auth: DPI_Service });
@@ -91,7 +98,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
   test('dataSubjectsDestroying', async () => {
     const { status } = await POST('/dpp/retention/dataSubjectsDestroying', {
-      applicationName: 'bookshop-retention',
+      applicationName: 'bookshop-retention-t5',
       dataSubjectRoleName: 'Customer',
     }, { auth: DPI_Service });
     expect(status).toEqual(403);
@@ -99,7 +106,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
   test('dataSubjectsEndOfResidence', async () => {
     const { status } = await POST('/dpp/retention/dataSubjectsEndOfResidence', {
-      applicationName: 'bookshop-retention',
+      applicationName: 'bookshop-retention-t5',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
       referenceDates: [
@@ -121,7 +128,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
   test('dataSubjectsEndOfResidenceConfirmation', async () => {
     const { status } = await await POST('/dpp/retention/dataSubjectsEndOfResidenceConfirmation', {
-      applicationName: 'bookshop-retention',
+      applicationName: 'bookshop-retention-t5',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
       referenceDates: [
@@ -146,7 +153,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
   test('dataSubjectInformation', async () => {
     const { status } = await POST('/dpp/retention/dataSubjectInformation', {
-      applicationName: 'bookshop-retention',
+      applicationName: 'bookshop-retention-t5',
       dataSubjectRoleName: 'Customer',
       dataSubjects: [
         { dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad' }
@@ -169,4 +176,124 @@ test('DPIRetention entities are not accessible on the API', async () => {
     const {status} = await GET(`/dpp/retention/${entity}`, { auth: { username: 'dpi', password: '1234' }});
     expect(status).toEqual(403);
   }
+})
+
+describe('Access Restrictions for blocked entities', () => {
+  const regularUser = { username: 'alice', password: '1234' }
+  const catalogAuditor = { username: 'catalog-auditor', password: '1234' }
+  const customerAuditor = { username: 'customer-auditor', password: '1234' }
+  const defaultAuditor = { username: 'auditor', password: '1234' }
+
+  beforeEach(async () => {
+    const {Orders, Customers} = cds.entities('sap.capire.bookshop')
+    await UPDATE.entity(Orders).where({ID: '5e2f2640-6866-4dcf-8f4d-3027aa831cad'}).set({dppBlockingDate: '2023-12-12'})
+    await UPDATE.entity(Customers).where({ID: 'e872239b-1283-4384-bf14-711e4b18a1b8'}).set({dppBlockingDate: '2023-12-12'})
+  })
+
+  test('Blocked records cannot be read via regular service', async () => {
+    const {data: {value: orders}, status} = await GET('/odata/v4/admin/Orders', {auth: regularUser})
+    expect(status).toEqual(200);
+    expect(orders.some(o => o.ID === '5e2f2640-6866-4dcf-8f4d-3027aa831cad')).toBeFalsy()
+
+    const {data: {value: customers}, status: statusCustomers} = await GET('/odata/v4/catalog/Customers', {auth: regularUser})
+    expect(statusCustomers).toEqual(200);
+    expect(customers.some(o => o.ID === 'e872239b-1283-4384-bf14-711e4b18a1b8')).toBeFalsy()
+  })
+
+  test('Blocked records cannot be read via regular service even when using $apply', async () => {
+    const {data: {value: orders}, status} = await GET('/odata/v4/catalog/Orders?$apply=groupby((legalEntity_title),aggregate(OrderNo with sum as TotalOrderNumber))/aggregate(TotalOrderNumber with avg as avgOrderNumber)', {auth: regularUser})
+    expect(status).toEqual(200);
+    expect(orders[0].avgOrderNumber).toEqual(22)
+  })
+
+  test('Blocked records can be read via regular service if user is default auditor', async () => {
+    const {data: {value: orders}, status} = await GET('/odata/v4/admin/Orders', {auth: defaultAuditor})
+    expect(status).toEqual(200);
+    expect(orders.some(o => o.ID === '5e2f2640-6866-4dcf-8f4d-3027aa831cad')).toBeTruthy()
+  })
+
+  test('Blocked records can be read via regular service if user is custom defined auditor of entity', async () => {
+    const {data: {value: customers}, status} = await GET('/odata/v4/catalog/Customers', {auth: customerAuditor})
+    expect(status).toEqual(200);
+    expect(customers.some(o => o.ID === 'e872239b-1283-4384-bf14-711e4b18a1b8')).toBeTruthy()
+  })
+
+  test('Blocked records cannot be read by service default auditor if entity specific auditor is defined', async () => {
+    const {data: {value: customers}, status} = await GET('/odata/v4/catalog/Customers', {auth: catalogAuditor})
+    expect(status).toEqual(200);
+    expect(customers.some(o => o.ID === 'e872239b-1283-4384-bf14-711e4b18a1b8')).toBeFalsy()
+  })
+
+  test('Blocked records cannot be read by default auditor if entity specific auditor is defined', async () => {
+    const {data: {value: customers}, status} = await GET('/odata/v4/catalog/Customers', {auth: defaultAuditor})
+    expect(status).toEqual(200);
+    expect(customers.some(o => o.ID === 'e872239b-1283-4384-bf14-711e4b18a1b8')).toBeFalsy()
+  })
+
+  test('Blocked records can be read via regular service if user is custom defined auditor of service', async () => {
+    const {data: {value: orders}, status} = await GET('/odata/v4/catalog/Orders', {auth: catalogAuditor})
+    expect(status).toEqual(200);
+    expect(orders.some(o => o.ID === '5e2f2640-6866-4dcf-8f4d-3027aa831cad')).toBeTruthy()
+  })
+
+  test('Blocked records cannot be read via regular service if user is auditor but service level default is defined', async () => {
+    const {data: {value: orders}, status} = await GET('/odata/v4/catalog/Orders', {auth: defaultAuditor})
+    expect(status).toEqual(200);
+    expect(orders.some(o => o.ID === '5e2f2640-6866-4dcf-8f4d-3027aa831cad')).toBeFalsy()
+  })
+
+  test('Draft tables of DPP entities are not blocked', async () => {
+    const {data: newOrder} = await POST('/odata/v4/admin/Orders', {
+      OrderNo: '123',
+      currency_code: 'DE',
+      endOfWarrantyDate: '2020-12-12',
+      legalEntity_title: 'SAP SE'
+    }, {auth: regularUser})
+
+    const savedOrder = await POST(`/odata/v4/admin/Orders(ID=${newOrder.ID},IsActiveEntity=false)/AdminService.draftActivate`, {}, {auth: regularUser})
+    expect(savedOrder.status).toEqual(201)
+    expect(savedOrder.data.endOfWarrantyDate).toEqual('2020-12-12')
+
+    const editOrder = await POST(`/odata/v4/admin/Orders(ID=${newOrder.ID},IsActiveEntity=true)/AdminService.draftEdit`, {}, {auth: regularUser})
+    expect(editOrder.status).toEqual(201)
+    expect(editOrder.data.endOfWarrantyDate).toEqual('2020-12-12')
+
+    const patchedOrder = await PATCH(`/odata/v4/admin/Orders(ID=${newOrder.ID},IsActiveEntity=false)`, {
+      endOfWarrantyDate: '2021-12-12',
+    }, {auth: regularUser})
+    expect(patchedOrder.status).toEqual(200)
+    expect(patchedOrder.data.endOfWarrantyDate).toEqual('2021-12-12')
+
+    const getDraft = await GET(`/odata/v4/admin/Orders(ID=${newOrder.ID},IsActiveEntity=false)`, {auth: regularUser})
+    expect(getDraft.status).toEqual(200)
+    expect(getDraft.data.endOfWarrantyDate).toEqual('2021-12-12')
+
+    const saveOrder = await POST(`/odata/v4/admin/Orders(ID=${newOrder.ID},IsActiveEntity=false)/AdminService.draftActivate`, {}, {auth: regularUser})
+    expect(saveOrder.status).toEqual(200)
+    expect(saveOrder.data.endOfWarrantyDate).toEqual('2021-12-12')
+  })
+
+  test('sap.dpp.RetentionService entities do not have restricted access', async () => {
+    const user = new cds.User({ id: 'dpi', roles: { DataRetentionManagerUser: 1, InvalidRoleSoEntitiesCannotBeAccessedViaAPI: 1 } })
+    const RetentionService = await cds.connect.to('sap.dpp.RetentionService')
+    const ctx = cds.EventContext.for({ id: cds.utils.uuid(), http: { req: null, res: null } })
+    ctx.user = user
+    const orders = await cds._with(ctx, () => RetentionService.run(
+      SELECT.from(RetentionService.entities.Orders)
+    ))
+    expect(orders.length).toBeGreaterThan(0)
+    expect(orders.some(o => o.ID === '5e2f2640-6866-4dcf-8f4d-3027aa831cad')).toBeTruthy()
+  })
+
+  test('sap.dpp.InformationService entities do not have restricted access', async () => {
+    const user = new cds.User({ id: 'dpi', roles: { PersonalDataManagerUser: 1 } })
+    const InformationService = await cds.connect.to('sap.dpp.InformationService')
+    const ctx = cds.EventContext.for({ id: cds.utils.uuid(), http: { req: null, res: null } })
+    ctx.user = user
+    const orders = await cds._with(ctx, () => InformationService.run(
+      SELECT.from(InformationService.entities.Orders)
+    ))
+    expect(orders.length).toBeGreaterThan(0)
+    expect(orders.some(o => o.ID === '5e2f2640-6866-4dcf-8f4d-3027aa831cad')).toBeTruthy()
+  })
 })

@@ -1,7 +1,7 @@
 const cds = require('@sap/cds');
 const path = require('path');
 
-let { POST: _POST } = cds.test().in(path.join(__dirname, '../bookshop-app'))
+let { POST: _POST, data } = cds.test().in(path.join(__dirname, '../bookshop-app'))
 const POST = async function() {
   try {
       return await _POST(...arguments)
@@ -9,15 +9,26 @@ const POST = async function() {
       return e.response ?? e;
   }
 }
-cds.test.data.autoReset(true);
 const DPI_Service = { username: 'dpi', password: '1234' }
+
+async function runWithPrivileged(fn) {
+  const user = new cds.User({ id: 'privileged', roles: {} });
+  user._is_privileged = true;
+  const ctx = cds.EventContext.for({ id: cds.utils.uuid(), http: { req: null, res: null } })
+  ctx.user = user
+  return await cds._with(ctx, () => fn())
+}
+
+beforeEach(async () => {
+  await runWithPrivileged(data.reset)
+})
 
 describe('data subject deletion', () => {
 
   describe('deletion', () => {
       test('dataSubjectEndOfBusiness returns true if all objects have reached end of business', async () => {
         const {status, data} = await POST('/dpp/retention/dataSubjectEndOfBusiness', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'
@@ -36,7 +47,7 @@ describe('data subject deletion', () => {
         endOfWarrantyDate.setFullYear(endOfWarrantyDate.getFullYear() + 1)
         await UPDATE.entity(Orders).set({endOfWarrantyDate: endOfWarrantyDate.toISOString()})
         const {status, data} = await POST('/dpp/retention/dataSubjectEndOfBusiness', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'
@@ -51,7 +62,7 @@ describe('data subject deletion', () => {
     
       test('dataSubjectOrganizationAttributeValues returns attribute values', async () => {
         const {status, data} = await POST('/dpp/retention/dataSubjectOrganizationAttributeValues', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -67,7 +78,7 @@ describe('data subject deletion', () => {
 
       test('dataSubjectOrganizationAttributeValues returns error if org attribute does not exist', async () => {
         const {status, data} = await POST('/dpp/retention/dataSubjectOrganizationAttributeValues', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -80,7 +91,7 @@ describe('data subject deletion', () => {
 
       test('dataSubjectOrganizationAttributeValues returns error if org attribute is not annotated as DataControllerID', async () => {
         const {status, data} = await POST('/dpp/retention/dataSubjectOrganizationAttributeValues', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -93,7 +104,7 @@ describe('data subject deletion', () => {
 
       test('dataSubjectLatestRetentionStartDates does not crash with made up org attribute', async () => {
         const {status, data} = await POST('/dpp/retention/dataSubjectLatestRetentionStartDates', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -116,7 +127,7 @@ describe('data subject deletion', () => {
 
       test('dataSubjectLatestRetentionStartDates', async () => {
         const {status, data} = await POST('/dpp/retention/dataSubjectLatestRetentionStartDates', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -140,7 +151,7 @@ describe('data subject deletion', () => {
       test('dataSubjectILMObjectInstanceBlocking returns amount of blocked instances', async () => {
         const {Orders} = cds.entities('sap.capire.bookshop');
         const {status, data} = await POST('/dpp/retention/dataSubjectILMObjectInstanceBlocking', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -149,16 +160,36 @@ describe('data subject deletion', () => {
     
         expect(status).toEqual(200);
         expect(data).toEqual(1);        
-        const orderAfterBlocking = await SELECT.from(Orders).where({ID: '5e2f2640-6866-4dcf-8f4d-3027aa831cad'});
+        const orderAfterBlocking = await runWithPrivileged(() => cds.run(SELECT.from(Orders).where({ID: '5e2f2640-6866-4dcf-8f4d-3027aa831cad'}).columns(order => {
+          order`.*`,
+          order.Items(item => {
+            item`.*`,
+            item.deliveries('*')
+          }),
+          order.Payments('*')
+        })));
         expect(orderAfterBlocking.length).toEqual(1);
-        expect(orderAfterBlocking[0].dppBlockingDate.startsWith(new Date().toISOString().substring(0, 10))).toBeTruthy()
-        expect(orderAfterBlocking[0].dppEarliestDestructionDate.startsWith('2020-04-04')).toBeTruthy()
+        expect(orderAfterBlocking[0].dppBlockingDate.startsWith(new Date().toISOString().substring(0, 10))).toBeTruthy();
+        expect(orderAfterBlocking[0].dppEarliestDestructionDate.startsWith('2020-04-04')).toBeTruthy();
+
+        expect(orderAfterBlocking[0].Items.length).toBeGreaterThan(0)
+        for (const record of orderAfterBlocking[0].Items) {
+          expect(record.dppIsBlocked).toEqual(true)
+          expect(record.deliveries.length).toBeGreaterThan(0)
+          for (const record2 of record.deliveries) {
+            expect(record2.dppIsBlocked).toEqual(true)
+          }
+        }
+        expect(orderAfterBlocking[0].Payments.length).toBeGreaterThan(0)
+        for (const record of orderAfterBlocking[0].Payments) {
+          expect(record.dppIsBlocked).toEqual(true)
+        }
       })
 
       test('dataSubjectILMObjectInstanceBlocking returns amount of blocked instances with custom blocking date', async () => {
         const {ILMObjectWithXPRBlockingEnabled} = cds.entities('sap.capire.bookshop');
         const {status, data} = await POST('/dpp/retention/dataSubjectILMObjectInstanceBlocking', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           iLMObjectName: 'ILMObjectWithXPRBlockingEnabled', 
           dataSubjectRoleName: 'Employee', 
           dataSubjectId: 'b16e120e-ac78-4433-ad00-8defdb101c40',
@@ -167,7 +198,7 @@ describe('data subject deletion', () => {
     
         expect(status).toEqual(200);
         expect(data).toEqual(2);        
-        const entitiesAfterBlocking = await SELECT.from(ILMObjectWithXPRBlockingEnabled).where({employee_ID: 'b16e120e-ac78-4433-ad00-8defdb101c40'});
+        const entitiesAfterBlocking = await runWithPrivileged(() => cds.run(SELECT.from(ILMObjectWithXPRBlockingEnabled).where({employee_ID: 'b16e120e-ac78-4433-ad00-8defdb101c40'})));
         expect(entitiesAfterBlocking.length).toEqual(2);
         expect(entitiesAfterBlocking[0].legacyBlockingDate.startsWith(new Date().toISOString().substring(0, 10))).toBeTruthy()
         expect(entitiesAfterBlocking[0].legacyDestructionDate.startsWith('2020-04-04')).toBeTruthy()
@@ -177,7 +208,7 @@ describe('data subject deletion', () => {
         const {Orders} = cds.entities('sap.capire.bookshop')
         await DELETE.from(Orders);
         const {status} = await POST('/dpp/retention/dataSubjectILMObjectInstanceBlocking', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -190,48 +221,48 @@ describe('data subject deletion', () => {
       test('dataSubjectsILMObjectInstancesDestroying', async () => {
         const {Orders} = cds.entities('sap.capire.bookshop');
         await POST('/dpp/retention/dataSubjectILMObjectInstanceBlocking', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
           maxDeletionDate: '2020-04-04T22:00:00'
         }, { auth: DPI_Service });
-        const blockingBeforeDelete = await SELECT.from(Orders).where({ID: '5e2f2640-6866-4dcf-8f4d-3027aa831cad'});
+        const blockingBeforeDelete = await runWithPrivileged(() => cds.run(SELECT.from(Orders).where({ID: '5e2f2640-6866-4dcf-8f4d-3027aa831cad'})));
         expect(blockingBeforeDelete.length).toEqual(1);
         expect(blockingBeforeDelete[0].dppBlockingDate).toBeTruthy();
         expect(blockingBeforeDelete[0].dppEarliestDestructionDate).toEqual('2020-04-04');
 
         await POST('/dpp/retention/dataSubjectsILMObjectInstancesDestroying', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
         }, { auth: DPI_Service });
 
-        const blockingAfter = await SELECT.from(Orders).where({ID: '5e2f2640-6866-4dcf-8f4d-3027aa831cad'});
+        const blockingAfter = await runWithPrivileged(() => cds.run(SELECT.from(Orders).where({ID: '5e2f2640-6866-4dcf-8f4d-3027aa831cad'})));
         expect(blockingAfter.length).toEqual(0);
       })
 
       test('dataSubjectsILMObjectInstancesDestroying with custom destruction date', async () => {
         const {ILMObjectWithXPRBlockingEnabled} = cds.entities('sap.capire.bookshop');
         await POST('/dpp/retention/dataSubjectILMObjectInstanceBlocking', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           iLMObjectName: 'ILMObjectWithXPRBlockingEnabled', 
           dataSubjectRoleName: 'Employee', 
           dataSubjectId: 'b16e120e-ac78-4433-ad00-8defdb101c40',
           maxDeletionDate: '2020-04-04T22:00:00'
         }, { auth: DPI_Service });
-        const blockingBeforeDelete = await SELECT.from(ILMObjectWithXPRBlockingEnabled).where({ID: '375ce788-e470-449f-ac81-86e433f8690d'});
+        const blockingBeforeDelete = await runWithPrivileged(() => cds.run(SELECT.from(ILMObjectWithXPRBlockingEnabled).where({ID: '375ce788-e470-449f-ac81-86e433f8690d'})));
         expect(blockingBeforeDelete.length).toEqual(1);
         expect(blockingBeforeDelete[0].legacyBlockingDate).toBeTruthy();
         expect(blockingBeforeDelete[0].legacyDestructionDate).toEqual('2020-04-04');
 
         await POST('/dpp/retention/dataSubjectsILMObjectInstancesDestroying', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           iLMObjectName: 'ILMObjectWithXPRBlockingEnabled', 
           dataSubjectRoleName: 'Employee', 
         }, { auth: DPI_Service });
 
-        const blockingAfter = await SELECT.from(ILMObjectWithXPRBlockingEnabled).where({ID: '375ce788-e470-449f-ac81-86e433f8690d'});
+        const blockingAfter = await runWithPrivileged(() => cds.run(SELECT.from(ILMObjectWithXPRBlockingEnabled).where({ID: '375ce788-e470-449f-ac81-86e433f8690d'})));
         expect(blockingAfter.length).toEqual(0);
       })
 
@@ -240,24 +271,24 @@ describe('data subject deletion', () => {
         const maxDeletionDate = new Date()
         maxDeletionDate.setFullYear(maxDeletionDate.getFullYear() + 1)
         await POST('/dpp/retention/dataSubjectILMObjectInstanceBlocking', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
           maxDeletionDate: maxDeletionDate.toISOString()
         }, { auth: DPI_Service });
-        const blockingBeforeDelete = await SELECT.from(Orders).where({ID: '5e2f2640-6866-4dcf-8f4d-3027aa831cad'});
+        const blockingBeforeDelete = await runWithPrivileged(() => cds.run(SELECT.from(Orders).where({ID: '5e2f2640-6866-4dcf-8f4d-3027aa831cad'})));
         expect(blockingBeforeDelete.length).toEqual(1);
         expect(blockingBeforeDelete[0].dppBlockingDate).toBeTruthy();
         expect(blockingBeforeDelete[0].dppEarliestDestructionDate).toEqual(maxDeletionDate.toISOString().substring(0,10));
 
         await POST('/dpp/retention/dataSubjectsILMObjectInstancesDestroying', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           iLMObjectName: 'Orders', 
           dataSubjectRoleName: 'Customer', 
         }, { auth: DPI_Service });
 
-        const blockingAfter = await SELECT.from(Orders).where({ID: '5e2f2640-6866-4dcf-8f4d-3027aa831cad'});
+        const blockingAfter = await runWithPrivileged(() => cds.run(SELECT.from(Orders).where({ID: '5e2f2640-6866-4dcf-8f4d-3027aa831cad'})));
         expect(blockingAfter.length).toEqual(1);
         expect(blockingAfter[0].dppBlockingDate).toBeTruthy();
         expect(blockingAfter[0].dppEarliestDestructionDate).toEqual(maxDeletionDate.toISOString().substring(0,10));
@@ -265,7 +296,7 @@ describe('data subject deletion', () => {
 
       test('dataSubjectBlocking returns 400 if active records exist', async () => {
         const {status} = await POST('/dpp/retention/dataSubjectBlocking', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
           maxDeletionDate: '2020-04-04T22:00:00'
@@ -298,14 +329,14 @@ describe('data subject deletion', () => {
         const maxDeletionDate = new Date()
         maxDeletionDate.setFullYear(maxDeletionDate.getFullYear() + 1)
         const {status} = await POST('/dpp/retention/dataSubjectBlocking', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
           maxDeletionDate: maxDeletionDate.toISOString()
         }, { auth: DPI_Service });
     
         expect(status).toEqual(200);
-        const blockingAfter = await SELECT.from(Customers).where({ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'});
+        const blockingAfter = await runWithPrivileged(() => cds.run(SELECT.from(Customers).where({ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'})));
         expect(blockingAfter.length).toEqual(1);
         expect(blockingAfter[0].dppBlockingDate).toBeTruthy();
         expect(blockingAfter[0].dppEarliestDestructionDate).toEqual(maxDeletionDate.toISOString().substring(0,10));
@@ -318,7 +349,7 @@ describe('data subject deletion', () => {
         await DELETE.from(ILMObjectWithStaticBlockingDisabled).where({Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'})
         await DELETE.from(ILMObjectWithEDMJSONBlockingEnabled).where({Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'})
         const {status} = await POST('/dpp/retention/dataSubjectBlocking', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
           maxDeletionDate: '2020-01-01'
@@ -338,14 +369,14 @@ describe('data subject deletion', () => {
         const maxDeletionDate = new Date()
         maxDeletionDate.setFullYear(maxDeletionDate.getFullYear() + 1)
         const {status} = await POST('/dpp/retention/dataSubjectBlocking', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           dataSubjectRoleName: 'Employee', 
           dataSubjectId: 'b16e120e-ac78-4433-ad00-8defdb101c40',
           maxDeletionDate: maxDeletionDate.toISOString()
         }, { auth: DPI_Service });
     
         expect(status).toEqual(200);
-        const blockingAfter = await SELECT.from(Employees).where({ID: 'b16e120e-ac78-4433-ad00-8defdb101c40'});
+        const blockingAfter = await runWithPrivileged(() => cds.run(SELECT.from(Employees).where({ID: 'b16e120e-ac78-4433-ad00-8defdb101c40'})));
         expect(blockingAfter.length).toEqual(1);
         expect(blockingAfter[0].legacyBlockingDate).toBeTruthy();
         expect(blockingAfter[0].legacyDestructionDate).toEqual(maxDeletionDate.toISOString().substring(0,10));
@@ -357,20 +388,20 @@ describe('data subject deletion', () => {
           legacyBlockingDate : new Date().toISOString().substring(0,10),
           legacyDestructionDate: "2020-01-02T00:00:00Z"
         });
-        const orders = await SELECT.from(Orders).where({Customer_ID: 'e872239b-1283-4384-bf14-711e4b18a1b8'});
+        const orders = await runWithPrivileged(() => cds.run(SELECT.from(Orders).where({Customer_ID: 'e872239b-1283-4384-bf14-711e4b18a1b8'})));
         expect(orders.length).toEqual(1);
 
         const maxDeletionDate = new Date()
         maxDeletionDate.setFullYear(maxDeletionDate.getFullYear() + 1)
         const {status} = await POST('/dpp/retention/dataSubjectBlocking', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           dataSubjectRoleName: 'Employee', 
           dataSubjectId: 'e872239b-1283-4384-bf14-711e4b18a1b8',
           maxDeletionDate: maxDeletionDate.toISOString()
         }, { auth: DPI_Service });
     
         expect(status).toEqual(200);
-        const blockingAfter = await SELECT.from(Employees).where({ID: 'e872239b-1283-4384-bf14-711e4b18a1b8'});
+        const blockingAfter = await runWithPrivileged(() => cds.run(SELECT.from(Employees).where({ID: 'e872239b-1283-4384-bf14-711e4b18a1b8'})));
         expect(blockingAfter.length).toEqual(1);
         expect(blockingAfter[0].legacyBlockingDate).toBeTruthy();
         expect(blockingAfter[0].legacyDestructionDate).toEqual(maxDeletionDate.toISOString().substring(0,10));
@@ -385,24 +416,24 @@ describe('data subject deletion', () => {
         const maxDeletionDate = new Date()
         maxDeletionDate.setFullYear(maxDeletionDate.getFullYear() + 1)
         await POST('/dpp/retention/dataSubjectBlocking', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           dataSubjectRoleName: 'Customer', 
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
           maxDeletionDate: maxDeletionDate.toISOString()
         }, { auth: DPI_Service });
     
-        const blockingBefore = await SELECT.from(Customers).where({ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'});
+        const blockingBefore = await runWithPrivileged(() => cds.run(SELECT.from(Customers).where({ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'})));
         expect(blockingBefore.length).toEqual(1);
         expect(blockingBefore[0].dppBlockingDate).toBeTruthy();
         expect(blockingBefore[0].dppEarliestDestructionDate).toEqual(maxDeletionDate.toISOString().substring(0,10));
         
         const {status} = await POST('/dpp/retention/dataSubjectsDestroying', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           dataSubjectRoleName: 'Customer', 
         }, { auth: DPI_Service });
         expect(status).toEqual(204);
 
-        const blockingAfter = await SELECT.from(Customers).where({ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'});
+        const blockingAfter = await runWithPrivileged(() => cds.run(SELECT.from(Customers).where({ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'})));
         expect(blockingAfter[0].dppBlockingDate).toBeTruthy();
         expect(blockingAfter[0].dppEarliestDestructionDate).toEqual(maxDeletionDate.toISOString().substring(0,10));
         expect(blockingAfter.length).toEqual(1);
@@ -416,7 +447,7 @@ describe('data subject deletion', () => {
         })
         
         const {status} = await POST('/dpp/retention/dataSubjectsDestroying', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           dataSubjectRoleName: 'Employee', 
         }, { auth: DPI_Service });
         expect(status).toEqual(200);
@@ -433,7 +464,7 @@ describe('data subject deletion', () => {
         })
         
         const {status} = await POST('/dpp/retention/dataSubjectsDestroying', {
-          applicationName: 'bookshop-retention', 
+          applicationName: 'bookshop-retention-t5', 
           dataSubjectRoleName: 'Customer', 
         }, { auth: DPI_Service });
         expect(status).toEqual(200);
@@ -479,7 +510,7 @@ describe('data subject deletion', () => {
 
     test('dataSubjectsEndOfResidence does not crash with made up org attribute', async () => {
       const {status, data} = await POST('/dpp/retention/dataSubjectsEndOfResidence', {
-        applicationName: 'bookshop-retention', 
+        applicationName: 'bookshop-retention-t5', 
         iLMObjectName: 'Orders',
         dataSubjectRoleName: 'Customer', 
         referenceDates: [
@@ -510,7 +541,7 @@ describe('data subject deletion', () => {
 
     test('dataSubjectsEndOfResidence returns eligible data subjects for deletion', async () => {
       const {status, data} = await POST('/dpp/retention/dataSubjectsEndOfResidence', {
-        applicationName: 'bookshop-retention', 
+        applicationName: 'bookshop-retention-t5', 
         iLMObjectName: 'Orders',
         dataSubjectRoleName: 'Customer', 
         referenceDates: [
@@ -541,7 +572,7 @@ describe('data subject deletion', () => {
 
     test('dataSubjectsEndOfResidence properly considers org attribute', async () => {
       const {status, data} = await POST('/dpp/retention/dataSubjectsEndOfResidence', {
-        applicationName: 'bookshop-retention', 
+        applicationName: 'bookshop-retention-t5', 
         iLMObjectName: 'Orders',
         dataSubjectRoleName: 'Customer', 
         referenceDates: [
@@ -568,7 +599,7 @@ describe('data subject deletion', () => {
 
     test('dataSubjectsEndOfResidenceConfirmation does not crash with made up org attribute', async () => {
       const {status, data} = await POST('/dpp/retention/dataSubjectsEndOfResidenceConfirmation', {
-        applicationName: 'bookshop-retention', 
+        applicationName: 'bookshop-retention-t5', 
         iLMObjectName: 'Orders', 
         dataSubjectRoleName: 'Customer', 
         referenceDates: [
@@ -598,7 +629,7 @@ describe('data subject deletion', () => {
 
     test('dataSubjectsEndOfResidenceConfirmation confirms data subjects end of residence', async () => {
       const {status, data} = await POST('/dpp/retention/dataSubjectsEndOfResidenceConfirmation', {
-        applicationName: 'bookshop-retention', 
+        applicationName: 'bookshop-retention-t5', 
         iLMObjectName: 'Orders', 
         dataSubjectRoleName: 'Customer', 
         referenceDates: [
@@ -631,7 +662,7 @@ describe('data subject deletion', () => {
       await DELETE.from(ILMObjectWithXPRBlockingEnabled).where('1 = 1')
 
       const {status, data} = await POST('/dpp/retention/dataSubjectsEndOfResidenceConfirmation', {
-        applicationName: 'bookshop-retention', 
+        applicationName: 'bookshop-retention-t5', 
         iLMObjectName: 'ILMObjectWithXPRBlockingEnabled', 
         dataSubjectRoleName: 'Customer', 
         referenceDates: [
@@ -661,7 +692,7 @@ describe('data subject deletion', () => {
       await DELETE.from(ILMObjectWithXPRBlockingEnabled).where('1 = 1')
 
       const {status, data} = await POST('/dpp/retention/dataSubjectsEndOfResidenceConfirmation', {
-        applicationName: 'bookshop-retention', 
+        applicationName: 'bookshop-retention-t5', 
         iLMObjectName: 'ILMObjectWithXPRBlockingEnabled', 
         dataSubjectRoleName: 'Customer', 
         referenceDates: [
@@ -699,7 +730,7 @@ describe('data subject deletion', () => {
 
     test('dataSubjectsEndOfResidence properly considers org attribute', async () => {
       const {status, data} = await POST('/dpp/retention/dataSubjectsEndOfResidenceConfirmation', {
-        applicationName: 'bookshop-retention', 
+        applicationName: 'bookshop-retention-t5', 
         iLMObjectName: 'Orders',
         dataSubjectRoleName: 'Customer', 
         referenceDates: [
@@ -726,7 +757,7 @@ describe('data subject deletion', () => {
 
     test('dataSubjectsEndOfResidenceConfirmation with empty reference dates still works', async () => {
       const {status, data} = await POST('/dpp/retention/dataSubjectsEndOfResidenceConfirmation', {
-        applicationName: 'bookshop-retention', 
+        applicationName: 'bookshop-retention-t5', 
         iLMObjectName: 'Orders', 
         dataSubjectRoleName: 'Customer', 
         referenceDates: [],
@@ -745,7 +776,7 @@ describe('data subject deletion', () => {
     //Used for Value helps
     test('dataSubjectInformation retrieval returns data subject information', async () => {
       const {status, data} = await POST('/dpp/retention/dataSubjectInformation', {
-        applicationName: 'bookshop-retention', 
+        applicationName: 'bookshop-retention-t5', 
         dataSubjectRoleName: 'Customer', 
         dataSubjects: [
           {dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'}

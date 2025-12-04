@@ -13,6 +13,8 @@ module.exports = class extends cds.add.Plugin {
     // const { isJava } = readProject()
     // const { mvn } = cds.add
 
+    // TODO: Add hdbanalyticprivilege to undeploy.json
+    
     // Create dpp/sidecar folder in the root repository and copy package.json template
     const root = process.cwd();
     const sidecarFolder = path.join(root, 'data-privacy', 'sidecar');

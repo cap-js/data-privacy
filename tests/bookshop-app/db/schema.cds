@@ -63,7 +63,7 @@ entity Orders : cuid, managed {
 
 entity OrderItems : cuid {
   parent_ID    : UUID;
-  book      : Association to Books;
+  book      : Association to one Books;
   amount    : Integer;
   netAmount : Decimal(9,2);
   deliveries : Composition of many Deliveries on deliveries.parent = $self;

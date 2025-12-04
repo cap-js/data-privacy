@@ -117,16 +117,20 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       const where = _buildWhereClauseForDS(iLMObject, dataSubjectId, dataSubjectRole)
       LOG.info(`Where clause: `, where)
       req.user._is_privileged = true
-      const toUpdate = await this.run(SELECT.one.from(iLMObject).where(where).columns([{func: 'count', as: '$count', args: [{val: 1}]}]));
+      const toUpdate = await this.run(SELECT.one.from(iLMObject).where(where).columns([{ func: 'count', as: '$count', args: [{ val: 1 }] }]));
       //Return 204 if no records where found
       if (toUpdate.$count === 0) {
         req.res.statusCode = 204
         return
       }
-      await this.run(UPDATE.entity(iLMObject).where(where).set({
-        [iLMObject._dpi.blockingDateReference]: new Date().toISOString().substring(0,10),
-        [iLMObject._dpi.earliestDestructionDateReference]: new Date(maxDeletionDate).toISOString().substring(0, 10)
-      }));
+
+      await this.run([
+        UPDATE.entity(iLMObject).where(where).set({
+          [iLMObject._dpi.blockingDateReference]: new Date().toISOString().substring(0, 10),
+          [iLMObject._dpi.earliestDestructionDateReference]: new Date(maxDeletionDate).toISOString().substring(0, 10)
+        }),
+        ...blockCompositions(iLMObject, where)
+      ]);
 
       req.res.status(200)
       return toUpdate.$count //We return something because returning nothing would cause 204 and 204 means we did not find any data
@@ -167,10 +171,10 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       //Active entities are the ones with no blocking date or a blocking date in the future
       for (const iLMObjectName in this.definition._dpi.iLMObjectsForRole(dataSubjectRoleName)) {
         const iLMObject = this.definition._dpi.iLMObjects[iLMObjectName];
-        const wherePart1 = {xpr: [{ref: [iLMObject._dpi.blockingDateReference]}, 'is', 'null', 'or', {ref: [iLMObject._dpi.blockingDateReference]}, '>', {val: new Date().toISOString().substring(0,10)}]}
+        const wherePart1 = { xpr: [{ ref: [iLMObject._dpi.blockingDateReference] }, 'is', 'null', 'or', { ref: [iLMObject._dpi.blockingDateReference] }, '>', { val: new Date().toISOString().substring(0, 10) }] }
         const wherePart2 = _buildWhereClauseForDS(iLMObject, dataSubjectId, dataSubjectRoleName)
         LOG.debug(`Where clause for getting active entities`, JSON.stringify(wherePart1), 'and', wherePart2)
-        const activeRecords = await cds.db.exists(iLMObject).where([wherePart1, 'and', {xpr: wherePart2}])
+        const activeRecords = await cds.db.exists(iLMObject).where([wherePart1, 'and', { xpr: wherePart2 }])
         if (activeRecords) {
           LOG.warn(`Block data subject for ${dataSubjectRoleName}, ID ${dataSubjectId} does not work due to active entities in ${iLMObject.name}.`)
           return req.error({ message: 'Active records still exist for the entity', code: 400 })
@@ -181,17 +185,21 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       req.user._is_privileged = true
       //Check if there are blocked records
       for (const singleEntity of dsEntities) {
-        const {amt} = await this.run(SELECT.one.from(singleEntity).where(_buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName)).columns('count(1) as amt'))
+        const where = _buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName)
+        const { amt } = await this.run(SELECT.one.from(singleEntity).where(where).columns('count(1) as amt'))
         modifiedRecords += Number(amt);
         if (new Date(maxDeletionDate).toISOString() > new Date().toISOString()) {
-          await this.run(UPDATE.entity(singleEntity).where(_buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName)).set({
-            [singleEntity._dpi.blockingDateReference]: new Date().toISOString().substring(0,10),
-            [singleEntity._dpi.earliestDestructionDateReference]: new Date(maxDeletionDate).toISOString().substring(0, 10)
-          }))
-          LOG.debug(`Where clause for updating ${singleEntity.name}`, _buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName), `with blocking details. Blocked ${amt} entities.`);
+          await this.run([
+            UPDATE.entity(singleEntity).where(where).set({
+              [singleEntity._dpi.blockingDateReference]: new Date().toISOString().substring(0, 10),
+              [singleEntity._dpi.earliestDestructionDateReference]: new Date(maxDeletionDate).toISOString().substring(0, 10)
+            }),
+            ...blockCompositions(singleEntity, where)
+          ])
+          LOG.debug(`Where clause for updating ${singleEntity.name}`, where, `with blocking details. Blocked ${amt} entities.`);
         } else {
-          await this.run(DELETE.from(singleEntity).where(_buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName)))
-          LOG.debug(`Where clause for deleting ${singleEntity.name}`, _buildWhereClauseForDS(singleEntity, dataSubjectId, dataSubjectRoleName), `with blocking details. Deleted ${amt} entities. Delete happened on dataSubjectBlocking because maxDeletionDate was in the past/today.`);
+          await this.run(DELETE.from(singleEntity).where(where))
+          LOG.debug(`Where clause for deleting ${singleEntity.name}`, where, `with blocking details. Deleted ${amt} entities. Delete happened on dataSubjectBlocking because maxDeletionDate was in the past/today.`);
         }
       }
       return modifiedRecords;
@@ -245,7 +253,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       if (dataSubjectIDsToDestroy.length > 0) {
         LOG.info(`Destroy data subjects with the ID`, dataSubjectIDsToDestroy)
         req.user._is_privileged = true
-        const deleted = await this.run(DELETE.from(dataSubjectEntity).where({ [dataSubjectEntity._dpi.dataSubjectIdReference]: { in: dataSubjectIDsToDestroy }, [dataSubjectEntity._dpi.earliestDestructionDateReference]: { '<=': new Date().toISOString().substring(0,10) } }));
+        const deleted = await this.run(DELETE.from(dataSubjectEntity).where({ [dataSubjectEntity._dpi.dataSubjectIdReference]: { in: dataSubjectIDsToDestroy }, [dataSubjectEntity._dpi.earliestDestructionDateReference]: { '<=': new Date().toISOString().substring(0, 10) } }));
         LOG.debug(`Destroyed ${deleted} data subjects, with ${dataSubjectIDsToDestroy.length} data subject IDs being provided.`)
         req.res.statusCode = 200
         return `Destroyed ${deleted} records`
@@ -294,16 +302,16 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
         `Reference dates:`, JSON.stringify(referenceDates))
       LOG.debug(`dataSubjectsEndOfResidenceConfirmation, data subject IDs`, dataSubjects)
       const dataSubjectIDs = dataSubjects.map(m => m.dataSubjectId)
-      
+
       if (dataSubjectIDs.length === 0) {
         LOG.debug(`No data subject IDs passed to dataSubjectsEndOfResidenceConfirmation. Early exit returning no data subjects at end of residence`);
         return []
       }
 
       const where = [
-          { ref: [iLMObject._dpi.dataSubjectIdReference] },
-          'in',
-          { list: dataSubjectIDs.map(d => ({ val: d })) }
+        { ref: [iLMObject._dpi.dataSubjectIdReference] },
+        'in',
+        { list: dataSubjectIDs.map(d => ({ val: d })) }
       ];
 
       //Second condition for case that role is dynamic
@@ -313,7 +321,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
           status: 400
         })
       }
-      const {whereWithCondition} = whereClauseForRetentionSets(referenceDates, iLMObject, dataSubjectRoleName);
+      const { whereWithCondition } = whereClauseForRetentionSets(referenceDates, iLMObject, dataSubjectRoleName);
       const [dataSubjectsMatchingConditions, dataSubjectsForThisEntity] = await Promise.all([
         SELECT.distinct.from(iLMObject)
           .where(whereWithCondition.length ? where.concat('and', whereWithCondition) : where.concat(whereWithCondition))
@@ -439,6 +447,34 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       }
       LOG.debug(`Where statements result: ${JSON.stringify(result)}`)
       return result;
+    }
+
+    function blockCompositions(entity, where, path = []) {
+      if (!entity.compositions) {
+        return []
+      }
+      return Object.keys(entity.compositions).reduce((acc, comp) => {
+        const backlink = Object.keys(entity.compositions[comp]._target.elements).find(e => entity.compositions[comp]._target.elements[e]._anchor?.parent.name === entity.name) ?? 'backlink'
+        const subSelectWhere = structuredClone(where)
+        for (const ele of subSelectWhere) {
+          if (ele.ref) {
+            ele.ref = [backlink, ...path, ...ele.ref]
+          }
+        }
+        acc.push(
+          UPDATE.entity(entity.compositions[comp]._target).where(subSelectWhere).set({
+            'dppIsBlocked': true,
+          })
+        )
+        if (entity.compositions[comp]._target.compositions) {
+          acc.push(...blockCompositions(
+            entity.compositions[comp]._target,
+            where,
+            [backlink, ...path]
+          ))
+        }
+        return acc;
+      }, [])
     }
 
     return super.init();

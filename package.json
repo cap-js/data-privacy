@@ -23,7 +23,8 @@
     "CHANGELOG.md"
   ],
   "dependencies": {
-    "@cap-js/audit-logging": "^1.1.0"
+    "@cap-js/audit-logging": "^1.1.0",
+    "patch-package": "^8.0.1"
   },
   "peerDependencies": {
     "@sap/cds": ">=9"
@@ -45,12 +46,14 @@
     "setupBookshopTest": "cd ./tests/bookshop-app && rm -rf package-lock.json && rm -rf ./node_modules/ && npm link ../../ && npm i && rm -rf ./node_modules/@sap/cds",
     "setupExtendDPIBookshop": "cd ./tests/retention/extend-retention-endpoint && npm i && rm -rf ./node_modules/@sap/cds",
     "setupExtendInformationBookshop": "cd ./tests/information/extend-information-endpoint && npm i && rm -rf ./node_modules/@sap/cds",
-    "test": "npx jest --silent"
+    "test": "npx jest --silent",
+    "postinstall": "patch-package"
   },
   "cds": {
     "requires": {
       "sap.dpp.RetentionService": {
-        "kind": "TableHeaderBlocking"
+        "kind": "TableHeaderBlocking",
+        "tableRestrictions": "srv"
       },
       "sap.dpp.InformationService": {
         "model": "@sap/cds-dpi/srv/DPIInformation"

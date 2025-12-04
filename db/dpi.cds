@@ -5,6 +5,10 @@ aspect dppFlags {
   dppEarliestDestructionDate : Date  @UI.HiddenFilter  @PersonalData.FieldSemantics: 'EndOfRetentionDate';
 }
 
+aspect dppCompositionFlags {
+  dppIsBlocked            : Boolean default false @UI.HiddenFilter;
+}
+
 type Condition : {
   conditionFieldName  : String;
   conditionFieldValue : String;

@@ -64,7 +64,7 @@
         "kind": "xsuaa"
       },
       "sap.dpp.RetentionService": {
-        "applicationName": "bookshop-retention"
+        "applicationName": "bookshop-retention-t5"
       }
     },
     "features": {

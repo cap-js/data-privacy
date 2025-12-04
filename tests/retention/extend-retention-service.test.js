@@ -35,7 +35,7 @@ describe('Extending sap.dpp.RetentionService to customize the endpoint', () => {
 
   test('DPI Retention handlers can be intercepted', async () => {
     const { status, data } = await POST('/dpp/retention/dataSubjectInformation', {
-      applicationName: 'bookshop-retention',
+      applicationName: 'bookshop-retention-t5',
       dataSubjectRoleName: 'Customer',
       dataSubjects: [
         { dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad' }
