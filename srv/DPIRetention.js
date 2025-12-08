@@ -8,10 +8,20 @@ module.exports = class RetentionService extends cds.ApplicationService {
     const { iLMObjects } = this.entities
 
     this.on('READ', iLMObjects, async req => {
-      const iLMObjects = Object.keys(this.definition._dpi.iLMObjects).map(iLMObject => {
+      const iLMObjects = Object.keys(this.definition._dpi.iLMObjects).reduce((allILMObjects, iLMObject) => {
         const entity = this.definition._dpi.iLMObjects[iLMObject];
         //const selectionCriteria = getSelectionCriteria(entity);
-        return {
+        
+        if (!entity._dpi.orgAttributeReference) {
+          LOG.error(`${iLMObject} cannot be exposed as an iLMObject because it does not have a property annotated with @PersonalData.FieldSemantics : 'DataControllerID' or annotated with @ILM.FieldSemantics : 'LineOrganizationAttribute'`);
+          return allILMObjects;
+        }
+        if (!entity._dpi.iLMObject.endOfBusinessDates?.length) {
+          LOG.error(`${iLMObject} cannot be exposed as an iLMObject because it does not have any property annotated with @PersonalData.FieldSemantics : 'EndOfBusinessDate'`);
+          return allILMObjects;
+        }
+
+        allILMObjects.push({
           iLMObjectName: iLMObject,
           iLMObjectType: 'Transaction',
           // Mandatory property - if not given DPI crashes
@@ -20,21 +30,7 @@ module.exports = class RetentionService extends cds.ApplicationService {
           iLMObjectBaseURL: buildBaseUrl(req),
           iLMObjectCheckEndPoint: `${this.path}/iLMObjects/${iLMObject}/isILMObjectEnabled`,
           organizationAttributeName: entity.elements[entity._dpi.orgAttributeReference]['@ILM.ValueHelp.Id'] ?? entity._dpi.orgAttributeReference,
-          referenceDates: (Object.entries(entity.elements)).reduce((acc, [name, value]) => {
-            if (value['@PersonalData.FieldSemantics'] === 'EndOfBusinessDate' && value.type !== 'cds.Association' && value.type !== 'cds.Composition') {
-              const startTime = {
-                referenceDateName: name,
-                referenceDateDescription: cds.i18n.labels.for(value) ?? cds.i18n.labels.key4(value),
-                referenceDateDescriptionKey: undefined,
-              }
-              const descriptionI18nKey = getTranslationKey(value['@Common.Label'])
-              if (descriptionI18nKey) {
-                startTime.referenceDateDescriptionKey = descriptionI18nKey;
-              }
-              acc.push(startTime)
-            }
-            return acc
-          }, []),
+          referenceDates: entity._dpi.iLMObject.endOfBusinessDates,
           conditions: Object.keys(entity.elements).reduce((conditions, elementName) => {
             const element = entity.elements[elementName];
             if (element['@ILM.ValueHelp.Type'] === 'condition') {
@@ -68,8 +64,9 @@ module.exports = class RetentionService extends cds.ApplicationService {
           //   selectionCriteria: selectionCriteria
           // },
           dataSubjectRoles: entity['@PersonalData.DataSubjectRole']['=']?.enum ? Object.keys(entity.elements[entity['@PersonalData.DataSubjectRole']['=']].enum).map(ds => ({ dataSubjectRoleName: ds })) : [{ dataSubjectRoleName: entity['@PersonalData.DataSubjectRole'] }]
-        }
-      })
+        })
+        return allILMObjects;
+      }, [])
       LOG.debug('Transactional data discovery:', JSON.stringify(iLMObjects))
       req.reply(iLMObjects)
     });
