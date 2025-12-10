@@ -1,8 +1,8 @@
 diff --git a/node_modules/@sap/cds/libx/_runtime/common/utils/resolveView.js b/node_modules/@sap/cds/libx/_runtime/common/utils/resolveView.js
-index 14fbef9..bc6d33f 100644
+index cff187c..1ad3a5d 100644
 --- a/node_modules/@sap/cds/libx/_runtime/common/utils/resolveView.js
 +++ b/node_modules/@sap/cds/libx/_runtime/common/utils/resolveView.js
-@@ -517,12 +517,12 @@ const _queryColumns = (target, columns = [], isAborted) => {
+@@ -523,12 +523,12 @@ const _queryColumns = (target, columns = [], isAborted) => {
    return queryColumns
  }
  
@@ -17,7 +17,7 @@ index 14fbef9..bc6d33f 100644
    }
  
    return [key, { val: col.val }]
-@@ -617,7 +617,7 @@ const getTransition = (queryTarget, service, skipForbiddenViewCheck, event, opti
+@@ -623,7 +623,7 @@ const getTransition = (queryTarget, service, skipForbiddenViewCheck, event, opti
    const { target: _target, transitionColumns } = transitionData
    const query = queryTarget.query
    const alias = query && query.SELECT && query.SELECT.from && query.SELECT.from.as

@@ -27,7 +27,7 @@
     "watch": "cds watch"
   },
   "engines": {
-    "node": "^20"
+    "node": ">=20"
   },
   "cds": {
     "requires": {
