@@ -37,7 +37,7 @@ module.exports = class RetentionService extends cds.ApplicationService {
               const condition = {
                 conditionFieldName: entity.elements[elementName]['@ILM.ValueHelp.Id'] ?? elementName,
                 conditionFieldType: mapCDStoRetentionDataType(element.type),
-                conditionFieldDescription: cds.i18n.labels.for(element),
+                conditionFieldDescription: cds.i18n.labels.for(element) ?? elementName,
                 conditionFieldDescriptionKey: undefined,
                 conditionFieldValueHelpEndPoint: element['@ILM.ValueHelp.Path'],
               }

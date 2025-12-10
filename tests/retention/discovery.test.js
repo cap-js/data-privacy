@@ -71,6 +71,9 @@ describe('iLMObject discovery', () => {
             expect(status).toEqual(200);
             for (const iLMObject of data) {
                 for (const condition of iLMObject.conditions) {
+                    expect(condition.conditionFieldDescription).toBeTruthy()
+                    expect(condition.conditionFieldName).toBeTruthy()
+                    expect(condition.conditionFieldType).toBeTruthy()
                     const iLMObjectDef = cds.model.definitions[`sap.dpp.RetentionService.${iLMObject.iLMObjectName}`];
                     expect(iLMObjectDef.elements[iLMObjectDef._dpi.elementByVHId(condition.conditionFieldName) ?? condition.conditionFieldName]['@PersonalData.FieldSemantics']).toEqual('PurposeID');
                     const {status, data} = await GET(condition.conditionFieldValueHelpEndPoint, { auth: DPI_Service })
