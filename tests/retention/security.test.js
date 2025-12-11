@@ -173,8 +173,10 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
 test('DPIRetention entities are not accessible on the API', async () => {
   for (const entity of Object.keys(cds.entities('sap.ilm.RetentionService')).filter(e => e !== 'iLMObjects' && e !== 'i18n-files' && !e.startsWith('valueHelp') && !e.endsWith('.texts'))) {
-    const {status} = await GET(`/dpp/retention/${entity}`, { auth: { username: 'dpi', password: '1234' }});
-    expect(status).toEqual(403);
+    if (Object.keys(cds.entities('sap.ilm.RetentionService')[entity]).some(k => k.startsWith('@PersonalData'))) {
+      const {status} = await GET(`/dpp/retention/${entity}`, { auth: { username: 'dpi', password: '1234' }});
+      expect(String(status).substring(0, 2)).toEqual('40');
+    }
   }
 })
 

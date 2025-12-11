@@ -46,24 +46,43 @@ describe('iLMObject discovery', () => {
         });
     })
 
-    // REVISIT: Only relevant once archiving/destruction is added
-    test.skip('Selection criteria are correctly determined', async () => {
-        const {status, data} = await GET('/dpp/retention/iLMObjects', { auth: DPI_Service });
-        expect(status).toEqual(200);
-        for (const iLMObject of data) {
-            for (const selectionCriteria of iLMObject.destructionConfiguration.selectionCriteria.concat(iLMObject.archivingConfiguration?.selectionCriteria ?? [])) {
-                if (selectionCriteria.selectionCriteriaValueHelpEndPoint) {
-                    const {status, data} = await GET(selectionCriteria.selectionCriteriaValueHelpEndPoint, { auth: DPI_Service })
-                    expect(status).toEqual(200);
-                    expect(data.length).toBeGreaterThan(0)
-                    expect(data[0]).toMatchObject({
-                        value: expect.any(String),
-                        valueDescription: expect.any(String)
-                    })
+    
+    describe('Selection criteria', () => {
+        // REVISIT: Only relevant once archiving/destruction is added
+        test.skip('Selection criteria are correctly determined', async () => {
+            const {status, data} = await GET('/dpp/retention/iLMObjects', { auth: DPI_Service });
+            expect(status).toEqual(200);
+            for (const iLMObject of data) {
+                for (const selectionCriteria of iLMObject.destructionConfiguration.selectionCriteria.concat(iLMObject.archivingConfiguration?.selectionCriteria ?? [])) {
+                    if (selectionCriteria.selectionCriteriaValueHelpEndPoint) {
+                        const {status, data} = await GET(selectionCriteria.selectionCriteriaValueHelpEndPoint, { auth: DPI_Service })
+                        expect(status).toEqual(200);
+                        expect(data.length).toBeGreaterThan(0)
+                        expect(data[0]).toMatchObject({
+                            value: expect.any(String),
+                            valueDescription: expect.any(String)
+                        })
+                    }
                 }
             }
-        }
-    });
+        });
+
+        test('Selection criteria are not generated for ILM / PersonalData field semantics', async () => {
+            const {data} = await GET('/dpp/retention', { auth: DPI_Service });
+            for (const entity of data.entities) {
+                if (entity.name.startsWith('valueHelp_selection')) {
+                    const nameSegments = entity.name.split('_')
+                    nameSegments.shift();
+                    nameSegments.shift();
+                    const field = nameSegments.pop();
+                    const entityDef = nameSegments.join('.')
+                    expect(Object.keys(cds.model.definitions[entityDef].elements[field]).some(k => k.startsWith('@PersonalData.FieldSemantics'))).toEqual(false)
+                    expect(Object.keys(cds.model.definitions[entityDef].elements[field]).some(k => k.startsWith('@ILM.FieldSemantics'))).toEqual(false)
+                }
+            }
+        })
+
+    })
 
     describe('Conditions', () => {
         test('Conditions are correctly determined', async () => {
@@ -75,7 +94,13 @@ describe('iLMObject discovery', () => {
                     expect(condition.conditionFieldName).toBeTruthy()
                     expect(condition.conditionFieldType).toBeTruthy()
                     const iLMObjectDef = cds.model.definitions[`sap.ilm.RetentionService.${iLMObject.iLMObjectName}`];
-                    expect(iLMObjectDef.elements[iLMObjectDef._dpi.elementByVHId(condition.conditionFieldName) ?? condition.conditionFieldName]['@PersonalData.FieldSemantics']).toEqual('PurposeID');
+
+                    const purposeField = iLMObjectDef.elements[iLMObjectDef._dpi.elementByVHId(condition.conditionFieldName) ?? condition.conditionFieldName]
+                    if (purposeField['@PersonalData.FieldSemantics']) {
+                        expect(purposeField['@PersonalData.FieldSemantics']).toEqual('PurposeID');
+                    } else {
+                        expect(purposeField['@ILM.FieldSemantics']).toEqual('ProcessOrganizationAttribute');
+                    }
                     const {status, data} = await GET(condition.conditionFieldValueHelpEndPoint, { auth: DPI_Service })
                     expect(status).toEqual(200);
                     expect(data.length).toBeGreaterThan(0)

@@ -145,14 +145,14 @@ resources:
               applicationType: TransactionMaster
               iLMObjectDiscoveryEndPoint: /dpp/retention/iLMObjects
             dataSubjectRoles:
-              - dataSubjectRoleName: Customer
-                dataSubjectDescription: Customer
+              - dataSubjectRoleName: Employee
+                dataSubjectDescription: Employee
                 dataSubjectBaseURL: ~{srv-api/srv-url}
                 dataSubjectBlockingEndPoint: /dpp/retention/dataSubjectBlocking
                 dataSubjectInformationEndPoint: /dpp/retention/dataSubjectInformation
                 dataSubjectsDestroyingEndPoint: /dpp/retention/dataSubjectsDestroying
-              - dataSubjectRoleName: Employee
-                dataSubjectDescription: Employee
+              - dataSubjectRoleName: Customer
+                dataSubjectDescription: Customer
                 dataSubjectBaseURL: ~{srv-api/srv-url}
                 dataSubjectBlockingEndPoint: /dpp/retention/dataSubjectBlocking
                 dataSubjectInformationEndPoint: /dpp/retention/dataSubjectInformation
@@ -168,6 +168,10 @@ resources:
                 organizationAttributeDescription: LegalEntity
                 organizationAttributeBaseURL: ~{srv-api/srv-url}
                 organizationAttributeValueHelpEndPoint: /dpp/retention/valueHelp_orgAttribute_sap_capire_bookshop_LegalEntities
+              - organizationAttributeName: sap.ilm.RetentionService.LegalEntities
+                organizationAttributeDescription: LegalEntity
+                organizationAttributeBaseURL: ~{srv-api/srv-url}
+                organizationAttributeValueHelpEndPoint: /dpp/retention/valueHelp_orgAttribute_sap_ilm_RetentionService_LegalEntities
               - organizationAttributeName: test.dpp.university.Universities
                 organizationAttributeDescription: sap.ilm.RetentionService.valueHelp_orgAttribute_test_dpp_university_Universities
                 organizationAttributeBaseURL: ~{srv-api/srv-url}
@@ -177,9 +181,9 @@ resources:
                 organizationAttributeBaseURL: ~{srv-api/srv-url}
                 organizationAttributeValueHelpEndPoint: /dpp/retention/valueHelp_orgAttribute_Universities
               - organizationAttributeName: universityStr
-                organizationAttributeDescription: sap.ilm.RetentionService.valueHelp_orgAttribute_sap_dpp_RetentionService_ErasmusApplications_universityStr
+                organizationAttributeDescription: sap.ilm.RetentionService.valueHelp_orgAttribute_sap_ilm_RetentionService_ErasmusApplications_universityStr
                 organizationAttributeBaseURL: ~{srv-api/srv-url}
-                organizationAttributeValueHelpEndPoint: /dpp/retention/valueHelp_orgAttribute_sap_dpp_RetentionService_ErasmusApplications_universityStr
+                organizationAttributeValueHelpEndPoint: /dpp/retention/valueHelp_orgAttribute_sap_ilm_RetentionService_ErasmusApplications_universityStr
   - name: bookshop-auditlog
     type: org.cloudfoundry.managed-service
     parameters:

@@ -113,7 +113,7 @@ entity ILMObjectWithXPRBlockingEnabled : cuid {
   employee      : Association to Employees @title : 'Employee'; 
   text          : String @title : 'Text';
   marketingDate : Date @title : 'Marketing date';
-  legalEntity   : Association to one LegalEntities @title : 'Legal entity';
+  division : Association to one Divisions;
   legacyBlockingDate : Date @PersonalData.FieldSemantics : 'BlockingDate';
   legacyDestructionDate : Date @PersonalData.FieldSemantics : 'EndOfRetentionDate';
 }
@@ -175,6 +175,15 @@ entity CustomerPostalAddress : cuid, managed {
 entity LegalEntities : managed {
   key title: String; 
   description: String;
+  divisions : Composition of many Divisions on divisions.legalEntity = $self;
+}
+
+@cds.autoexposed: false
+entity Divisions : cuid {
+  legalEntity : Association to one LegalEntities;
+  title : String;
+  description: String;
+  purpose_ID: UUID;
 }
 
 

@@ -103,7 +103,6 @@ annotate bookshop.ILMObjectWithXPRBlockingEnabled with @(
 ) {
   employee      @PersonalData.FieldSemantics : 'DataSubjectID';
   marketingDate @PersonalData.FieldSemantics : 'EndOfBusinessDate';
-  legalEntity   @PersonalData.FieldSemantics : 'DataControllerID';
 };
 
 // UI annotation for SAP DPI Retention
