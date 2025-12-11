@@ -1,8 +1,8 @@
-using sap.dpp.RetentionService from './DPIRetention';
-using {sap.dpp.Condition, sap.dpp.ReferenceDate} from '../db/dpi';
+using sap.ilm.RetentionService from './DPIRetention';
+using {sap.ilm.Condition, sap.ilm.ReferenceDate} from '../db/dpi';
 
 @impl : './TableHeaderBlocking.js'
-extend service sap.dpp.RetentionService with {
+extend service sap.ilm.RetentionService with {
 
     /**
      * The application must implement this endpoint that checks the state of the business for a given data subject in the context of a data subject role for a given ILM object. 

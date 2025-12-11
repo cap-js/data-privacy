@@ -1,6 +1,6 @@
 
-using sap.dpp.bookshop as bookshop from './base';
+using sap.ilm.bookshop as bookshop from './base';
 
-extend sap.dpp.bookshop.OrderItems with {
+extend sap.ilm.bookshop.OrderItems with {
     customer : Association to one bookshop.Customers;
 }

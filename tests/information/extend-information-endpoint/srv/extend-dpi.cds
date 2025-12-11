@@ -1,4 +1,4 @@
-using {sap.dpp.InformationService} from '@sap/cds-dpi';
+using {sap.ilm.InformationService} from '@sap/cds-dpi';
 using {sap.capire.bookshop as db} from '../db/schema';
 
 extend service InformationService with {

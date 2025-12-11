@@ -37,7 +37,7 @@ modules:
       - name: bookshop-cf-logging
       - name: bookshop-auditlog
       - name: bookshop-information
-      - name: bookshop-retention-t5
+      - name: bookshop-retention
   - name: bookshop-db-deployer
     type: hdb
     path: gen/db
@@ -69,7 +69,7 @@ resources:
           - name: $XSAPPNAME.DataRetentionManagerUser
             description: Technial scope to restrict access to retention endpoint
             grant-as-authority-to-apps:
-              - $XSSERVICENAME(bookshop-retention-t5)
+              - $XSSERVICENAME(bookshop-retention)
   - name: bookshop-cf-logging
     type: org.cloudfoundry.managed-service
     parameters:
@@ -97,7 +97,7 @@ resources:
           informationConfiguration:
             applicationConfiguration:
               dataSubjectDeletionAgent: retention-manager
-              retentionApplicationName: bookshop-retention-t5
+              retentionApplicationName: bookshop-retention
               disableDataSubjectCorrection: true
               cacheControl: no-cache
             components:
@@ -110,24 +110,24 @@ resources:
                     serviceEndPoint: /dpp/information
                     appPaginationEnabled: true
                     cacheControl: no-cache
-  - name: bookshop-retention-t5
+  - name: bookshop-retention
     type: org.cloudfoundry.managed-service
     requires:
       - name: srv-api
     parameters:
-      service-name: bookshop-retention-t5
+      service-name: bookshop-retention
       service: data-privacy-integration-service
       service-plan: data-privacy-internal
       config:
         xs-security:
-          xsappname: bookshop-retention-t5-${org}-${space}
+          xsappname: bookshop-retention-${org}-${space}
           authorities:
             - $ACCEPT_GRANTED_AUTHORITIES
         dataPrivacyConfiguration:
           configType: retention
           applicationConfiguration:
-            applicationName: bookshop-retention-t5
-            applicationDescription: bookshop-retention-t5
+            applicationName: bookshop-retention
+            applicationDescription: bookshop-retention
             applicationDescriptionKey: APPLICATION_NAME
             applicationBaseURL: ~{srv-api/srv-url}
             applicationTitle: bookshop
@@ -169,15 +169,15 @@ resources:
                 organizationAttributeBaseURL: ~{srv-api/srv-url}
                 organizationAttributeValueHelpEndPoint: /dpp/retention/valueHelp_orgAttribute_sap_capire_bookshop_LegalEntities
               - organizationAttributeName: test.dpp.university.Universities
-                organizationAttributeDescription: sap.dpp.RetentionService.valueHelp_orgAttribute_test_dpp_university_Universities
+                organizationAttributeDescription: sap.ilm.RetentionService.valueHelp_orgAttribute_test_dpp_university_Universities
                 organizationAttributeBaseURL: ~{srv-api/srv-url}
                 organizationAttributeValueHelpEndPoint: /dpp/retention/valueHelp_orgAttribute_test_dpp_university_Universities
               - organizationAttributeName: Universities
-                organizationAttributeDescription: sap.dpp.RetentionService.valueHelp_orgAttribute_Universities
+                organizationAttributeDescription: sap.ilm.RetentionService.valueHelp_orgAttribute_Universities
                 organizationAttributeBaseURL: ~{srv-api/srv-url}
                 organizationAttributeValueHelpEndPoint: /dpp/retention/valueHelp_orgAttribute_Universities
               - organizationAttributeName: universityStr
-                organizationAttributeDescription: sap.dpp.RetentionService.valueHelp_orgAttribute_sap_dpp_RetentionService_ErasmusApplications_universityStr
+                organizationAttributeDescription: sap.ilm.RetentionService.valueHelp_orgAttribute_sap_dpp_RetentionService_ErasmusApplications_universityStr
                 organizationAttributeBaseURL: ~{srv-api/srv-url}
                 organizationAttributeValueHelpEndPoint: /dpp/retention/valueHelp_orgAttribute_sap_dpp_RetentionService_ErasmusApplications_universityStr
   - name: bookshop-auditlog

@@ -463,7 +463,7 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
         }
         acc.push(
           UPDATE.entity(entity.compositions[comp]._target).where(subSelectWhere).set({
-            'dppIsBlocked': true,
+            [entity.compositions[comp]._target._dpi.blockingDateReference]: new Date().toISOString().substring(0, 10),
           })
         )
         if (entity.compositions[comp]._target.compositions) {

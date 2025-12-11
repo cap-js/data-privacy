@@ -1,8 +1,8 @@
-using {sap.dpp.dppFlags} from '../db/dpi';
+using {sap.ilm.blocking, sap.ilm.destruction} from '../db/dpi';
 
 @requires: 'DataRetentionManagerUser'
 @protocol: 'rest'
-service sap.dpp.RetentionService @(path: '/dpp/retention') {
+service sap.ilm.RetentionService @(path: '/dpp/retention') {
 
     @cds.persistence.exists
     @cds.persistence.skip
@@ -13,8 +13,8 @@ service sap.dpp.RetentionService @(path: '/dpp/retention') {
     @readonly
     @cds.persistence.exists
     @cds.persistence.skip
-    entity iLMObjects : dppFlags {
-        //dppFlags just being used to have in m.definitions
+    entity iLMObjects : blocking, destruction {
+        //blocking, destruction just being used to have in m.definitions
         key iLMObjectName: String;
         isILMObjectEnabled: Boolean;
     }

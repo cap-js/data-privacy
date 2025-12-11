@@ -46,20 +46,20 @@
     "setupBookshopTest": "cd ./tests/bookshop-app && rm -rf package-lock.json && rm -rf ./node_modules/ && npm link ../../ && npm i && rm -rf ./node_modules/@sap/cds",
     "setupExtendDPIBookshop": "cd ./tests/retention/extend-retention-endpoint && npm i && rm -rf ./node_modules/@sap/cds",
     "setupExtendInformationBookshop": "cd ./tests/information/extend-information-endpoint && npm i && rm -rf ./node_modules/@sap/cds",
-    "test": "npx jest --silent",
+    "test:local": "npx jest --silent",
     "postinstall": "patch-package"
   },
   "cds": {
     "requires": {
-      "sap.dpp.RetentionService": {
+      "sap.ilm.RetentionService": {
         "kind": "TableHeaderBlocking",
         "tableRestrictions": "srv"
       },
-      "sap.dpp.InformationService": {
+      "sap.ilm.InformationService": {
         "model": "@sap/cds-dpi/srv/DPIInformation"
       },
       "kinds": {
-        "sap.dpp.RetentionService-TableHeaderBlocking": {
+        "sap.ilm.RetentionService-TableHeaderBlocking": {
           "impl": "@sap/cds-dpi/srv/TableHeaderBlocking",
           "model": "@sap/cds-dpi/srv/TableHeaderBlocking"
         }

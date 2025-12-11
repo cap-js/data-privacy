@@ -1,12 +1,12 @@
-namespace sap.dpp;
+namespace sap.ilm;
 
-aspect dppFlags {
-  dppBlockingDate            : Date  @UI.HiddenFilter  @PersonalData.FieldSemantics: 'BlockingDate';
-  dppEarliestDestructionDate : Date  @UI.HiddenFilter  @PersonalData.FieldSemantics: 'EndOfRetentionDate';
+aspect destruction {
+  ilmEarliestDestructionDate : Date  @UI.HiddenFilter  @PersonalData.FieldSemantics: 'EndOfRetentionDate';
+  ilmLatestDestructionDate : Date  @UI.HiddenFilter;
 }
 
-aspect dppCompositionFlags {
-  dppIsBlocked            : Boolean default false @UI.HiddenFilter;
+aspect blocking {
+  dppBlockingDate            : Date  @UI.HiddenFilter  @PersonalData.FieldSemantics: 'BlockingDate';
 }
 
 type Condition : {

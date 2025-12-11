@@ -1,7 +1,7 @@
 // Proxy for importing schema from bookshop sample
 using { Country, Currency, managed, cuid, sap.common.CodeList } from '@sap/cds/common';
 
-namespace sap.dpp.bookshop;
+namespace sap.ilm.bookshop;
 
 entity Books : managed {
   key ID : Integer;
@@ -290,7 +290,7 @@ annotate ILMObjectWithEDMJSONBlockingEnabled with @(
 annotate ILMObjectWithXPRBlockingEnabled with @(
   PersonalData.DataSubjectRole : 'Employee',
   PersonalData.EntitySemantics : 'Other',
-  ILM.BlockingEnabled : '(SELECT isBlockingEnabled FROM sap.dpp.bookshop.Configuration)'
+  ILM.BlockingEnabled : '(SELECT isBlockingEnabled FROM sap.ilm.bookshop.Configuration)'
 ) {
   employee      @PersonalData.FieldSemantics : 'DataSubjectID';
   marketingDate @PersonalData.FieldSemantics : 'EndOfBusinessDate';

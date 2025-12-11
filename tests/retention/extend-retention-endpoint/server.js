@@ -1,7 +1,7 @@
 const cds = require('@sap/cds');
 
 cds.once('listening', async () => {
-    const DPIRetention = await cds.connect.to('sap.dpp.RetentionService');
+    const DPIRetention = await cds.connect.to('sap.ilm.RetentionService');
     DPIRetention.prepend(() => {
         DPIRetention.on('dataSubjectInformation', async () => {
             return [

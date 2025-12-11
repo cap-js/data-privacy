@@ -1,5 +1,5 @@
 
-using sap.dpp.bookshop as bookshop from './base';
+using sap.ilm.bookshop as bookshop from './base';
 
 annotate bookshop.Orders with {
     legalEntity @PersonalData.FieldSemantics #LegalEntity : 'DataControllerID' @PersonalData.FieldSemantics #Condition : 'PurposeID';

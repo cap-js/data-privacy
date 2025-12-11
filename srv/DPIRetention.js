@@ -135,7 +135,7 @@ module.exports = class RetentionService extends cds.ApplicationService {
      */
     this.before('*', req => {
 
-      if (req.data.applicationName && req.data.applicationName !== cds.env.requires['sap.dpp.RetentionService'].applicationName) {
+      if (req.data.applicationName && req.data.applicationName !== cds.env.requires['sap.ilm.RetentionService'].applicationName) {
         return req.error({
           status: 400, 
           code: 'WRONG_APPLICATION_NAME',
@@ -143,7 +143,7 @@ module.exports = class RetentionService extends cds.ApplicationService {
           target: 'applicationName',
           args: [
             req.data.applicationName,
-            cds.env.requires['sap.dpp.RetentionService'].applicationName
+            cds.env.requires['sap.ilm.RetentionService'].applicationName
           ]
         });
       }

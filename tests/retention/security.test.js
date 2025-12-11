@@ -30,7 +30,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
   const DPI_Service = { username: 'abc', password: '1234' }
   test('dataSubjectEndOfBusiness', async () => {
     const { status } = await POST('/dpp/retention/dataSubjectEndOfBusiness', {
-      applicationName: 'bookshop-retention-t5',
+      applicationName: 'bookshop-retention',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
       dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad'
@@ -40,7 +40,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
   test('dataSubjectOrganizationAttributeValues', async () => {
     const { status } = await POST('/dpp/retention/dataSubjectOrganizationAttributeValues', {
-      applicationName: 'bookshop-retention-t5',
+      applicationName: 'bookshop-retention',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
       dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -51,7 +51,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
   test('dataSubjectLatestRetentionStartDates', async () => {
     const { status } = await POST('/dpp/retention/dataSubjectLatestRetentionStartDates', {
-      applicationName: 'bookshop-retention-t5',
+      applicationName: 'bookshop-retention',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
       dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -68,7 +68,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
   test('dataSubjectILMObjectInstanceBlocking', async () => {
     const { status } = await POST('/dpp/retention/dataSubjectILMObjectInstanceBlocking', {
-      applicationName: 'bookshop-retention-t5',
+      applicationName: 'bookshop-retention',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
       dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
@@ -79,7 +79,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
   test('dataSubjectBlocking', async () => {
     const { status } = await POST('/dpp/retention/dataSubjectBlocking', {
-      applicationName: 'bookshop-retention-t5',
+      applicationName: 'bookshop-retention',
       dataSubjectRoleName: 'Customer',
       dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
       maxDeletionDate: '2020-04-04T22:00:00'
@@ -89,7 +89,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
   test('dataSubjectsILMObjectInstancesDestroying', async () => {
     const { status } = await POST('/dpp/retention/dataSubjectsILMObjectInstancesDestroying', {
-      applicationName: 'bookshop-retention-t5',
+      applicationName: 'bookshop-retention',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
     }, { auth: DPI_Service });
@@ -98,7 +98,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
   test('dataSubjectsDestroying', async () => {
     const { status } = await POST('/dpp/retention/dataSubjectsDestroying', {
-      applicationName: 'bookshop-retention-t5',
+      applicationName: 'bookshop-retention',
       dataSubjectRoleName: 'Customer',
     }, { auth: DPI_Service });
     expect(status).toEqual(403);
@@ -106,7 +106,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
   test('dataSubjectsEndOfResidence', async () => {
     const { status } = await POST('/dpp/retention/dataSubjectsEndOfResidence', {
-      applicationName: 'bookshop-retention-t5',
+      applicationName: 'bookshop-retention',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
       referenceDates: [
@@ -128,7 +128,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
   test('dataSubjectsEndOfResidenceConfirmation', async () => {
     const { status } = await await POST('/dpp/retention/dataSubjectsEndOfResidenceConfirmation', {
-      applicationName: 'bookshop-retention-t5',
+      applicationName: 'bookshop-retention',
       iLMObjectName: 'Orders',
       dataSubjectRoleName: 'Customer',
       referenceDates: [
@@ -153,7 +153,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 
   test('dataSubjectInformation', async () => {
     const { status } = await POST('/dpp/retention/dataSubjectInformation', {
-      applicationName: 'bookshop-retention-t5',
+      applicationName: 'bookshop-retention',
       dataSubjectRoleName: 'Customer',
       dataSubjects: [
         { dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad' }
@@ -172,7 +172,7 @@ describe('SAP DPI Retention endpoints cannot be accessed with an unauthorized us
 });
 
 test('DPIRetention entities are not accessible on the API', async () => {
-  for (const entity of Object.keys(cds.entities('sap.dpp.RetentionService')).filter(e => e !== 'iLMObjects' && e !== 'i18n-files' && !e.startsWith('valueHelp') && !e.endsWith('.texts'))) {
+  for (const entity of Object.keys(cds.entities('sap.ilm.RetentionService')).filter(e => e !== 'iLMObjects' && e !== 'i18n-files' && !e.startsWith('valueHelp') && !e.endsWith('.texts'))) {
     const {status} = await GET(`/dpp/retention/${entity}`, { auth: { username: 'dpi', password: '1234' }});
     expect(status).toEqual(403);
   }
@@ -273,9 +273,9 @@ describe('Access Restrictions for blocked entities', () => {
     expect(saveOrder.data.endOfWarrantyDate).toEqual('2021-12-12')
   })
 
-  test('sap.dpp.RetentionService entities do not have restricted access', async () => {
+  test('sap.ilm.RetentionService entities do not have restricted access', async () => {
     const user = new cds.User({ id: 'dpi', roles: { DataRetentionManagerUser: 1, InvalidRoleSoEntitiesCannotBeAccessedViaAPI: 1 } })
-    const RetentionService = await cds.connect.to('sap.dpp.RetentionService')
+    const RetentionService = await cds.connect.to('sap.ilm.RetentionService')
     const ctx = cds.EventContext.for({ id: cds.utils.uuid(), http: { req: null, res: null } })
     ctx.user = user
     const orders = await cds._with(ctx, () => RetentionService.run(
@@ -285,9 +285,9 @@ describe('Access Restrictions for blocked entities', () => {
     expect(orders.some(o => o.ID === '5e2f2640-6866-4dcf-8f4d-3027aa831cad')).toBeTruthy()
   })
 
-  test('sap.dpp.InformationService entities do not have restricted access', async () => {
+  test('sap.ilm.InformationService entities do not have restricted access', async () => {
     const user = new cds.User({ id: 'dpi', roles: { PersonalDataManagerUser: 1 } })
-    const InformationService = await cds.connect.to('sap.dpp.InformationService')
+    const InformationService = await cds.connect.to('sap.ilm.InformationService')
     const ctx = cds.EventContext.for({ id: cds.utils.uuid(), http: { req: null, res: null } })
     ctx.user = user
     const orders = await cds._with(ctx, () => InformationService.run(

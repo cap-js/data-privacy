@@ -74,7 +74,7 @@ describe('iLMObject discovery', () => {
                     expect(condition.conditionFieldDescription).toBeTruthy()
                     expect(condition.conditionFieldName).toBeTruthy()
                     expect(condition.conditionFieldType).toBeTruthy()
-                    const iLMObjectDef = cds.model.definitions[`sap.dpp.RetentionService.${iLMObject.iLMObjectName}`];
+                    const iLMObjectDef = cds.model.definitions[`sap.ilm.RetentionService.${iLMObject.iLMObjectName}`];
                     expect(iLMObjectDef.elements[iLMObjectDef._dpi.elementByVHId(condition.conditionFieldName) ?? condition.conditionFieldName]['@PersonalData.FieldSemantics']).toEqual('PurposeID');
                     const {status, data} = await GET(condition.conditionFieldValueHelpEndPoint, { auth: DPI_Service })
                     expect(status).toEqual(200);
@@ -98,7 +98,7 @@ describe('iLMObject discovery', () => {
 
     describe('Org attributes', () => {
         test('test org attribute endpoints', async () => {
-            const organizationAttributes = Object.keys(cds.model.definitions).filter(n => n.startsWith('sap.dpp.RetentionService.valueHelp_orgAttribute'))
+            const organizationAttributes = Object.keys(cds.model.definitions).filter(n => n.startsWith('sap.ilm.RetentionService.valueHelp_orgAttribute'))
             for (const attribute of organizationAttributes) {
                 const attributeDefinition = cds.model.definitions[attribute]
                 const {status, data} = await GET(attributeDefinition['@ILM.ValueHelp.Path'], { auth: DPI_Service })

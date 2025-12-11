@@ -31,10 +31,10 @@ cds.on('loaded', csn => {
 })
 
 cds.on('listening', async () => {
-    if (!cds.env.requires['sap.dpp.RetentionService'].applicationName) {
+    if (!cds.env.requires['sap.ilm.RetentionService'].applicationName) {
         const { name } = JSON.parse(await fs.readFile(path.join(cds.root, 'package.json')));
         LOG.debug
-        cds.env.requires['sap.dpp.RetentionService'].applicationName = name;
+        cds.env.requires['sap.ilm.RetentionService'].applicationName = name;
     }
 })
 
