@@ -25,6 +25,26 @@ module.exports = class RetentionService extends cds.ApplicationService {
             return allILMObjects;
           }
 
+          const conditions = Object.keys(entity.elements).reduce((conditions, elementName) => {
+            const element = entity.elements[elementName];
+            if (element['@ILM.ValueHelp.Type'] === 'condition') {
+              const condition = {
+                conditionFieldName:
+                  entity.elements[elementName]['@ILM.ValueHelp.Id'] ?? elementName,
+                conditionFieldType: mapCDStoRetentionDataType(element.type),
+                conditionFieldDescription: cds.i18n.labels.for(element) ?? elementName,
+                conditionFieldDescriptionKey: undefined,
+                conditionFieldValueHelpEndPoint: element['@ILM.ValueHelp.Path'],
+              };
+              const labelI18nKey = getTranslationKey(element['@Common.Label']);
+              if (labelI18nKey) {
+                condition.conditionFieldDescriptionKey = labelI18nKey;
+              }
+              conditions.push(condition);
+            }
+            return conditions;
+          }, []);
+
           allILMObjects.push({
             iLMObjectName: iLMObject,
             iLMObjectType: 'Transaction',
@@ -40,25 +60,7 @@ module.exports = class RetentionService extends cds.ApplicationService {
               entity.elements[entity._dpi.orgAttributeReference]['@ILM.ValueHelp.Id'] ??
               entity._dpi.orgAttributeReference,
             referenceDates: entity._dpi.iLMObject.endOfBusinessDates,
-            conditions: Object.keys(entity.elements).reduce((conditions, elementName) => {
-              const element = entity.elements[elementName];
-              if (element['@ILM.ValueHelp.Type'] === 'condition') {
-                const condition = {
-                  conditionFieldName:
-                    entity.elements[elementName]['@ILM.ValueHelp.Id'] ?? elementName,
-                  conditionFieldType: mapCDStoRetentionDataType(element.type),
-                  conditionFieldDescription: cds.i18n.labels.for(element) ?? elementName,
-                  conditionFieldDescriptionKey: undefined,
-                  conditionFieldValueHelpEndPoint: element['@ILM.ValueHelp.Path'],
-                };
-                const labelI18nKey = getTranslationKey(element['@Common.Label']);
-                if (labelI18nKey) {
-                  condition.conditionFieldDescriptionKey = labelI18nKey;
-                }
-                conditions.push(condition);
-              }
-              return conditions;
-            }, []),
+            conditions: conditions.length ? conditions : undefined,
             dataSubjectBlockingConfiguration: {
               dataSubjectEndOfBusinessEndPoint: `${this.path}/dataSubjectEndOfBusiness`,
               dataSubjectOrganizationAttributesEndPoint: `${this.path}/dataSubjectOrganizationAttributeValues`,

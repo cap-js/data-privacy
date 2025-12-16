@@ -114,6 +114,8 @@ describe('iLMObject discovery', () => {
       const { status, data } = await GET('/dpp/retention/iLMObjects', { auth: DPI_Service });
       expect(status).toEqual(200);
       for (const iLMObject of data) {
+        if (!iLMObject.conditions) continue;
+
         for (const condition of iLMObject.conditions) {
           expect(condition.conditionFieldDescription).toBeTruthy();
           expect(condition.conditionFieldName).toBeTruthy();
@@ -142,6 +144,13 @@ describe('iLMObject discovery', () => {
           });
         }
       }
+    });
+
+    test('Conditions are not set if no conditions exist', async () => {
+      const { status, data } = await GET('/dpp/retention/iLMObjects', { auth: DPI_Service });
+      expect(status).toEqual(200);
+      const marketingILMObject = data.find((d) => d.iLMObjectName === 'Marketing');
+      expect(marketingILMObject.conditions).toBeUndefined();
     });
 
     test('Conditions are correctly added to iLMObjects', async () => {
