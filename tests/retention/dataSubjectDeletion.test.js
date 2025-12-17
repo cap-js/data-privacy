@@ -322,6 +322,55 @@ describe('data subject deletion', () => {
       expect(blockingAfter.length).toEqual(0);
     });
 
+    test('dataSubjectsILMObjectInstancesDestroying executed twice', async () => {
+      const { Orders } = cds.entities('sap.capire.bookshop');
+      await POST(
+        '/dpp/retention/dataSubjectILMObjectInstanceBlocking',
+        {
+          applicationName: 'bookshop-retention',
+          iLMObjectName: 'Orders',
+          dataSubjectRoleName: 'Customer',
+          dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
+          maxDeletionDate: '2020-04-04T22:00:00',
+        },
+        { auth: DPI_Service },
+      );
+      const blockingBeforeDelete = await runWithPrivileged(() =>
+        cds.run(SELECT.from(Orders).where({ ID: '5e2f2640-6866-4dcf-8f4d-3027aa831cad' })),
+      );
+      expect(blockingBeforeDelete.length).toEqual(1);
+      expect(blockingBeforeDelete[0][Orders._dpi.blockingDateReference]).toBeTruthy();
+      expect(blockingBeforeDelete[0][Orders._dpi.earliestDestructionDateReference]).toEqual(
+        '2020-04-04',
+      );
+
+      await POST(
+        '/dpp/retention/dataSubjectsILMObjectInstancesDestroying',
+        {
+          applicationName: 'bookshop-retention',
+          iLMObjectName: 'Orders',
+          dataSubjectRoleName: 'Customer',
+        },
+        { auth: DPI_Service },
+      );
+
+      const blockingAfter = await runWithPrivileged(() =>
+        cds.run(SELECT.from(Orders).where({ ID: '5e2f2640-6866-4dcf-8f4d-3027aa831cad' })),
+      );
+      expect(blockingAfter.length).toEqual(0);
+
+      const { status } = await POST(
+        '/dpp/retention/dataSubjectsILMObjectInstancesDestroying',
+        {
+          applicationName: 'bookshop-retention',
+          iLMObjectName: 'Orders',
+          dataSubjectRoleName: 'Customer',
+        },
+        { auth: DPI_Service },
+      );
+      expect(status).toEqual(202);
+    });
+
     test('dataSubjectsILMObjectInstancesDestroying with custom destruction date', async () => {
       const { ILMObjectWithXPRBlockingEnabled } = cds.entities('sap.capire.bookshop');
       await POST(
@@ -521,6 +570,52 @@ describe('data subject deletion', () => {
         ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
       });
       expect(customers.length).toEqual(0);
+    });
+
+    test('dataSubjectBlocking called twice does not return 404', async () => {
+      const {
+        Orders,
+        Marketing,
+        Customers,
+        ILMObjectWithStaticBlockingDisabled,
+        ILMObjectWithEDMJSONBlockingEnabled,
+      } = cds.entities('sap.capire.bookshop');
+      await DELETE.from(Orders).where({ Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad' });
+      await DELETE.from(Marketing).where({ Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad' });
+      await DELETE.from(ILMObjectWithStaticBlockingDisabled).where({
+        Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
+      });
+      await DELETE.from(ILMObjectWithEDMJSONBlockingEnabled).where({
+        Customer_ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
+      });
+      const { status } = await POST(
+        '/dpp/retention/dataSubjectBlocking',
+        {
+          applicationName: 'bookshop-retention',
+          dataSubjectRoleName: 'Customer',
+          dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
+          maxDeletionDate: '2020-01-01',
+        },
+        { auth: DPI_Service },
+      );
+
+      expect(status).toEqual(200);
+      const customers = await SELECT.from(Customers).where({
+        ID: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
+      });
+      expect(customers.length).toEqual(0);
+
+      const { status: status2 } = await POST(
+        '/dpp/retention/dataSubjectBlocking',
+        {
+          applicationName: 'bookshop-retention',
+          dataSubjectRoleName: 'Customer',
+          dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
+          maxDeletionDate: '2020-01-01',
+        },
+        { auth: DPI_Service },
+      );
+      expect(status2).toEqual(200);
     });
 
     test('dataSubjectBlocking works with custom destruction date', async () => {

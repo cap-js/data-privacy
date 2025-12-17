@@ -212,10 +212,23 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
         whereCondition,
       );
       req.user._is_privileged = true;
-      const deleted = await this.run(DELETE.from(iLMObject).where(whereCondition));
-      LOG.info(
-        `Deleted ${deleted} ${iLMObject} for the data subject role ${dataSubjectRole} as they reached end of blocking`,
+      const { amt } = await this.run(
+        SELECT.one.from(iLMObject).where(whereCondition).columns('count(1) as amt'),
       );
+      try {
+        await this.run(DELETE.from(iLMObject).where(whereCondition));
+        LOG.debug(
+          `Deleted ${amt} ${iLMObject} for the data subject role ${dataSubjectRole} as they reached end of blocking`,
+        );
+      } catch (err) {
+        if (err.code === 404) {
+          LOG.debug(
+            `Did not find any records from ${iLMObject} for the given where clause. Should have deleted ${amt} records for the data subject role ${dataSubjectRole} as they reached end of blocking`,
+          );
+        } else {
+          throw err;
+        }
+      }
       req.res.statusCode = 202;
     });
 
@@ -293,12 +306,24 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
             `with blocking details. Blocked ${amt} entities.`,
           );
         } else {
-          await this.run(DELETE.from(singleEntity).where(where));
-          LOG.debug(
-            `Where clause for deleting ${singleEntity.name}`,
-            where,
-            `with blocking details. Deleted ${amt} entities. Delete happened on dataSubjectBlocking because maxDeletionDate was in the past/today.`,
-          );
+          try {
+            await this.run(DELETE.from(singleEntity).where(where));
+            LOG.debug(
+              `Where clause for deleting ${singleEntity.name}`,
+              where,
+              `with blocking details. Deleted ${amt} entities. Delete happened on dataSubjectBlocking because maxDeletionDate was in the past/today.`,
+            );
+          } catch (err) {
+            if (err.code === 404) {
+              LOG.debug(
+                `Where clause for deleting ${singleEntity.name}`,
+                where,
+                `with blocking details. Delete returned 404 because no records were found for the where clause to be deleted. ${amt} entities should have been deleted. Delete happened on dataSubjectBlocking because maxDeletionDate was in the past/today.`,
+              );
+            } else {
+              throw err;
+            }
+          }
         }
       }
       return modifiedRecords;
@@ -361,21 +386,39 @@ module.exports = class TableHeaderBlockingService extends require('./DPIRetentio
       if (dataSubjectIDsToDestroy.length > 0) {
         LOG.info(`Destroy data subjects with the ID`, dataSubjectIDsToDestroy);
         req.user._is_privileged = true;
-        const deleted = await this.run(
-          DELETE.from(dataSubjectEntity).where({
-            [dataSubjectEntity._dpi.dataSubjectIdReference]: {
-              in: dataSubjectIDsToDestroy,
-            },
-            [dataSubjectEntity._dpi.earliestDestructionDateReference]: {
-              '<=': new Date().toISOString().substring(0, 10),
-            },
-          }),
-        );
-        LOG.debug(
-          `Destroyed ${deleted} data subjects, with ${dataSubjectIDsToDestroy.length} data subject IDs being provided.`,
-        );
+        let records = 0;
+        let innerRecords = 0;
+        const where = {
+          [dataSubjectEntity._dpi.dataSubjectIdReference]: {
+            in: dataSubjectIDsToDestroy,
+          },
+          [dataSubjectEntity._dpi.earliestDestructionDateReference]: {
+            '<=': new Date().toISOString().substring(0, 10),
+          },
+        };
+        try {
+          innerRecords = 0;
+          const { amt } = await this.run(
+            SELECT.one.from(dataSubjectEntity).where(where).columns('count(1) as amt'),
+          );
+          records += amt;
+          innerRecords = amt;
+          await this.run(DELETE.from(dataSubjectEntity).where(where));
+          LOG.debug(
+            `Destroyed ${innerRecords} data subjects, with ${dataSubjectIDsToDestroy.length} data subject IDs being provided.`,
+          );
+        } catch (err) {
+          if (err.code === 404) {
+            LOG.debug(
+              `Failed to destroy any records. Likely due to no records being found by the where clause. Should have destroyed ${innerRecords} data subjects, with ${dataSubjectIDsToDestroy.length} data subject IDs being provided.`,
+            );
+          } else {
+            throw err;
+          }
+        }
+
         req.res.statusCode = 200;
-        return `Destroyed ${deleted} records`;
+        return `Destroyed ${records} records`;
       }
     });
 
