@@ -9,4 +9,6 @@ extend service RetentionService with {
         Customer,
         Items
     }
+
+    entity LegalEntities as projection on db.LegalEntities;
 }

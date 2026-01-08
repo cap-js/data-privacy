@@ -19,7 +19,10 @@ entity Orders : cuid, managed {
   Customer          : Association to Customers @title : '{i18n>CUSTOMER}'; 
   endOfWarrantyDate : Date @title : 'End of warranty date';
   legalEntity       : Association to one LegalEntities @title : 'Legal entity';
+  associatedEntity : Association to one Foo;
 }
+
+entity Foo : cuid {};
 
 entity OrderItems : cuid {
   parent_ID    : UUID;

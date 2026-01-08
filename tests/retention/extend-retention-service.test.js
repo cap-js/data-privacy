@@ -24,14 +24,25 @@ describe('Extending sap.ilm.RetentionService to customize the endpoint', () => {
 
     expect(Orders.elements.ID).toBeTruthy();
     expect(Orders.elements.legalEntity_title).toBeTruthy();
-    expect(Orders.elements.legalEntity).toBeFalsy(); //Exclude Associations even if explicitly exposed and instead just add foreign keys
     expect(Orders.elements.aliasEndOfBusiness).toBeTruthy();
     expect(Orders.elements.Customer_ID).toBeTruthy();
     expect(Orders.elements.Items).toBeTruthy();
+    expect(Orders.elements.associatedEntity).toBeFalsy(); //Exclude Associations even if explicitly exposed and instead just add foreign keys
 
     //DPP flags are still exposed
     expect(Orders._dpi.blockingDateReference).toBeTruthy();
     expect(Orders._dpi.earliestDestructionDateReference).toBeTruthy();
+  });
+
+  test('If ValueHelp association is manually exposed, it does not cause redundant value helps', async () => {
+    const { LegalEntities } = cds.entities('sap.ilm.RetentionService');
+
+    expect(LegalEntities.elements.title).toBeTruthy();
+
+    const valueHelps = Object.keys(cds.entities('sap.ilm.RetentionService')).filter(
+      (k) => k.startsWith('valueHelp_orgAttribute') && k.match(/LegalEntities/),
+    );
+    expect(valueHelps.length).toEqual(1);
   });
 
   test('DPI Retention handlers can be intercepted', async () => {

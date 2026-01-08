@@ -75,7 +75,7 @@ describe('data subject deletion', () => {
           iLMObjectName: 'Orders',
           dataSubjectRoleName: 'Customer',
           dataSubjectId: '8e2f2640-6866-4dcf-8f4d-3027aa831cad',
-          organizationAttributeName: 'sap.capire.bookshop.LegalEntities',
+          organizationAttributeName: 'sap.ilm.RetentionService.LegalEntities',
         },
         { auth: DPI_Service },
       );
