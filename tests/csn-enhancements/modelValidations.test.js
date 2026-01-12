@@ -428,6 +428,56 @@ describe('Model validations to ensure a working model for DPI', () => {
       );
     });
 
+    describe('Data subject compositions are only DS details', () => {
+      test('Warning in case composition does not point to a DS Details entity', async () => {
+        await cds.load([
+          '../csn-enhancements/scenarios/dataSubjectsStructure.cds',
+          '@sap/cds-dpi/srv/DPIInformation',
+          '@sap/cds-dpi/srv/TableHeaderBlocking',
+        ]);
+        expect(log.output.length).toBeGreaterThan(0);
+        expect(log.output).toContain(
+          `\n[data-privacy] - The composition compToTransactional of the data subject DS points to sap.ilm.bookshop.Orders.`,
+        );
+      });
+
+      test('Warning in case composition of DS details composition does not point to a DS Details entity', async () => {
+        await cds.load([
+          '../csn-enhancements/scenarios/dataSubjectsStructure.cds',
+          '@sap/cds-dpi/srv/DPIInformation',
+          '@sap/cds-dpi/srv/TableHeaderBlocking',
+        ]);
+        expect(log.output.length).toBeGreaterThan(0);
+        expect(log.output).toContain(
+          `\n[data-privacy] - The composition compDsDetails.compToOrdersInDSDetails of the data subject DS points to sap.ilm.bookshop.Orders.`,
+        );
+      });
+
+      test('No warning for association to transactional data', async () => {
+        await cds.load([
+          '../csn-enhancements/scenarios/dataSubjectsStructure.cds',
+          '@sap/cds-dpi/srv/DPIInformation',
+          '@sap/cds-dpi/srv/TableHeaderBlocking',
+        ]);
+        expect(log.output.length).toBeGreaterThan(0);
+        expect(log.output).not.toContain(
+          `\n[data-privacy] - The composition associatedOrders of the data subject DS points to sap.ilm.bookshop.Orders.`,
+        );
+      });
+
+      test('No warning for composition to DS details', async () => {
+        await cds.load([
+          '../csn-enhancements/scenarios/dataSubjectsStructure.cds',
+          '@sap/cds-dpi/srv/DPIInformation',
+          '@sap/cds-dpi/srv/TableHeaderBlocking',
+        ]);
+        expect(log.output.length).toBeGreaterThan(0);
+        expect(log.output).not.toContain(
+          `\n[data-privacy] - The composition compDsDetails of the data subject DS points to DSDetails.`,
+        );
+      });
+    });
+
     describe('Dynamic role validations', () => {
       test('Error in case dynamic role path contains a to many segment', async () => {
         await cds.load([
