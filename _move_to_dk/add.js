@@ -56,6 +56,39 @@ module.exports = class extends cds.add.Plugin {
 
     //update xs-security.json
     const xsSecurityPath = path.join(cds.root, 'xs-security.json');
+    let xsSecurityContent = await fs.readFile(xsSecurityPath, 'utf8');
+
+    xsSecurityContent = JSON.parse(xsSecurityContent);
+
+    // Modify the xs-security.json content to add data-privacy configuration
+    if (!xsSecurityContent.scopes) {
+      xsSecurityContent.scopes = [];
+      xsSecurityContent.xsappname = `${appName}-auth`;
+      xsSecurityContent['tenant-mode'] = 'dedicated';
+    }
+
+    const scopeNames = xsSecurityContent.scopes.map((scope) => scope.name);
+    if (!scopeNames.includes('$XSAPPNAME.PersonalDataManagerUser')) {
+      xsSecurityContent.scopes.push({
+        name: '$XSAPPNAME.PersonalDataManagerUser',
+        description: 'Technical scope to restrict access to information endpoint',
+        'grant-as-authority-to-apps': [`$XSSERVICENAME(${appName}-information)`],
+      });
+    }
+
+    if (!scopeNames.includes('$XSAPPNAME.DataRetentionManagerUser')) {
+      xsSecurityContent.scopes.push({
+        name: '$XSAPPNAME.DataRetentionManagerUser',
+        description: 'Technical scope to restrict access to retention endpoint',
+        'grant-as-authority-to-apps': [`$XSSERVICENAME(${appName}-retention)`],
+      });
+    }
+
+    // Write back the modified xs-security.json
+    await fs.writeFile(xsSecurityPath, JSON.stringify(xsSecurityContent, null, 2), 'utf8');
+    log.info('xs-security.json enhanced with data-privacy configuration.');
+
+    /*
     let xsSecurityContent = {
       "xsappname": `${appName}-auth`,
       "tenant-mode": "dedicated",
@@ -77,7 +110,12 @@ module.exports = class extends cds.add.Plugin {
       ]
     };
     await fs.writeFile(xsSecurityPath, JSON.stringify(xsSecurityContent, null, 2), 'utf8');
-    log.info('xs-security.json enhanced with data-privacy configuration.');
+    log.info('xs-security.json enhanced with data-privacy configuration.');*/
+
+
+
+
+
   }
 
   async combine() {
