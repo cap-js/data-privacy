@@ -15,6 +15,9 @@ const { path } = cds.utils;
 module.exports = class extends cds.add.Plugin {
   async run() {
 
+
+    const project = readProject();
+
     let package_json = path.join(cds.root, 'package.json');
     let { appName } = require(package_json);
     let packageJsonContent = await fs.readFile(package_json, 'utf8');
@@ -28,11 +31,17 @@ module.exports = class extends cds.add.Plugin {
       packageJsonContent.cds.requires = {};
     }
 
+
     if (!packageJsonContent.cds.requires['sap.dpp.RetentionService']) {
       packageJsonContent.cds.requires['sap.dpp.RetentionService'] = {
-        kind: 'TableHeader',
-        applicationName: appName,
+        kind: 'TableHeaderBlocking',
+        tableRestrictions: 'srv',
+        applicationName: project.appName
       };
+    } else {
+      if (!packageJsonContent.cds.requires['sap.dpp.RetentionService'].applicationName) {
+        packageJsonContent.cds.requires['sap.dpp.RetentionService'].applicationName = project.appName;
+      }
     }
     if (!packageJsonContent.cds.requires['sap.dpp.InformationService']) {
       packageJsonContent.cds.requires['sap.dpp.InformationService'] = {
@@ -51,6 +60,8 @@ module.exports = class extends cds.add.Plugin {
     // Write back the modified package.json
     await fs.writeFile(package_json, JSON.stringify(packageJsonContent, null, 2), 'utf8');
     log.info('package.json enhanced with data-privacy configuration.');
+
+
 
 
 
@@ -80,7 +91,7 @@ module.exports = class extends cds.add.Plugin {
       xsSecurityContent.scopes.push({
         name: '$XSAPPNAME.DataRetentionManagerUser',
         description: 'Technical scope to restrict access to retention endpoint',
-        'grant-as-authority-to-apps': [`$XSSERVICENAME(${appName}-retention)`],
+        'grant-as-authority-to-apps': [`$XSSERVICENAMEretention)`],
       });
     }
 
@@ -112,17 +123,13 @@ module.exports = class extends cds.add.Plugin {
     await fs.writeFile(xsSecurityPath, JSON.stringify(xsSecurityContent, null, 2), 'utf8');
     log.info('xs-security.json enhanced with data-privacy configuration.');*/
 
-
-
-
-
   }
 
   async combine() {
     const project = readProject();
-    const { hasMta, srvPath, cf } = project;
+    const { hasMta, srvPath } = project;
 
-    if (hasMta && cf) {
+    if (hasMta) {
       const srv = srv4(srvPath); // Node.js or Java server module
       const dpiInfo = {
         in: 'resources',
