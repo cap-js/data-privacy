@@ -5,45 +5,83 @@ const { srv4 } = registries.mta;
 const log = cds.log('data-privacy');
 const fs = require('fs/promises');
 const fsSync = require('fs');
+const { insert } = require('@sap/cds');
+const { INSERT } = require('@sap/cds/lib/ql/cds-ql');
+const { name } = require('tar/types');
 const { path } = cds.utils;
 
+/*
+//Erweiterung von mta.yaml (xsuaa und dpi service einfügen)
+//Erweiterung von package.json
+//xs-security.js anpassen (roles, scopes) wenn nicht vorhanden. 
+//Unterscheidung kyma(helm)/cf
+*/
 module.exports = class extends cds.add.Plugin {
   async run() {
-    // const { isJava } = readProject()
-    // const { mvn } = cds.add
-
-    // TODO: Add hdbanalyticprivilege to undeploy.json
-
-    // Create dpp/sidecar folder in the root repository and copy package.json template
-    const root = process.cwd();
-    const sidecarFolder = path.join(root, 'data-privacy', 'sidecar');
-    const sidecarFolderSrv = path.join(sidecarFolder, 'srv');
-
-    // Ensure data-privacy/sidecar exists
-    await fs.mkdir(sidecarFolder, { recursive: true });
-    await fs.mkdir(sidecarFolderSrv, { recursive: true });
-
-    // Copy the template package.json file
-    const processPath = process.cwd();
 
     let package_json = path.join(cds.root, 'package.json');
     let { appName } = require(package_json);
+    let packageJsonContent = await fs.readFile(package_json, 'utf8');
 
-    const packageJsonTemplate = path.join(__dirname, 'templates', 'sidecar-package.json');
-
-    // Read the template package.json
-    let packageJsonContent = await fs.readFile(packageJsonTemplate, 'utf8');
-    // Replace placeholder with actual app name
-    packageJsonContent = packageJsonContent.replace(/"APP_NAME_PLACEHOLDER"/g, `"${appName}"`);
-
-    // Write the modified content to the target location
-    const packageJsonTarget = path.join(processPath, 'data-privacy', 'sidecar', 'package.json');
-    if (!fsSync.existsSync(packageJsonTarget)) {
-      await fs.writeFile(packageJsonTarget, packageJsonContent, 'utf8');
-      log.info('Template package.json copied and modified successfully.');
-    } else {
-      log.info('Target package.json already exists. Skipping copy.');
+    packageJsonContent = JSON.parse(packageJsonContent);
+    // Modify the package.json content to add data-privacy configuration
+    if (!packageJsonContent.cds) {
+      packageJsonContent.cds = {};
     }
+    if (!packageJsonContent.cds.requires) {
+      packageJsonContent.cds.requires = {};
+    }
+
+    if (!packageJsonContent.cds.requires['sap.dpp.RetentionService']) {
+      packageJsonContent.cds.requires['sap.dpp.RetentionService'] = {
+        kind: 'TableHeader',
+        applicationName: appName,
+      };
+    }
+    if (!packageJsonContent.cds.requires['sap.dpp.InformationService']) {
+      packageJsonContent.cds.requires['sap.dpp.InformationService'] = {
+        model: '@sap/cds-dpi/srv/DPIInformation',
+      };
+    }
+    if (!packageJsonContent.cds.requires['kinds']) {
+      packageJsonContent.cds.requires['kinds'] = {};
+    }
+    if (!packageJsonContent.cds.requires['kinds']['sap.dpp.RetentionService-TableHeader']) {
+      packageJsonContent.cds.requires['kinds']['sap.dpp.RetentionService-TableHeader'] = {
+        impl: '@sap/cds-dpi/srv/TableHeaderBlocking',
+        model: '@sap/cds-dpi/srv/TableHeaderBlocking',
+      };
+    }
+    // Write back the modified package.json
+    await fs.writeFile(package_json, JSON.stringify(packageJsonContent, null, 2), 'utf8');
+    log.info('package.json enhanced with data-privacy configuration.');
+
+
+
+    //update xs-security.json
+    const xsSecurityPath = path.join(cds.root, 'xs-security.json');
+    let xsSecurityContent = {
+      "xsappname": `${appName}-auth`,
+      "tenant-mode": "dedicated",
+      "scopes": [
+        {
+          "name": "$XSAPPNAME.PersonalDataManagerUser",
+          "description": "Technical scope to restrict access to information endpoint",
+          "grant-as-authority-to-apps": [
+            `$XSSERVICENAME(${appName}-information)`
+          ]
+        },
+        {
+          "name": "$XSAPPNAME.DataRetentionManagerUser",
+          "description": "Technical scope to restrict access to retention endpoint",
+          "grant-as-authority-to-apps": [
+            `$XSSERVICENAME(${appName}-retention)`
+          ]
+        }
+      ]
+    };
+    await fs.writeFile(xsSecurityPath, JSON.stringify(xsSecurityContent, null, 2), 'utf8');
+    log.info('xs-security.json enhanced with data-privacy configuration.');
   }
 
   async combine() {
@@ -66,13 +104,11 @@ module.exports = class extends cds.add.Plugin {
           'parameters.config.dataPrivacyConfiguration.configType': 'retention',
         },
       };
-      const xsuaa = {
-        in: 'resources',
-        where: { 'parameters.service': 'xsuaa' },
-      };
+
+      // --- Add dpi information resource --- 
       await merge(__dirname, 'add/mta.yaml.hbs').into('mta.yaml', {
         project, // for Mustache replacements
-        additions: [srv, dpiInfo, xsuaa],
+        additions: [srv, dpiInfo],
         relationships: [
           {
             insert: [dpiInfo, 'name'],
@@ -80,10 +116,12 @@ module.exports = class extends cds.add.Plugin {
           },
         ],
       });
+
+
       //Two merge functions needed because relationships even if an array, can only handle the first relationship for a into target and not multiple ones
       await merge(__dirname, 'add/mta.yaml.hbs').into('mta.yaml', {
         project, // for Mustache replacements
-        additions: [srv, dpiRetention, xsuaa],
+        additions: [srv, dpiRetention],
         relationships: [
           {
             insert: [dpiRetention, 'name'],
@@ -91,10 +129,77 @@ module.exports = class extends cds.add.Plugin {
           },
         ],
       });
+
+      // --- Add auditlog resource ---
+      const auditlog = {
+        in: 'resources',
+        where: { 'parameters.service': 'auditlog' },
+        name: `${project.appName}-auditlog`,
+        type: 'org.cloudfoundry.managed-service',
+        parameters: {
+          "service": 'auditlog',
+          "service-plan": 'standard',
+          "service-name": `${project.appName}-auditlog`
+        }
+      }
+
+      // --- Add authorization resource ---
+      const authorization = {
+        in: 'resources',
+        where: { 'parameters.service': 'xsuaa' },
+        name: `${project.appName}-auth`,
+        parameters: {
+          config: {
+            scopes: [
+              {
+                name: `$XSAPPNAME.PersonalDataManagerUser`,
+                description: 'Technical scope to restrict access to information endpoint',
+                'grant-as-authority-to-apps': [
+                  `$XSSERVICENAME(${project.appName}-information)`
+                ]
+              },
+              {
+                name: `$XSAPPNAME.DataRetentionManagerUser`,
+                description: 'Technical scope to restrict access to retention endpoint',
+                'grant-as-authority-to-apps': [
+                  `$XSSERVICENAME(${project.appName}-retention)`
+                ]
+              }
+            ],
+            xsappname: `${project.appName}-${project.org}-${project.space}`,
+            'tenant-mode': 'dedicated',
+            'service-plan': 'application',
+            path: './xs-security.json'
+          }
+
+        }
+      };
+
+      // --- First merge to add authorization and auditlog resources ---  
+      await merge(__dirname, 'add/mta.yaml.hbs').into('mta.yaml', {
+        project,
+        additions: [authorization, auditlog],
+        relationships: [
+          {
+            insert: [authorization, 'name'],
+            into: [srv, 'requires', 'name'],
+          },
+
+          {
+            insert: [auditlog, 'name'],
+            into: [srv, 'requires', 'name'],
+          }
+
+        ]
+      });
+
+
+
+
+      // if (hasHelm) {
+      //  ...
+      // if (hasMultitenancy) {
+      //  ...
     }
-    // if (hasHelm) {
-    //  ...
-    // if (hasMultitenancy) {
-    //  ...
   }
 };

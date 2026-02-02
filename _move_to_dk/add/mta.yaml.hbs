@@ -5,21 +5,9 @@ modules:
     requires: 
       - name: {{appName}}-information
       - name: {{appName}}-retention
+      - name: {{appName}}-auth
+      - name: {{appName}}-auditlog
 resources: 
-  - name: {{appName}}-auth
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: xsuaa
-      config:
-        scopes:
-          - name: $XSAPPNAME.PersonalDataManagerUser
-            description: Technical scope to restrict access to information endpoint
-            grant-as-authority-to-apps:
-              - $XSSERVICENAME({{appName}}-information)
-          - name: $XSAPPNAME.DataRetentionManagerUser
-            description: Technical scope to restrict access to retention endpoint
-            grant-as-authority-to-apps:
-              - $XSSERVICENAME({{appName}}-retention)
   - name: {{appName}}-information
     type: org.cloudfoundry.managed-service
     requires:
@@ -95,3 +83,28 @@ resources:
               # simulationSupportedForArchiving: true
               # simulationSupportedForDestruction: true
               iLMObjectDiscoveryEndPoint: /dpp/retention/iLMObjects
+  - name: {{appName}}-auditlog
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: auditlog
+      service-plan: standard
+      service-name: {{appName}}-auditlog
+  - name: {{appName}}-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      config:
+        scopes:
+          - name: $XSAPPNAME.PersonalDataManagerUser
+            description: Technical scope to restrict access to information endpoint
+            grant-as-authority-to-apps:
+              - $XSSERVICENAME({{appName}}-information)
+          - name: $XSAPPNAME.DataRetentionManagerUser
+            description: Technial scope to restrict access to retention endpoint
+            grant-as-authority-to-apps:
+              - $XSSERVICENAME({{appName}}-retention)
+        xsappname: {{appName}}-${org}-${space}
+        tenant-mode: dedicated
+      service-plan: application
+      path: ./xs-security.json
+ 
