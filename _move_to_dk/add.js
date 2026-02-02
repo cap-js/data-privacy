@@ -4,10 +4,6 @@ const { srv4 } = registries.mta;
 
 const log = cds.log('data-privacy');
 const fs = require('fs/promises');
-const fsSync = require('fs');
-const { insert } = require('@sap/cds');
-const { INSERT } = require('@sap/cds/lib/ql/cds-ql');
-const { name } = require('tar/types');
 const { path } = cds.utils;
 
 /*
@@ -86,9 +82,9 @@ module.exports = class extends cds.add.Plugin {
 
   async combine() {
     const project = readProject();
-    const { hasMta, srvPath } = project;
+    const { hasMta, srvPath, cf } = project;
 
-    if (hasMta) {
+    if (hasMta && cf) {
       const srv = srv4(srvPath); // Node.js or Java server module
       const dpiInfo = {
         in: 'resources',
