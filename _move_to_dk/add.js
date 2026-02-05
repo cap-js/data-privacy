@@ -1,17 +1,11 @@
 const cds = require('@sap/cds-dk'); //> load from cds-dk
 const { readProject, merge, registries } = cds.add;
 const { srv4 } = registries.mta;
-
 const log = cds.log('data-privacy');
 const fs = require('fs/promises');
 const { path } = cds.utils;
 
-/*
-//Erweiterung von mta.yaml (xsuaa und dpi service einfügen)
-//Erweiterung von package.json
-//xs-security.js anpassen (roles, scopes) wenn nicht vorhanden. 
-//Unterscheidung kyma(helm)/cf
-*/
+
 module.exports = class extends cds.add.Plugin {
   async run() {
 
@@ -62,9 +56,6 @@ module.exports = class extends cds.add.Plugin {
     log.info('package.json enhanced with data-privacy configuration.');
 
 
-
-
-
     //update xs-security.json
     const xsSecurityPath = path.join(cds.root, 'xs-security.json');
     let xsSecurityContent = await fs.readFile(xsSecurityPath, 'utf8');
@@ -99,29 +90,8 @@ module.exports = class extends cds.add.Plugin {
     await fs.writeFile(xsSecurityPath, JSON.stringify(xsSecurityContent, null, 2), 'utf8');
     log.info('xs-security.json enhanced with data-privacy configuration.');
 
-    /*
-    let xsSecurityContent = {
-      "xsappname": `${appName}-auth`,
-      "tenant-mode": "dedicated",
-      "scopes": [
-        {
-          "name": "$XSAPPNAME.PersonalDataManagerUser",
-          "description": "Technical scope to restrict access to information endpoint",
-          "grant-as-authority-to-apps": [
-            `$XSSERVICENAME(${appName}-information)`
-          ]
-        },
-        {
-          "name": "$XSAPPNAME.DataRetentionManagerUser",
-          "description": "Technical scope to restrict access to retention endpoint",
-          "grant-as-authority-to-apps": [
-            `$XSSERVICENAME(${appName}-retention)`
-          ]
-        }
-      ]
-    };
-    await fs.writeFile(xsSecurityPath, JSON.stringify(xsSecurityContent, null, 2), 'utf8');
-    log.info('xs-security.json enhanced with data-privacy configuration.');*/
+
+
 
   }
 
@@ -131,6 +101,48 @@ module.exports = class extends cds.add.Plugin {
 
     if (hasMta) {
       const srv = srv4(srvPath); // Node.js or Java server module
+
+      //--- add iEoP configuration ----
+      //load model and check if oid and object type annotations are present
+      /*
+      let csn = await cds.compile('*');
+      let objectType = null;
+
+
+      const retentionEntities = Object.values(csn.definitions).filter(
+        (d) => d['@PersonalData.EntitySemantics'] === 'DataSubject'
+      );
+      let hasIEoP = false;
+      for (const entity of retentionEntities) {
+        if (entity['@ODM.entityName'] && entity['@ODM.oid']) {
+          objectType = entity['@ODM.entityName'];
+          hasIEoP = true;
+          break;
+        }
+      }
+
+      if (!hasIEoP) {
+        log.info('No entities with @ODM.entityName and @ODM.oid found. iEoP configuration will not be added to mta.yaml');
+        return;
+      }
+
+      //Update configuration in mta.yaml for iEoP
+      const iEoPConfig = {
+        in: `parameters.config.dataPrivacyConfiguration.retentionConfiguration.iEoPConfiguration.applicationConfiguration`,
+
+        where: {
+          objectType: objectType
+        }
+
+      };
+
+
+      await merge(__dirname, 'add/mta.yaml.hbs').into('mta.yaml', {
+        project,
+        additions: [iEoPConfig]
+      });*/
+
+
       const dpiInfo = {
         in: 'resources',
         where: {
@@ -180,7 +192,7 @@ module.exports = class extends cds.add.Plugin {
         parameters: {
           "service": 'auditlog',
           "service-plan": 'standard',
-          "service-name": `${project.appName}-auditlog`
+          "service-name": `${project.appName} -auditlog`
         }
       }
 
@@ -188,7 +200,7 @@ module.exports = class extends cds.add.Plugin {
       const authorization = {
         in: 'resources',
         where: { 'parameters.service': 'xsuaa' },
-        name: `${project.appName}-auth`,
+        name: `${project.appName} -auth`,
         parameters: {
           config: {
             scopes: [
@@ -196,14 +208,14 @@ module.exports = class extends cds.add.Plugin {
                 name: `$XSAPPNAME.PersonalDataManagerUser`,
                 description: 'Technical scope to restrict access to information endpoint',
                 'grant-as-authority-to-apps': [
-                  `$XSSERVICENAME(${project.appName}-information)`
+                  `$XSSERVICENAME(${project.appName} - information)`
                 ]
               },
               {
                 name: `$XSAPPNAME.DataRetentionManagerUser`,
                 description: 'Technical scope to restrict access to retention endpoint',
                 'grant-as-authority-to-apps': [
-                  `$XSSERVICENAME(${project.appName}-retention)`
+                  `$XSSERVICENAME(${project.appName} - retention)`
                 ]
               }
             ],
@@ -233,9 +245,6 @@ module.exports = class extends cds.add.Plugin {
 
         ]
       });
-
-
-
 
       // if (hasHelm) {
       //  ...
