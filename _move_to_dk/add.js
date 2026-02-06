@@ -82,7 +82,7 @@ module.exports = class extends cds.add.Plugin {
       xsSecurityContent.scopes.push({
         name: '$XSAPPNAME.DataRetentionManagerUser',
         description: 'Technical scope to restrict access to retention endpoint',
-        'grant-as-authority-to-apps': [`$XSSERVICENAMEretention)`],
+        'grant-as-authority-to-apps': [`$XSSERVICENAME(${appName}-retention)`],
       });
     }
 
