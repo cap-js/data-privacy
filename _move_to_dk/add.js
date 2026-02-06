@@ -200,7 +200,7 @@ module.exports = class extends cds.add.Plugin {
       const authorization = {
         in: 'resources',
         where: { 'parameters.service': 'xsuaa' },
-        name: `${project.appName} -auth`,
+        name: `${project.appName}-auth`,
         parameters: {
           config: {
             scopes: [
