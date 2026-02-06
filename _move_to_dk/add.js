@@ -192,7 +192,7 @@ module.exports = class extends cds.add.Plugin {
         parameters: {
           "service": 'auditlog',
           "service-plan": 'standard',
-          "service-name": `${project.appName} -auditlog`
+          "service-name": `${project.appName}-auditlog`
         }
       }
 
@@ -208,14 +208,14 @@ module.exports = class extends cds.add.Plugin {
                 name: `$XSAPPNAME.PersonalDataManagerUser`,
                 description: 'Technical scope to restrict access to information endpoint',
                 'grant-as-authority-to-apps': [
-                  `$XSSERVICENAME(${project.appName} - information)`
+                  `$XSSERVICENAME(${project.appName}-information)`
                 ]
               },
               {
                 name: `$XSAPPNAME.DataRetentionManagerUser`,
                 description: 'Technical scope to restrict access to retention endpoint',
                 'grant-as-authority-to-apps': [
-                  `$XSSERVICENAME(${project.appName} - retention)`
+                  `$XSSERVICENAME(${project.appName}-retention)`
                 ]
               }
             ],
