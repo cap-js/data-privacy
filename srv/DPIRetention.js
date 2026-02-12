@@ -69,6 +69,10 @@ module.exports = class RetentionService extends cds.ApplicationService {
               dataSubjectsEndOfResidenceConfirmationEndPoint: `${this.path}/dataSubjectsEndOfResidenceConfirmation`,
               dataSubjectILMObjectBlockingEndPoint: `${this.path}/dataSubjectILMObjectInstanceBlocking`,
               dataSubjectsILMObjectDestroyingEndPoint: `${this.path}/dataSubjectsILMObjectInstancesDestroying`,
+
+              //configuration for unblocking an ILM object instance in case of wrong blocking 
+              dataSubjectILMObjectUnblockingEndPoint: `${this.path}/dataSubjectILMObjectInstanceUnblocking`,
+              dataSubjectUnblockingEndPoint: `${this.path}/dataSubjectUnblocking`
             },
             // destructionConfiguration: {
             //   iLMObjectDestructionEndPoint: `${this.path}/destruction`,
@@ -77,13 +81,13 @@ module.exports = class RetentionService extends cds.ApplicationService {
             // },
             dataSubjectRoles: entity['@PersonalData.DataSubjectRole']['=']?.enum
               ? Object.keys(entity.elements[entity['@PersonalData.DataSubjectRole']['=']].enum).map(
-                  (ds) => ({ dataSubjectRoleName: ds }),
-                )
+                (ds) => ({ dataSubjectRoleName: ds }),
+              )
               : [
-                  {
-                    dataSubjectRoleName: entity['@PersonalData.DataSubjectRole'],
-                  },
-                ],
+                {
+                  dataSubjectRoleName: entity['@PersonalData.DataSubjectRole'],
+                },
+              ],
           });
           return allILMObjects;
         },
