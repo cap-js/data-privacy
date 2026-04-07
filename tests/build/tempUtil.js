@@ -1,6 +1,6 @@
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
+const fs = require("fs");
+const os = require("os");
+const path = require("path");
 
 /**
  * Use instance to ensure that tempFolders list is not global
@@ -19,14 +19,14 @@ const path = require('path');
  */
 module.exports = class TempUtil {
   static get DEFAULT_TEMP_DIR() {
-    return path.join(__dirname, '_out');
+    return path.join(__dirname, "_out");
   }
   static get OS_TEMP_DIR() {
     return os.tmpdir();
   }
 
   constructor(fileName) {
-    this.fileName = `${path.parse(path.basename(fileName)).name.replace('.', '-')}-`;
+    this.fileName = `${path.parse(path.basename(fileName)).name.replace(".", "-")}-`;
     this.tempFolders = new Set();
   }
 

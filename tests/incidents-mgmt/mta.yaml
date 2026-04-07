@@ -1,4 +1,4 @@
-_schema-version: '3.1'
+_schema-version: "3.1"
 ID: capire.incidents
 version: 1.0.0
 description: incidents

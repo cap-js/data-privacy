@@ -1,13 +1,13 @@
-const cds = require('@sap/cds');
-const path = require('path');
+const cds = require("@sap/cds");
+const path = require("path");
 
 let {
   GET,
   POST: _POST,
   PATCH: _PATCH,
-  DELETE: _DELETE,
-} = cds.test().in(path.join(__dirname, '../bookshop-app'));
-const DPI_Service = { username: 'dpi', password: '1234' };
+  DELETE: _DELETE
+} = cds.test().in(path.join(__dirname, "../bookshop-app"));
+const DPI_Service = { username: "dpi", password: "1234" };
 
 async function safeRequest(method, ...args) {
   try {
@@ -22,47 +22,47 @@ const DELETE = (...args) => safeRequest(_DELETE, ...args);
 
 function buildKeyString(keys, record) {
   const keyParts = keys.map(
-    (k) => `${k}=${typeof record[k] === 'string' ? `'${record[k]}'` : record[k]}`,
+    (k) => `${k}=${typeof record[k] === "string" ? `'${record[k]}'` : record[k]}`
   );
-  return keyParts.length === 1 ? keyParts[0] : keyParts.join(',');
+  return keyParts.length === 1 ? keyParts[0] : keyParts.join(",");
 }
 
-describe('Information service', () => {
+describe("Information service", () => {
   let entities;
   let metadata;
 
   beforeAll(async () => {
-    const { status, data } = await GET('/dpp/information/$metadata?$format=json', {
-      auth: DPI_Service,
+    const { status, data } = await GET("/dpp/information/$metadata?$format=json", {
+      auth: DPI_Service
     });
     expect(status).toEqual(200);
-    metadata = data['sap.dpp.InformationService'];
-    entities = Object.keys(metadata.EntityContainer).filter((k) => k !== '$Kind');
+    metadata = data["sap.dpp.InformationService"];
+    entities = Object.keys(metadata.EntityContainer).filter((k) => k !== "$Kind");
   });
 
-  test('All entities in metadata can be requested via sap.dpp.InformationService', async () => {
+  test("All entities in metadata can be requested via sap.dpp.InformationService", async () => {
     for (const entity of entities) {
       const { status: statusEntity, data: dataEntity } = await GET(`/dpp/information/${entity}`, {
-        auth: DPI_Service,
+        auth: DPI_Service
       });
       expect(statusEntity).toEqual(200);
       expect(dataEntity.value.length).toBeGreaterThan(0);
     }
   });
 
-  describe('All exposed entities are readonly', () => {
-    test('POST requests are rejected with 405 for all entities', async () => {
+  describe("All exposed entities are readonly", () => {
+    test("POST requests are rejected with 405 for all entities", async () => {
       for (const entity of entities) {
         const { status } = await POST(`/dpp/information/${entity}`, {}, { auth: DPI_Service });
         expect(status).toEqual(405);
       }
     });
 
-    test('PATCH requests are rejected with 405 for all entities', async () => {
+    test("PATCH requests are rejected with 405 for all entities", async () => {
       for (const entity of entities) {
-        const keys = metadata[entity]['$Key'];
+        const keys = metadata[entity]["$Key"];
         const { data: entityData } = await GET(`/dpp/information/${entity}?$top=1`, {
-          auth: DPI_Service,
+          auth: DPI_Service
         });
         const record = entityData.value[0];
         const keyStr = buildKeyString(keys, record);
@@ -70,23 +70,23 @@ describe('Information service', () => {
         const { status } = await PATCH(
           `/dpp/information/${entity}(${keyStr})`,
           {},
-          { auth: DPI_Service },
+          { auth: DPI_Service }
         );
         expect(status).toEqual(405);
       }
     });
 
-    test('DELETE requests are rejected with 405 for all entities', async () => {
+    test("DELETE requests are rejected with 405 for all entities", async () => {
       for (const entity of entities) {
-        const keys = metadata[entity]['$Key'];
+        const keys = metadata[entity]["$Key"];
         const { data: entityData } = await GET(`/dpp/information/${entity}?$top=1`, {
-          auth: DPI_Service,
+          auth: DPI_Service
         });
         const record = entityData.value[0];
         const keyStr = buildKeyString(keys, record);
 
         const { status } = await DELETE(`/dpp/information/${entity}(${keyStr})`, {
-          auth: DPI_Service,
+          auth: DPI_Service
         });
         expect(status).toEqual(405);
       }

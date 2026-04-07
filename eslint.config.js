@@ -1,4 +1,4 @@
-import cds from "@sap/cds/eslint.config.mjs"
+import cds from "@sap/cds/eslint.config.mjs";
 
 export default [
   ...cds,
@@ -6,8 +6,8 @@ export default [
     files: ["**/*.js"],
     rules: {
       "no-await-in-loop": "error",
-      "no-console": ["error", { allow: ["warn", "error"] }],
-    },
+      "no-console": ["error", { allow: ["warn", "error"] }]
+    }
   },
   {
     files: ["tests/**"],
@@ -15,7 +15,7 @@ export default [
       "no-console": "off",
       "no-undef": "off",
       "no-unused-vars": "off",
-      "no-redeclare": "off",
-    },
-  },
-]
+      "no-redeclare": "off"
+    }
+  }
+];

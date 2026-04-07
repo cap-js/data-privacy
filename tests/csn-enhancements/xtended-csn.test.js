@@ -1,22 +1,22 @@
-const cds = require('@sap/cds');
-const path = require('path');
+const cds = require("@sap/cds");
+const path = require("path");
 
-cds.test().in(path.join(__dirname, '../bookshop-app'));
+cds.test().in(path.join(__dirname, "../bookshop-app"));
 
-describe('xtended csn', () => {
+describe("xtended csn", () => {
   let log = cds.test.log();
-  test('Loading model with flavour xtended work', async () => {
+  test("Loading model with flavour xtended work", async () => {
     const model = await cds.load(
       [
-        '../csn-enhancements/scenarios/base.cds',
-        '@sap/cds-dpi/srv/DPIInformation',
-        '@sap/cds-dpi/srv/TableHeaderBlocking',
+        "../csn-enhancements/scenarios/base.cds",
+        "@sap/cds-dpi/srv/DPIInformation",
+        "@sap/cds-dpi/srv/TableHeaderBlocking"
       ],
-      { flavor: 'xtended' },
+      { flavor: "xtended" }
     );
-    expect(model.meta['sap.ilm.enhanced']).toEqual(true);
-    expect(model.definitions['sap.ilm.RetentionService']).toBeTruthy();
-    expect(model.definitions['sap.dpp.InformationService']).toBeTruthy();
-    expect(log.output).not.toContain('Error');
+    expect(model.meta["sap.ilm.enhanced"]).toEqual(true);
+    expect(model.definitions["sap.ilm.RetentionService"]).toBeTruthy();
+    expect(model.definitions["sap.dpp.InformationService"]).toBeTruthy();
+    expect(log.output).not.toContain("Error");
   });
 });
