@@ -145,7 +145,7 @@ module.exports = class RetentionService extends cds.ApplicationService {
           { file: "i18n_es.properties" }
         ];
       }
-      let file = "";
+      let file;
       if (req.data.file.startsWith("i18n_en")) {
         file = getFile("en");
       } else if (req.data.file.startsWith("i18n_de")) {
