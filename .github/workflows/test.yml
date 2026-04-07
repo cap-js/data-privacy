@@ -24,7 +24,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: npm
       - name: Install global CDS
         shell: bash
         run: npm i -g @sap/cds-dk@${{ matrix.cds-version }}
