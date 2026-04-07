@@ -1,0 +1,5 @@
+ID;modifiedAt;createdAt;createdBy;modifiedBy;Customer_ID;text;marketingDate;legalEntity_title
+5e2f2640-6866-4dcf-8f4d-3027aa831cad;2019-04-04;2019-01-31;john.doe@test.com;john.doe@test.com;8e2f2640-6866-4dcf-8f4d-3027aa831cad;New cars;2020-04-04;SAP Ltd
+5e3f2640-6866-4dcf-8f4d-3027aa831cad;2019-04-04;2019-01-31;peter.doe@test.com;peter.doe@test.com;9e2f2640-6866-4dcf-8f4d-3027aa831cad;New motorbikes;2020-04-04;SAP Ltd
+44e718c9-ff99-47f1-8ca3-950c850777d4;2019-04-04;2019-01-30;jane.doe@test.com;jane.doe@test.com;74e718c9-ff99-47f1-8ca3-950c850777d4;New shoes SALE !!!;2020-04-04;SAP Ltd
+45e718c9-ff99-47f1-8ca3-950c850777d4;2020-04-04;2020-01-30;jane.doe@test.com;jane.doe@test.com;74e718c9-ff99-47f1-8ca3-950c850777d4;Fashion SALE !!!;2021-01-01;SAP Ltd

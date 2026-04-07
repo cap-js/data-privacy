@@ -2,3 +2,7 @@
 node_modules/
 gen/
 package-lock.json
+
+coverage/
+.vscode/
+_out

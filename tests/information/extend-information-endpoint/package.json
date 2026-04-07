@@ -1,0 +1,77 @@
+{
+  "name": "@capire/gdpr-extend-information-srv",
+  "description": "My application",
+  "version": "1.0.0",
+  "dependencies": {
+    "@cap-js/audit-logging": "^1.0.0",
+    "@cap-js/hana": "^2",
+    "@sap/cds": "^9",
+    "@sap/cds-dpi": "file:../../../",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "@cap-js/sqlite": "^2",
+    "@sap/cds-dk": "^9"
+  },
+  "scripts": {
+    "start": "cds-serve --production",
+    "watch": "cds watch"
+  },
+  "engines": {
+    "node": "^20"
+  },
+  "cds": {
+    "requires": {
+      "[development]": {
+        "auth": {
+          "strategy": "dummy",
+          "users": {
+            "dpi": {
+              "password": "1234",
+              "roles": [
+                "PersonalDataManagerUser",
+                "DataRetentionManagerUser"
+              ]
+            },
+            "alice": {
+              "password": "1234",
+              "roles": [
+                "PersonalDataManagerUser",
+                "DataRetentionManagerUser"
+              ]
+            }
+          }
+        }
+      },
+      "[test]": {
+        "auth": {
+          "strategy": "dummy",
+          "users": {
+            "dpi": {
+              "password": "1234",
+              "roles": [
+                "PersonalDataManagerUser",
+                "DataRetentionManagerUser"
+              ]
+            }
+          }
+        }
+      },
+      "db": {
+        "kind": "sql"
+      },
+      "uaa": {
+        "kind": "xsuaa"
+      },
+      "sap.ilm.RetentionService": {
+        "applicationName": "bookshop-retention"
+      }
+    },
+    "features": {
+      "kibana_formatter": true
+    },
+    "hana": {
+      "deploy-format": "hdbtable"
+    }
+  }
+}

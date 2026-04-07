@@ -1,3 +1,3 @@
 ### Have you...
 
-- [ ] Added relevant entry to the change log?
+- [ ] Added a relevant entry to the change log?

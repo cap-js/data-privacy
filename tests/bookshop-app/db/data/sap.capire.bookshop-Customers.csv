@@ -1,0 +1,5 @@
+ID;modifiedAt;createdAt;createdBy;modifiedBy;email;firstName;lastName;dateOfBirth;legalEntity_title
+8e2f2640-6866-4dcf-8f4d-3027aa831cad;2019-04-04;2019-01-31;admin@business.com;admin@business.com;john.doe@test.com;John;Doe;1970-01-01;SAP Ltd
+74e718c9-ff99-47f1-8ca3-950c850777d4;2019-04-04;2019-01-30;admin@business.com;admin@business.com;jane.doe@sap.com;Jane;Doe;1980-11-11;SAP Ltd
+9e2f2640-6866-4dcf-8f4d-3027aa831cad;2019-04-04;2019-01-31;admin@business.com;admin@business.com;peter.doe@test.com;Peter;Doe;1970-01-01;SAP Ltd
+e872239b-1283-4384-bf14-711e4b18a1b8;2019-04-04;2019-01-31;admin@business.com;admin@business.com;gustav.stresemann@test.com;Gustav;Stresemann;1970-01-01;SAP SE

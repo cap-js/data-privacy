@@ -1,0 +1,9 @@
+[
+  "src/gen/**/*.hdbanalyticprivilege",
+  "src/**/*.hdbanalyticprivilege",
+  "src/gen/**/*.hdbview",
+  "src/gen/**/*.hdbindex",
+  "src/gen/**/*.hdbconstraint",
+  "src/**/*.hdbrole",
+  "src/gen/**/*.hdbrole"
+]

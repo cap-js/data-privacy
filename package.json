@@ -1,58 +1,74 @@
 {
-  "name": "@cap-js/REPO-NAME",
-  "version": "1.0.0",
-  "description": "CAP cds-plugin REPO-DESCRIPTION",
+  "name": "@cap-js/data-privacy",
+  "version": "0.5.0",
+  "description": "CDS plugin providing an integration with the SAP Data Privacy Integration service for PII data retention and information retrieval based on annotations.",
   "license": "Apache-2.0",
-  "author": "AUTHOR",
+  "author": "SAP SE (https://www.sap.com)",
   "homepage": "https://cap.cloud.sap/",
+  "repository": "cap-js/data-privacy",
   "main": "cds-plugin.js",
-  "scripts": {
-    "lint": "npx eslint .",
-    "test": "npx jest --silent",
-    "test:hybrid": "cds bind --exec -- npx jest",
-    "prettier": "npx -y prettier@3 --write .",
-    "prettier:check": "npx -y prettier@3 --check .",
-    "watch:sample": "cd tests/bookshop && cds watch"
-  },
-  "files": [
-    "index.cds",
-    "lib",
-    "db",
-    "srv"
+  "keywords": [
+    "cds",
+    "CAP",
+    "cdsbuild"
   ],
-  "license": "Apache-2.0",
-  "devDependencies": {
-    "@cap-js/cds-test": ">=0",
-    "@cap-js/sqlite": "^2"
+  "files": [
+    "_i18n",
+    "lib",
+    "srv",
+    "db",
+    "index.cds",
+    "cds-plugin.js",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "dependencies": {
+    "@sap/xsenv": "^6.1.0"
   },
   "peerDependencies": {
-    "@sap/cds": ">=8"
+    "@cap-js/audit-logging": "^1.1.0",
+    "@sap/cds": ">=9.8"
+  },
+  "devDependencies": {
+    "@cap-js/cds-test": "^0.4.0",
+    "@cap-js/cds-types": "^0.15.0",
+    "@cap-js/sqlite": "^2",
+    "@eslint/js": "^10",
+    "@sap/cds-common-content": "*",
+    "@sap/cds-dk": "^9",
+    "@sap/cds-lsp": "^9.2.1",
+    "eslint": "^10",
+    "jest": "^30.2.0",
+    "prettier": "^3.8.1"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=20"
   },
-  "workspaces": [
-    "tests/bookshop/"
-  ],
+  "scripts": {
+    "lint": "npx eslint .",
+    "format": "prettier . --write && format-cds -f",
+    "format:check": "prettier . --check && format-cds --check",
+    "test-setup": "npm run setupBookshopTest && npm run setupExtendDPIBookshop && npm run setupExtendInformationBookshop",
+    "setupBookshopTest": "cd ./tests/bookshop-app && rm -rf package-lock.json && rm -rf ./node_modules/ && npm link ../../ && npm i && rm -rf ./node_modules/@sap/cds",
+    "setupExtendDPIBookshop": "cd ./tests/retention/extend-retention-endpoint && npm i && rm -rf ./node_modules/@sap/cds",
+    "setupExtendInformationBookshop": "cd ./tests/information/extend-information-endpoint && npm i && rm -rf ./node_modules/@sap/cds",
+    "test": "npx jest --silent"
+  },
   "cds": {
     "requires": {
-      "emojis": {
-        "[development]": {
-          "kind": "emojis-local"
-        },
-        "[hybrid]": {
-          "kind": "emojis-prod"
-        },
-        "[production]": {
-          "kind": "emojis-prod"
-        }
+      "sap.ilm.RetentionService": {
+        "kind": "TableHeaderBlocking",
+        "external": false,
+        "tableRestrictions": "srv"
+      },
+      "sap.dpp.InformationService": {
+        "external": false,
+        "model": "@sap/cds-dpi/srv/DPIInformation"
       },
       "kinds": {
-        "emojis-local": {
-          "impl": "@cap-js/REPO-NAME/srv/basic"
-        },
-        "emojis-prod": {
-          "impl": "@cap-js/REPO-NAME/srv/prod"
+        "sap.ilm.RetentionService-TableHeaderBlocking": {
+          "model": "@sap/cds-dpi/srv/TableHeaderBlocking"
         }
       }
     }

@@ -1,0 +1,169 @@
+_schema-version: '3.1'
+ID: capire.incidents
+version: 1.0.0
+description: incidents
+parameters:
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm unlink @sap/cds-dpi
+        - npm pack ../../
+        - sh -c 'TGZ_FILE="$(ls -1 | grep -E "^sap-cds-dpi.*\.tgz$" | head -n 1)" && npm install "./${TGZ_FILE}"'
+        - npm ci
+        - npx -p @sap/cds-dk cds build --production
+        - sh -c 'cp "$(ls -1 | grep -E "^sap-cds-dpi.*\.tgz$" | head -n 1)" ./gen/srv'
+modules:
+  - name: incidents-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      buildpack: nodejs_buildpack
+      memory: 256MB
+    build-parameters:
+      builder: npm-ci
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: incidents-auth
+      - name: incidents-db
+      - name: incidents-information
+      - name: incidents-retention
+  - name: incidents-db-deployer
+    type: hdb
+    path: gen/db
+    parameters:
+      buildpack: nodejs_buildpack
+      memory: 128MB
+    requires:
+      - name: incidents-db
+      - name: incidents-auth
+resources:
+  - name: incidents-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      config:
+        scopes:
+          - name: $XSAPPNAME.PersonalDataManagerUser
+            description: Technial scope to restrict access to information endpoint
+            grant-as-authority-to-apps:
+              - $XSSERVICENAME(incidents-information)
+          - name: $XSAPPNAME.DataRetentionManagerUser
+            description: Technial scope to restrict access to retention endpoint
+            grant-as-authority-to-apps:
+              - $XSSERVICENAME(incidents-retention)
+        xsappname: incidents-${org}-${space}
+        tenant-mode: dedicated
+      service-plan: application
+      path: ./xs-security.json
+  - name: incidents-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana
+      service-plan: hdi-shared
+  - name: incidents-portal
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service-plan: standard
+      service: portal
+  - name: incidents-html5-repo-runtime
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service-plan: app-runtime
+      service: html5-apps-repo
+  - name: incidents-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service-plan: app-host
+      service: html5-apps-repo
+  - name: incidents-information
+    type: org.cloudfoundry.managed-service
+    requires:
+      - name: srv-api
+    parameters:
+      service-name: incidents-information
+      service: data-privacy-integration-service
+      service-plan: data-privacy-internal
+      config:
+        xs-security:
+          xsappname: incidents-information-${org}-${space}
+          authorities:
+            - $ACCEPT_GRANTED_AUTHORITIES
+        dataPrivacyConfiguration:
+          configType: information
+          applicationConfiguration:
+            applicationName: incidents-mgmt-information
+            applicationTitle: incidents-mgmt-information
+            enableAutoSubscription: true
+          informationConfiguration:
+            applicationConfiguration:
+              dataSubjectDeletionAgent: retention-manager
+              retentionApplicationName: incidents-mgmt-retention
+              disableDataSubjectCorrection: true
+              cacheControl: no-cache
+            components:
+              - componentName: incidents-srv
+                componentBaseURL: ~{srv-api/srv-url}
+                serviceEndPoints:
+                  - serviceName: incidents-service
+                    serviceFormat: odata-v4
+                    annotationFormat: v4
+                    serviceEndPoint: /pdm
+                    appPaginationEnabled: true
+                    cacheControl: no-cache
+  - name: incidents-retention
+    type: org.cloudfoundry.managed-service
+    requires:
+      - name: srv-api
+    parameters:
+      service-name: incidents-retention
+      service: data-privacy-integration-service
+      service-plan: data-privacy-internal
+      config:
+        xs-security:
+          xsappname: incidents-retention-${org}-${space}
+          authorities:
+            - $ACCEPT_GRANTED_AUTHORITIES
+        dataPrivacyConfiguration:
+          configType: retention
+          applicationConfiguration:
+            applicationName: incidents-mgmt-retention
+            applicationTitle: incidents-mgmt-retention
+            applicationDescription: incidents-mgmt-retention
+            applicationBaseURL: ~{srv-api/srv-url}
+            enableAutoSubscription: true
+          translationConfiguration:
+            textBundleBaseURL: ~{srv-api/srv-url}
+            textBundleEndPoint: /dpp/retention/i18n-files/i18n.properties
+            defaultLanguage: en
+            supportedLanguages:
+              - de
+              - fr
+              - es
+              - en
+          retentionConfiguration:
+            applicationConfiguration:
+              applicationType: TransactionMaster
+              simulationSupportedForArchiving: true
+              simulationSupportedForDestruction: true
+              iLMObjectDiscoveryEndPoint: /dpp/retention/iLMObjects
+            dataSubjectRoles:
+              - dataSubjectRoleName: Customer
+                dataSubjectDescription: Customer
+                dataSubjectBaseURL: ~{srv-api/srv-url}
+                dataSubjectBlockingEndPoint: /dpp/retention/dataSubjectBlocking
+                dataSubjectInformationEndPoint: /dpp/retention/dataSubjectInformation
+                dataSubjectsDestroyingEndPoint: /dpp/retention/dataSubjectsDestroying
+            organizationAttributes:
+              - organizationAttributeName: legalEntity_title
+                organizationAttributeDescription: LegalEntity
+                organizationAttributeBaseURL: ~{srv-api/srv-url}
+                organizationAttributeValueHelpEndPoint: /dpp/retention/valueHelp_orgAttribute_sap_capire_incidents_LegalEntities
+              - organizationAttributeName: LegalEntities
+                organizationAttributeDescription: LegalEntity
+                organizationAttributeBaseURL: ~{srv-api/srv-url}
+                organizationAttributeValueHelpEndPoint: /dpp/retention/valueHelp_orgAttribute_LegalEntities

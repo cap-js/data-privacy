@@ -1,0 +1,167 @@
+_schema-version: '3.1'
+ID: capire.gdpr
+version: 1.0.0
+description: bookshop
+parameters:
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm unlink @sap/cds-dpi
+        - npm pack ../../
+        - sh -c 'TGZ_FILE="$(ls -1 | grep -E "^sap-cds-dpi.*\.tgz$" | head -n 1)" && npm install "./${TGZ_FILE}"'
+        - npm ci
+        - npx -p @sap/cds-dk cds build --production
+        - sh -c 'cp "$(ls -1 | grep -E "^sap-cds-dpi.*\.tgz$" | head -n 1)" ./gen/srv'
+  after-all:
+    - builder: custom
+      commands:
+        - npm link ../../
+        - rm -rf ./node_modules/@sap/cds
+modules:
+  - name: bookshop-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      buildpack: nodejs_buildpack
+    build-parameters:
+      builder: npm-ci
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: bookshop-db
+      - name: bookshop-auth
+      - name: bookshop-cf-logging
+      - name: bookshop-auditlog
+      - name: bookshop-information
+      - name: bookshop-retention
+  - name: bookshop-db-deployer
+    type: hdb
+    path: gen/db
+    parameters:
+      buildpack: nodejs_buildpack
+    requires:
+      - name: bookshop-db
+      - name: bookshop-auth
+      - name: bookshop-cf-logging
+resources:
+  - name: bookshop-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana
+      service-plan: hdi-shared
+  - name: bookshop-auth
+    type: org.cloudfoundry.managed-service
+    processed-after:
+      - bookshop-information
+      - bookshop-retention
+    parameters:
+      service: xsuaa
+      service-plan: application
+      config:
+        xsappname: bookshop-${org}-${space}
+        tenant-mode: dedicated
+        scopes:
+          - name: $XSAPPNAME.PersonalDataManagerUser
+            description: Technical scope to restrict access to information endpoint
+            grant-as-authority-to-apps:
+              - $XSSERVICENAME(bookshop-information)
+          - name: $XSAPPNAME.DataRetentionManagerUser
+            description: Technical scope to restrict access to retention endpoint
+            grant-as-authority-to-apps:
+              - $XSSERVICENAME(bookshop-retention)
+  - name: bookshop-cf-logging
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: application-logs
+      service-plan: lite
+  - name: bookshop-information
+    type: org.cloudfoundry.managed-service
+    requires:
+      - name: srv-api
+    parameters:
+      service-name: bookshop-information
+      service: data-privacy-integration-service
+      service-plan: data-privacy-internal
+      config:
+        xs-security:
+          xsappname: bookshop-information-${org}-${space}
+          authorities:
+            - $ACCEPT_GRANTED_AUTHORITIES
+        dataPrivacyConfiguration:
+          configType: information
+          applicationConfiguration:
+            applicationName: bookshop-information
+            applicationTitle: bookshop
+            enableAutoSubscription: true
+          informationConfiguration:
+            applicationConfiguration:
+              dataSubjectDeletionAgent: retention-manager
+              retentionApplicationName: bookshop-retention
+              disableDataSubjectCorrection: true
+              cacheControl: no-cache
+            components:
+              - componentName: bookshop-srv
+                componentBaseURL: ~{srv-api/srv-url}
+                serviceEndPoints:
+                  - serviceName: bookshop-service
+                    serviceFormat: odata-v4
+                    annotationFormat: v4
+                    serviceEndPoint: /dpp/information
+                    appPaginationEnabled: true
+                    cacheControl: no-cache
+  - name: bookshop-retention
+    type: org.cloudfoundry.managed-service
+    requires:
+      - name: srv-api
+    parameters:
+      service-name: bookshop-retention
+      service: data-privacy-integration-service
+      service-plan: data-privacy-internal
+      config:
+        xs-security:
+          xsappname: bookshop-retention-${org}-${space}
+          authorities:
+            - $ACCEPT_GRANTED_AUTHORITIES
+        dataPrivacyConfiguration:
+          configType: retention
+          applicationConfiguration:
+            applicationName: bookshop-retention
+            applicationDescription: bookshop-retention
+            applicationDescriptionKey: APPLICATION_NAME
+            applicationBaseURL: ~{srv-api/srv-url}
+            applicationTitle: bookshop
+            enableAutoSubscription: true
+          translationConfiguration:
+            textBundleEndPoint: /dpp/retention/i18n-files/i18n.properties
+            defaultLanguage: en
+            supportedLanguages:
+              - de
+              - fr
+              - es
+              - en
+            textBundleBaseURL: ~{srv-api/srv-url}
+          retentionConfiguration:
+            applicationConfiguration:
+              applicationType: TransactionMaster
+              iLMObjectDiscoveryEndPoint: /dpp/retention/iLMObjects
+            dataSubjectRoles:
+              - dataSubjectRoleName: Customer
+                dataSubjectDescription: Customer
+                dataSubjectBaseURL: ~{srv-api/srv-url}
+                dataSubjectBlockingEndPoint: /dpp/retention/dataSubjectBlocking
+                dataSubjectInformationEndPoint: /dpp/retention/dataSubjectInformation
+                dataSubjectsDestroyingEndPoint: /dpp/retention/dataSubjectsDestroying
+            organizationAttributes:
+              - organizationAttributeName: sap.capire.bookshop.LegalEntities
+                organizationAttributeDescription: LegalEntity
+                organizationAttributeBaseURL: ~{srv-api/srv-url}
+                organizationAttributeValueHelpEndPoint: /dpp/retention/valueHelp_orgAttribute_sap_capire_bookshop_LegalEntities
+  - name: bookshop-auditlog
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: auditlog
+      service-plan: oauth2

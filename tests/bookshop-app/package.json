@@ -1,0 +1,106 @@
+{
+  "name": "@capire/gdpr",
+  "description": "My application",
+  "version": "1.0.0",
+  "dependencies": {
+    "@cap-js/audit-logging": "^1.0.0",
+    "@cap-js/hana": "^2",
+    "@sap/cds": "^9",
+    "@sap/cds-common-content": "^3",
+    "@sap/cds-dpi": "file:../../",
+    "@sap/xsenv": "^6",
+    "@sap/xssec": "^4",
+    "express": "^4.17.1",
+    "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "@cap-js/sqlite": "^2",
+    "@sap/cds-dk": "^9",
+    "@sap/ux-specification": "^1.102.15"
+  },
+  "scripts": {
+    "start": "cds-serve --production",
+    "watch": "cds watch"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "cds": {
+    "requires": {
+      "[development]": {
+        "auth": {
+          "strategy": "dummy",
+          "users": {
+            "dpi": {
+              "password": "1234",
+              "roles": [
+                "PersonalDataManagerUser",
+                "DataRetentionManagerUser"
+              ]
+            },
+            "alice": {
+              "password": "1234",
+              "roles": [
+                "PersonalDataManagerUser",
+                "DataRetentionManagerUser"
+              ]
+            },
+            "catalog-auditor": {
+              "password": "1234",
+              "roles": [
+                "CATALOG_AUDITOR"
+              ]
+            },
+            "customer-auditor": {
+              "password": "1234",
+              "roles": [
+                "CUSTOMER_AUDITOR"
+              ]
+            },
+            "auditor": {
+              "password": "1234",
+              "roles": [
+                "Auditor"
+              ]
+            }
+          }
+        }
+      },
+      "[test]": {
+        "auth": {
+          "strategy": "dummy",
+          "users": {
+            "dpi": {
+              "password": "1234",
+              "roles": [
+                "PersonalDataManagerUser",
+                "DataRetentionManagerUser"
+              ]
+            }
+          }
+        }
+      },
+      "db": {
+        "kind": "sql"
+      },
+      "uaa": {
+        "kind": "xsuaa"
+      },
+      "[production]": {
+        "db": {
+          "kind": "hana-cloud"
+        },
+        "auth": "xsuaa"
+      },
+      "sap.ilm.RetentionService": {
+        "applicationName": "bookshop-retention"
+      }
+    },
+    "features": {
+      "kibana_formatter": true
+    },
+    "hana": {
+      "deploy-format": "hdbtable"
+    }
+  }
+}

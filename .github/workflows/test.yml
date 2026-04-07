@@ -9,39 +9,57 @@ on:
 
 jobs:
   test:
+    name: Running ${{ matrix.testSuite }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         node-version: [20.x, 22.x]
-        cds-version: [latest, 8]
+        cds-version: [latest]
+        testSuite: [tests/csn-enhancements, tests/retention, tests/information, tests/build]
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+        with:
+          clean: true
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm i -g @sap/cds-dk@${{ matrix.cds-version }}
-      - run: npm i
-      - run: cd tests/bookshop && npm i
-      - run: npm run test
-  integration-tests:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: [20.x, 22.x]
-        cds-version: [latest, 8]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Integration tests
-        uses: ./.github/actions/integration-tests
-        with:
-          CF_API: ${{ secrets.CF_API }}
-          CF_USERNAME: ${{ secrets.CF_USERNAME }}
-          CF_PASSWORD: ${{ secrets.CF_PASSWORD }}
-          CF_ORG: ${{ secrets.CF_ORG }}
-          CF_SPACE: ${{ secrets.CF_SPACE }}
-          NODE_VERSION: ${{ matrix.node-version }}
-      - run: npm run test
+          cache: npm
+          cache-dependency-path: '**/package-lock.json'
+      - name: Install global CDS
+        shell: bash
+        run: npm i -g @sap/cds-dk@${{ matrix.cds-version }}
+      - name: Install root dependencies
+        shell: bash
+        run: |
+          npm install @sap/cds@${{ matrix.cds-version }}
+          npm install
+      - name: Install bookshop
+        shell: bash
+        run: |
+          cd ./tests/bookshop-app
+          npm link ../../
+          npm install
+          rm -rf ./node_modules/@sap/cds
+      - name: Install extended retention
+        shell: bash
+        run: |
+          cd ./tests/retention/extend-retention-endpoint
+          npm link ../../../
+          npm install
+          rm -rf ./node_modules/@sap/cds
+      - name: Install extended information
+        shell: bash
+        run: |
+          cd ./tests/information/extend-information-endpoint
+          npm link ../../../
+          npm install
+          rm -rf ./node_modules/@sap/cds
+      - name: CDS version
+        shell: bash
+        run: cds v -i
+      - name: Run tests
+        env:
+          NODE_OPTIONS: '--max_old_space_size=4096'
+        run: npx jest --testPathPatterns ${{ matrix.testSuite }}
+    
