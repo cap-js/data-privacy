@@ -12,6 +12,7 @@ export default [
   {
     files: ["tests/**"],
     rules: {
+      "no-await-in-loop": "off",
       "no-console": "off",
       "no-undef": "off",
       "no-unused-vars": "off",

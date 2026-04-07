@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 const cds = require("@sap/cds");
 const LOG = cds.log("data-privacy");
 const { _buildWhereClauseForDS, whereForConditionSet } = require("../lib/utils");
