@@ -547,7 +547,8 @@ describe("data subject deletion", () => {
         Marketing,
         Customers,
         ILMObjectWithStaticBlockingDisabled,
-        ILMObjectWithEDMJSONBlockingEnabled
+        ILMObjectWithEDMJSONBlockingEnabled,
+        ILMObjectWithCustomName
       } = cds.entities("sap.capire.bookshop");
       await UPDATE.entity(Orders)
         .where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" })
@@ -575,6 +576,14 @@ describe("data subject deletion", () => {
             .toISOString()
             .substring(0, 10),
           legacyDestructionDate: "2020-01-02T00:00:00Z"
+        });
+      await UPDATE.entity(ILMObjectWithCustomName)
+        .where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" })
+        .set({
+          [ILMObjectWithCustomName._dpi.blockingDateReference]: new Date()
+            .toISOString()
+            .substring(0, 10),
+          [ILMObjectWithCustomName._dpi.earliestDestructionDateReference]: "2020-01-02T00:00:00Z"
         });
       const maxDeletionDate = new Date();
       maxDeletionDate.setFullYear(maxDeletionDate.getFullYear() + 1);
@@ -606,7 +615,8 @@ describe("data subject deletion", () => {
         Marketing,
         Customers,
         ILMObjectWithStaticBlockingDisabled,
-        ILMObjectWithEDMJSONBlockingEnabled
+        ILMObjectWithEDMJSONBlockingEnabled,
+        ILMObjectWithCustomName
       } = cds.entities("sap.capire.bookshop");
       await DELETE.from(Orders).where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" });
       await DELETE.from(Marketing).where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" });
@@ -614,6 +624,9 @@ describe("data subject deletion", () => {
         Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
       });
       await DELETE.from(ILMObjectWithEDMJSONBlockingEnabled).where({
+        Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+      });
+      await DELETE.from(ILMObjectWithCustomName).where({
         Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
       });
       const { status } = await POST(
@@ -640,7 +653,8 @@ describe("data subject deletion", () => {
         Marketing,
         Customers,
         ILMObjectWithStaticBlockingDisabled,
-        ILMObjectWithEDMJSONBlockingEnabled
+        ILMObjectWithEDMJSONBlockingEnabled,
+        ILMObjectWithCustomName
       } = cds.entities("sap.capire.bookshop");
       await DELETE.from(Orders).where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" });
       await DELETE.from(Marketing).where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" });
@@ -648,6 +662,9 @@ describe("data subject deletion", () => {
         Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
       });
       await DELETE.from(ILMObjectWithEDMJSONBlockingEnabled).where({
+        Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+      });
+      await DELETE.from(ILMObjectWithCustomName).where({
         Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
       });
       const { status } = await POST(
@@ -756,7 +773,8 @@ describe("data subject deletion", () => {
         Marketing,
         Customers,
         ILMObjectWithStaticBlockingDisabled,
-        ILMObjectWithEDMJSONBlockingEnabled
+        ILMObjectWithEDMJSONBlockingEnabled,
+        ILMObjectWithCustomName
       } = cds.entities("sap.capire.bookshop");
       await DELETE.from(Orders).where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" });
       await DELETE.from(Marketing).where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" });
@@ -764,6 +782,9 @@ describe("data subject deletion", () => {
         Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
       });
       await DELETE.from(ILMObjectWithEDMJSONBlockingEnabled).where({
+        Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+      });
+      await DELETE.from(ILMObjectWithCustomName).where({
         Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
       });
       const maxDeletionDate = new Date();
