@@ -568,7 +568,7 @@ describe("Model validations to ensure a working model for DPI", () => {
       ]);
       expect(log.output.length).toBeGreaterThan(0);
       expect(log.output).toContain(
-        `Only string value are allowed for @ILM.ObjectName on ILMObjectNameNotString!`
+        `Only string values are allowed for @ILM.ObjectName on ILMObjectNameNotString!`
       );
     });
 
