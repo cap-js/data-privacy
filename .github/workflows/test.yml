@@ -9,7 +9,7 @@ on:
 
 jobs:
   test:
-    name: Running ${{ matrix.testSuite }}
+    name: Running ${{ matrix.testSuite }} for CAP ${{ matrix.cds-version }} and node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
