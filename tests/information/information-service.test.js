@@ -40,6 +40,13 @@ describe("Information service", () => {
     entities = Object.keys(metadata.EntityContainer).filter((k) => k !== "$Kind");
   });
 
+  test("Data subject does not inherit keys from flattened elements", async () => {
+    const Customer = cds.model.definitions['sap.dpp.InformationService.Customers'];
+    const keys = Object.keys(Customer.elements).filter(e => Customer.elements[e].key);
+    expect(keys.length).toEqual(1);
+    expect(keys[0]).toEqual('ID');
+  });
+
   test("All entities in metadata can be requested via sap.dpp.InformationService", async () => {
     for (const entity of entities) {
       const { status: statusEntity, data: dataEntity } = await GET(`/dpp/information/${entity}`, {
