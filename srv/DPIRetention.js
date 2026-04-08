@@ -192,7 +192,9 @@ module.exports = class RetentionService extends cds.ApplicationService {
           (iLMObjectName) =>
             iLMObjects[iLMObjectName]._dpi.iLMObject.name === req.data.iLMObjectName
         );
-        if (!iLMObjectEntityName) {
+        if (iLMObjectEntityName) {
+          req.data.iLMObject = this.entities[iLMObjectEntityName];
+        } else {
           return req.error({
             status: 400,
             code: "ILM_OBJECT_DOES_NOT_EXIST",
@@ -200,8 +202,6 @@ module.exports = class RetentionService extends cds.ApplicationService {
             target: "iLMObjectName",
             args: [req.data.iLMObjectName]
           });
-        } else if (this.entities[iLMObjectEntityName]) {
-          req.data.iLMObject = this.entities[iLMObjectEntityName];
         }
       }
     });
