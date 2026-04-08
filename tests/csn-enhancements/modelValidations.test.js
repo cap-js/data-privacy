@@ -563,8 +563,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("Error if @ILM.ObjectName is not a string", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/ilmObjectName.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output.length).toBeGreaterThan(0);
       expect(log.output).toContain(
@@ -575,8 +575,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("Warning if @ILM.ObjectName is present but entity is not an ILM object", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/ilmObjectName.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output.length).toBeGreaterThan(0);
       expect(log.output).toContain(
@@ -587,8 +587,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("No error or warning for @ILM.ObjectName on entity with EntitySemantics Other", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/ilmObjectName.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output).not.toContain(
         `Only string value are allowed for @ILM.ObjectName on ValidILMObjectNameWithOther!`
@@ -601,8 +601,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("No warning for @ILM.ObjectName on entity with BlockingEnabled", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/ilmObjectName.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output).not.toContain(
         `@ILM.ObjectName on ValidILMObjectNameWithBlocking is ignored because ValidILMObjectNameWithBlocking is not marked as an ILM Object!`
@@ -612,8 +612,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("No warning for @ILM.ObjectName on entity with ArchivingEnabled", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/ilmObjectName.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output).not.toContain(
         `@ILM.ObjectName on ValidILMObjectNameWithArchiving is ignored because ValidILMObjectNameWithArchiving is not marked as an ILM Object!`
