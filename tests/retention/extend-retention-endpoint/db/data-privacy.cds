@@ -1,6 +1,6 @@
 using {sap.samples.poetryslams as poetrySlamManagerModel} from './poetrySlamManagerModel';
 
-using {sap.ilm.RetentionService} from '@sap/cds-dpi';
+using {sap.ilm.RetentionService} from '@cap-js/data-privacy';
 
 extend service RetentionService with {
 

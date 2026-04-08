@@ -8,8 +8,8 @@ describe("Model validations to ensure a working model for DPI", () => {
   test("Error if association targeting DataSubject exists but entity is no iLMObject", async () => {
     await cds.load([
       "../csn-enhancements/scenarios/missingILMObjectMarker.cds",
-      "@sap/cds-dpi/srv/DPIInformation",
-      "@sap/cds-dpi/srv/TableHeaderBlocking"
+      "@cap-js/data-privacy/srv/DPIInformation",
+      "@cap-js/data-privacy/srv/TableHeaderBlocking"
     ]);
     expect(log.output.length).toBeGreaterThan(0);
     expect(log.output).toContain("but is not marked as transactional data!");
@@ -18,8 +18,8 @@ describe("Model validations to ensure a working model for DPI", () => {
   test("Error if entity has two org attributes", async () => {
     await cds.load([
       "../csn-enhancements/scenarios/orgAttributes.cds",
-      "@sap/cds-dpi/srv/DPIInformation",
-      "@sap/cds-dpi/srv/TableHeaderBlocking"
+      "@cap-js/data-privacy/srv/DPIInformation",
+      "@cap-js/data-privacy/srv/TableHeaderBlocking"
     ]);
     expect(log.output.length).toBeGreaterThan(0);
     expect(log.output).toContain("has multiple organization attributes configured");
@@ -28,8 +28,8 @@ describe("Model validations to ensure a working model for DPI", () => {
   test("Error if a property has two PersonalData.FieldSemantics annotations", async () => {
     await cds.load([
       "../csn-enhancements/scenarios/overlappingAnnotations.cds",
-      "@sap/cds-dpi/srv/DPIInformation",
-      "@sap/cds-dpi/srv/TableHeaderBlocking"
+      "@cap-js/data-privacy/srv/DPIInformation",
+      "@cap-js/data-privacy/srv/TableHeaderBlocking"
     ]);
     expect(log.output.length).toBeGreaterThan(0);
     expect(log.output).toContain(
@@ -40,8 +40,8 @@ describe("Model validations to ensure a working model for DPI", () => {
   test("Error if a property has @ILM.FieldSemantics : LineOrg but conflicting PersonalData.FieldSemantics annotation", async () => {
     await cds.load([
       "../csn-enhancements/scenarios/overlappingAnnotations.cds",
-      "@sap/cds-dpi/srv/DPIInformation",
-      "@sap/cds-dpi/srv/TableHeaderBlocking"
+      "@cap-js/data-privacy/srv/DPIInformation",
+      "@cap-js/data-privacy/srv/TableHeaderBlocking"
     ]);
     expect(log.output.length).toBeGreaterThan(0);
     expect(log.output).toContain(
@@ -52,8 +52,8 @@ describe("Model validations to ensure a working model for DPI", () => {
   test("Error if a property has @ILM.FieldSemantics : ProcessOrg but conflicting PersonalData.FieldSemantics annotation", async () => {
     await cds.load([
       "../csn-enhancements/scenarios/overlappingAnnotations.cds",
-      "@sap/cds-dpi/srv/DPIInformation",
-      "@sap/cds-dpi/srv/TableHeaderBlocking"
+      "@cap-js/data-privacy/srv/DPIInformation",
+      "@cap-js/data-privacy/srv/TableHeaderBlocking"
     ]);
     expect(log.output.length).toBeGreaterThan(0);
     expect(log.output).toContain(
@@ -64,8 +64,8 @@ describe("Model validations to ensure a working model for DPI", () => {
   test("No error when @PersonalData.FieldSemantics : EndOfBusinessDate and DataControllerID is only added in RetentionService", async () => {
     await cds.load([
       "../csn-enhancements/scenarios/entityAttributeOnlyInExtend.cds",
-      "@sap/cds-dpi/srv/DPIInformation",
-      "@sap/cds-dpi/srv/TableHeaderBlocking"
+      "@cap-js/data-privacy/srv/DPIInformation",
+      "@cap-js/data-privacy/srv/TableHeaderBlocking"
     ]);
     expect(log.output.length).toBeGreaterThan(0);
     expect(log.output).not.toContain(`Error`);
@@ -74,8 +74,8 @@ describe("Model validations to ensure a working model for DPI", () => {
   test("No error when only @ILM.FieldSemantics : LineOrganizationID is given", async () => {
     await cds.load([
       "../csn-enhancements/scenarios/onlyILMAnnotations.cds",
-      "@sap/cds-dpi/srv/DPIInformation",
-      "@sap/cds-dpi/srv/TableHeaderBlocking"
+      "@cap-js/data-privacy/srv/DPIInformation",
+      "@cap-js/data-privacy/srv/TableHeaderBlocking"
     ]);
     expect(log.output.length).toBeGreaterThan(0);
     expect(log.output).not.toContain(
@@ -87,8 +87,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("LargeBinary is not supported for any PersonalData field", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/invalidDataTypes.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output.length).toBeGreaterThan(0);
       const dataType = "cds.LargeBinary";
@@ -113,8 +113,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("LargeString is not supported for any PersonalData field", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/invalidDataTypes.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output.length).toBeGreaterThan(0);
       const dataType = "cds.LargeString";
@@ -139,8 +139,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("Map is not supported for any PersonalData field", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/invalidDataTypes.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output.length).toBeGreaterThan(0);
       const dataType = "cds.Map";
@@ -165,8 +165,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("Date types are not supported for PersonalData reference fields", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/invalidDataTypes.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output.length).toBeGreaterThan(0);
       const dataType = "cds.Date";
@@ -200,8 +200,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("Regular types are supported for PersonalData reference fields", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/invalidDataTypes.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output.length).toBeGreaterThan(0);
       const dataType = "cds.String";
@@ -235,8 +235,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("Strings are not supported for PersonalData date fields", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/invalidDataTypes.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output.length).toBeGreaterThan(0);
       const dataType = "cds.String";
@@ -255,8 +255,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("Time is not supported for PersonalData date fields", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/invalidDataTypes.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output.length).toBeGreaterThan(0);
       const dataType = "cds.Time";
@@ -275,8 +275,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("UUIDs are not supported for PersonalData date fields", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/invalidDataTypes.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output.length).toBeGreaterThan(0);
       const dataType = "cds.UUID";
@@ -295,8 +295,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("Date fields are supported for PersonalData date fields", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/invalidDataTypes.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output.length).toBeGreaterThan(0);
       const dataType = "cds.Date";
@@ -339,8 +339,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("Binary is not supported for any PersonalData field", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/invalidDataTypes.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output.length).toBeGreaterThan(0);
       const dataType = "cds.Binary";
@@ -365,8 +365,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("Custom types are correctly resolved", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/invalidDataTypes.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output.length).toBeGreaterThan(0);
       const dataType = "cds.LargeBinary";
@@ -410,8 +410,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("ILM.FieldSemantics are checked for type correctness", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/invalidDataTypes.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output.length).toBeGreaterThan(0);
       const dataType = "cds.Binary";
@@ -429,8 +429,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("Error in case entity has EntitySemantics but not DataSubjectRole", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/entitySemantics.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output.length).toBeGreaterThan(0);
       expect(log.output).toContain(
@@ -441,8 +441,8 @@ describe("Model validations to ensure a working model for DPI", () => {
     test("Error in case entity has DataSubjectRole but not EntitySemantics", async () => {
       await cds.load([
         "../csn-enhancements/scenarios/entitySemantics.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ]);
       expect(log.output.length).toBeGreaterThan(0);
       expect(log.output).toContain(
@@ -454,8 +454,8 @@ describe("Model validations to ensure a working model for DPI", () => {
       test("Warning in case composition does not point to a DS Details entity", async () => {
         await cds.load([
           "../csn-enhancements/scenarios/dataSubjectsStructure.cds",
-          "@sap/cds-dpi/srv/DPIInformation",
-          "@sap/cds-dpi/srv/TableHeaderBlocking"
+          "@cap-js/data-privacy/srv/DPIInformation",
+          "@cap-js/data-privacy/srv/TableHeaderBlocking"
         ]);
         expect(log.output.length).toBeGreaterThan(0);
         expect(log.output).toContain(
@@ -466,8 +466,8 @@ describe("Model validations to ensure a working model for DPI", () => {
       test("Warning in case composition of DS details composition does not point to a DS Details entity", async () => {
         await cds.load([
           "../csn-enhancements/scenarios/dataSubjectsStructure.cds",
-          "@sap/cds-dpi/srv/DPIInformation",
-          "@sap/cds-dpi/srv/TableHeaderBlocking"
+          "@cap-js/data-privacy/srv/DPIInformation",
+          "@cap-js/data-privacy/srv/TableHeaderBlocking"
         ]);
         expect(log.output.length).toBeGreaterThan(0);
         expect(log.output).toContain(
@@ -478,8 +478,8 @@ describe("Model validations to ensure a working model for DPI", () => {
       test("No warning for association to transactional data", async () => {
         await cds.load([
           "../csn-enhancements/scenarios/dataSubjectsStructure.cds",
-          "@sap/cds-dpi/srv/DPIInformation",
-          "@sap/cds-dpi/srv/TableHeaderBlocking"
+          "@cap-js/data-privacy/srv/DPIInformation",
+          "@cap-js/data-privacy/srv/TableHeaderBlocking"
         ]);
         expect(log.output.length).toBeGreaterThan(0);
         expect(log.output).not.toContain(
@@ -490,8 +490,8 @@ describe("Model validations to ensure a working model for DPI", () => {
       test("No warning for composition to DS details", async () => {
         await cds.load([
           "../csn-enhancements/scenarios/dataSubjectsStructure.cds",
-          "@sap/cds-dpi/srv/DPIInformation",
-          "@sap/cds-dpi/srv/TableHeaderBlocking"
+          "@cap-js/data-privacy/srv/DPIInformation",
+          "@cap-js/data-privacy/srv/TableHeaderBlocking"
         ]);
         expect(log.output.length).toBeGreaterThan(0);
         expect(log.output).not.toContain(
@@ -504,8 +504,8 @@ describe("Model validations to ensure a working model for DPI", () => {
       test("Error in case dynamic role path contains a to many segment", async () => {
         await cds.load([
           "../csn-enhancements/scenarios/entitySemantics.cds",
-          "@sap/cds-dpi/srv/DPIInformation",
-          "@sap/cds-dpi/srv/TableHeaderBlocking"
+          "@cap-js/data-privacy/srv/DPIInformation",
+          "@cap-js/data-privacy/srv/TableHeaderBlocking"
         ]);
         expect(log.output.length).toBeGreaterThan(0);
         expect(log.output).toContain(
@@ -516,8 +516,8 @@ describe("Model validations to ensure a working model for DPI", () => {
       test("Error in case dynamic role path is missing enum", async () => {
         await cds.load([
           "../csn-enhancements/scenarios/entitySemantics.cds",
-          "@sap/cds-dpi/srv/DPIInformation",
-          "@sap/cds-dpi/srv/TableHeaderBlocking"
+          "@cap-js/data-privacy/srv/DPIInformation",
+          "@cap-js/data-privacy/srv/TableHeaderBlocking"
         ]);
         expect(log.output.length).toBeGreaterThan(0);
         expect(log.output).toContain(
@@ -528,8 +528,8 @@ describe("Model validations to ensure a working model for DPI", () => {
       test("Enum for dynamic role can be behind custom type", async () => {
         await cds.load([
           "../csn-enhancements/scenarios/entitySemantics.cds",
-          "@sap/cds-dpi/srv/DPIInformation",
-          "@sap/cds-dpi/srv/TableHeaderBlocking"
+          "@cap-js/data-privacy/srv/DPIInformation",
+          "@cap-js/data-privacy/srv/TableHeaderBlocking"
         ]);
         expect(log.output.length).toBeGreaterThan(0);
         expect(log.output).not.toContain(
@@ -540,8 +540,8 @@ describe("Model validations to ensure a working model for DPI", () => {
       test("Dynamic role can be a path with multiple segments", async () => {
         await cds.load([
           "../csn-enhancements/scenarios/entitySemantics.cds",
-          "@sap/cds-dpi/srv/DPIInformation",
-          "@sap/cds-dpi/srv/TableHeaderBlocking"
+          "@cap-js/data-privacy/srv/DPIInformation",
+          "@cap-js/data-privacy/srv/TableHeaderBlocking"
         ]);
         expect(log.output.length).toBeGreaterThan(0);
         expect(log.output).not.toContain(`ValidDynamicDSRoleWithPath`);
@@ -550,8 +550,8 @@ describe("Model validations to ensure a working model for DPI", () => {
       test("Dynamic role paths to enums are possible", async () => {
         await cds.load([
           "../csn-enhancements/scenarios/entitySemantics.cds",
-          "@sap/cds-dpi/srv/DPIInformation",
-          "@sap/cds-dpi/srv/TableHeaderBlocking"
+          "@cap-js/data-privacy/srv/DPIInformation",
+          "@cap-js/data-privacy/srv/TableHeaderBlocking"
         ]);
         expect(log.output.length).toBeGreaterThan(0);
         expect(log.output).not.toContain(`ValidDynamicDSRole`);

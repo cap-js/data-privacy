@@ -9,8 +9,8 @@ describe("xtended csn", () => {
     const model = await cds.load(
       [
         "../csn-enhancements/scenarios/base.cds",
-        "@sap/cds-dpi/srv/DPIInformation",
-        "@sap/cds-dpi/srv/TableHeaderBlocking"
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
       ],
       { flavor: "xtended" }
     );

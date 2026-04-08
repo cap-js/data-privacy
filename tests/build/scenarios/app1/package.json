@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "dependencies": {
     "@sap/cds": "^9",
-    "@sap/cds-dpi": "file:../../../../"
+    "@cap-js/data-privacy": "file:../../../../"
   },
   "devDependencies": {
     "@cap-js/sqlite": "^2",
