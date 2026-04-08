@@ -558,4 +558,66 @@ describe("Model validations to ensure a working model for DPI", () => {
       });
     });
   });
+
+  describe("@ILM.ObjectName validations", () => {
+    test("Error if @ILM.ObjectName is not a string", async () => {
+      await cds.load([
+        "../csn-enhancements/scenarios/ilmObjectName.cds",
+        "@sap/cds-dpi/srv/DPIInformation",
+        "@sap/cds-dpi/srv/TableHeaderBlocking"
+      ]);
+      expect(log.output.length).toBeGreaterThan(0);
+      expect(log.output).toContain(
+        `Only string values are allowed for @ILM.ObjectName on ILMObjectNameNotString!`
+      );
+    });
+
+    test("Warning if @ILM.ObjectName is present but entity is not an ILM object", async () => {
+      await cds.load([
+        "../csn-enhancements/scenarios/ilmObjectName.cds",
+        "@sap/cds-dpi/srv/DPIInformation",
+        "@sap/cds-dpi/srv/TableHeaderBlocking"
+      ]);
+      expect(log.output.length).toBeGreaterThan(0);
+      expect(log.output).toContain(
+        `@ILM.ObjectName on ILMObjectNameIgnored is ignored because ILMObjectNameIgnored is not marked as an ILM Object! Annotate the entity with @PersonalData.EntitySemantics = 'Other', @ILM.ArchivingEnabled or @ILM.BlockingEnabled for that.`
+      );
+    });
+
+    test("No error or warning for @ILM.ObjectName on entity with EntitySemantics Other", async () => {
+      await cds.load([
+        "../csn-enhancements/scenarios/ilmObjectName.cds",
+        "@sap/cds-dpi/srv/DPIInformation",
+        "@sap/cds-dpi/srv/TableHeaderBlocking"
+      ]);
+      expect(log.output).not.toContain(
+        `Only string value are allowed for @ILM.ObjectName on ValidILMObjectNameWithOther!`
+      );
+      expect(log.output).not.toContain(
+        `@ILM.ObjectName on ValidILMObjectNameWithOther is ignored because ValidILMObjectNameWithOther is not marked as an ILM Object!`
+      );
+    });
+
+    test("No warning for @ILM.ObjectName on entity with BlockingEnabled", async () => {
+      await cds.load([
+        "../csn-enhancements/scenarios/ilmObjectName.cds",
+        "@sap/cds-dpi/srv/DPIInformation",
+        "@sap/cds-dpi/srv/TableHeaderBlocking"
+      ]);
+      expect(log.output).not.toContain(
+        `@ILM.ObjectName on ValidILMObjectNameWithBlocking is ignored because ValidILMObjectNameWithBlocking is not marked as an ILM Object!`
+      );
+    });
+
+    test("No warning for @ILM.ObjectName on entity with ArchivingEnabled", async () => {
+      await cds.load([
+        "../csn-enhancements/scenarios/ilmObjectName.cds",
+        "@sap/cds-dpi/srv/DPIInformation",
+        "@sap/cds-dpi/srv/TableHeaderBlocking"
+      ]);
+      expect(log.output).not.toContain(
+        `@ILM.ObjectName on ValidILMObjectNameWithArchiving is ignored because ValidILMObjectNameWithArchiving is not marked as an ILM Object!`
+      );
+    });
+  });
 });
