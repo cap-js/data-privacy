@@ -8,12 +8,12 @@ build-parameters:
   before-all:
     - builder: custom
       commands:
-        - npm unlink @sap/cds-dpi
+        - npm unlink @cap-js/data-privacy
         - npm pack ../../
-        - sh -c 'TGZ_FILE="$(ls -1 | grep -E "^sap-cds-dpi.*\.tgz$" | head -n 1)" && npm install "./${TGZ_FILE}"'
+        - sh -c 'TGZ_FILE="$(ls -1 | grep -E "^cap-js-data-privacy.*\.tgz$" | head -n 1)" && npm install "./${TGZ_FILE}"'
         - npm ci
         - npx -p @sap/cds-dk cds build --production
-        - sh -c 'cp "$(ls -1 | grep -E "^sap-cds-dpi.*\.tgz$" | head -n 1)" ./gen/srv'
+        - sh -c 'cp "$(ls -1 | grep -E "^cap-js-data-privacy.*\.tgz$" | head -n 1)" ./gen/srv'
   after-all:
     - builder: custom
       commands:

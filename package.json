@@ -64,11 +64,11 @@
       },
       "sap.dpp.InformationService": {
         "external": false,
-        "model": "@sap/cds-dpi/srv/DPIInformation"
+        "model": "@cap-js/data-privacy/srv/DPIInformation"
       },
       "kinds": {
         "sap.ilm.RetentionService-TableHeaderBlocking": {
-          "model": "@sap/cds-dpi/srv/TableHeaderBlocking"
+          "model": "@cap-js/data-privacy/srv/TableHeaderBlocking"
         }
       }
     }

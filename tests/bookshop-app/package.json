@@ -4,10 +4,10 @@
   "version": "1.0.0",
   "dependencies": {
     "@cap-js/audit-logging": "^1.0.0",
+    "@cap-js/data-privacy": "file:../../",
     "@cap-js/hana": "^2",
     "@sap/cds": "^9",
     "@sap/cds-common-content": "^3",
-    "@sap/cds-dpi": "file:../../",
     "@sap/xsenv": "^6",
     "@sap/xssec": "^4",
     "express": "^4.17.1",
