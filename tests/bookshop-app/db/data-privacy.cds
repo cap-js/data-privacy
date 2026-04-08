@@ -106,6 +106,16 @@ annotate bookshop.ILMObjectWithXPRBlockingEnabled with @(
   marketingDate @PersonalData.FieldSemantics: 'EndOfBusinessDate';
 };
 
+annotate bookshop.ILMObjectWithCustomName with @(
+  PersonalData.DataSubjectRole: 'Customer',
+  PersonalData.EntitySemantics: 'Other',
+  ILM.ObjectName: 'CustomILMName'
+) {
+  Customer @PersonalData.FieldSemantics: 'DataSubjectID';
+  marketingDate @PersonalData.FieldSemantics: 'EndOfBusinessDate';
+  legalEntity @PersonalData.FieldSemantics: 'DataControllerID';
+};
+
 // UI annotation for SAP DPI Retention
 annotate bookshop.Marketing with @(UI.SelectionFields: [legalEntity_title]);
 

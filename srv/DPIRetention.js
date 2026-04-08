@@ -46,7 +46,8 @@ module.exports = class RetentionService extends cds.ApplicationService {
           }, []);
 
           allILMObjects.push({
-            iLMObjectName: iLMObject,
+            iLMObjectName:
+              typeof entity["@ILM.ObjectName"] === "string" ? entity["@ILM.ObjectName"] : iLMObject,
             iLMObjectType: "Transaction",
             // Mandatory property - if not given DPI crashes
             iLMObjectDescription:
@@ -185,11 +186,23 @@ module.exports = class RetentionService extends cds.ApplicationService {
           ]
         });
       }
-
-      if (req.data.iLMObjectName && !this.entities[req.data.iLMObjectName]) {
-        return req.error(400, `The ILM object ${req.data.iLMObjectName} does not exist!`);
-      } else if (req.data.iLMObjectName && this.entities[req.data.iLMObjectName]) {
-        req.data.iLMObject = this.entities[req.data.iLMObjectName];
+      if (req.data.iLMObjectName) {
+        const iLMObjects = this.definition._dpi.iLMObjects;
+        const iLMObjectEntityName = Object.keys(iLMObjects).find(
+          (iLMObjectName) =>
+            iLMObjects[iLMObjectName]._dpi.iLMObject.name === req.data.iLMObjectName
+        );
+        if (iLMObjectEntityName) {
+          req.data.iLMObject = this.entities[iLMObjectEntityName];
+        } else {
+          return req.error({
+            status: 400,
+            code: "ILM_OBJECT_DOES_NOT_EXIST",
+            message: "ILM_OBJECT_DOES_NOT_EXIST",
+            target: "iLMObjectName",
+            args: [req.data.iLMObjectName]
+          });
+        }
       }
     });
 

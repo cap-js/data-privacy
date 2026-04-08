@@ -220,6 +220,14 @@ entity Divisions : cuid {
 }
 
 
+@Core.Description: 'Custom ILM Name Document'
+entity ILMObjectWithCustomName : cuid, managed {
+  Customer      : Association to Customers @title: 'Customer';
+  text          : String @title: 'Text';
+  marketingDate : Date @title: 'Marketing date';
+  legalEntity   : Association to one LegalEntities @title: 'Legal entity';
+}
+
 annotate Payments with {
   ID @title: 'ID';
 // Customer @Common : {
