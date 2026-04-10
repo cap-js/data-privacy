@@ -23,6 +23,13 @@
     "LICENSE",
     "CHANGELOG.md"
   ],
+  "workspaces": [
+    "tests/build/scenarios/app1",
+    "tests/build/scenarios/app2",
+    "tests/build/scenarios/app3",
+    "tests/information/extend-information-endpoint",
+    "tests/retention/extend-retention-endpoint"
+  ],
   "dependencies": {
     "@sap/xsenv": "^6.1.0"
   },

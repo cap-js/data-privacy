@@ -1135,9 +1135,6 @@ describe("data subject deletion", () => {
     });
 
     test("dataSubjectsEndOfResidenceConfirmation returns no data subjects if no data subjects are passed", async () => {
-      const { ILMObjectWithXPRBlockingEnabled } = cds.entities("sap.capire.bookshop");
-      await DELETE.from(ILMObjectWithXPRBlockingEnabled).where("1 = 1");
-
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectsEndOfResidenceConfirmation",
         {
@@ -1171,8 +1168,12 @@ describe("data subject deletion", () => {
     });
 
     test("dataSubjectsEndOfResidenceConfirmation returns the data subjects if they do not have any business with the specified ILMObject", async () => {
-      const { ILMObjectWithXPRBlockingEnabled } = cds.entities("sap.capire.bookshop");
-      await DELETE.from(ILMObjectWithXPRBlockingEnabled).where("1 = 1");
+      // Use freshly created customers that are guaranteed to have no
+      // ILMObjectWithXPRBlockingEnabled records, instead of deleting all
+      // XPR records globally (which would break test isolation).
+      const td1 = await createCustomerTestData();
+      const td2 = await createCustomerTestData();
+      const td3 = await createCustomerTestData();
 
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectsEndOfResidenceConfirmation",
@@ -1198,9 +1199,9 @@ describe("data subject deletion", () => {
             }
           ],
           dataSubjects: [
-            { dataSubjectId: "9e2f2640-6866-4dcf-8f4d-3027aa831cad" },
-            { dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" },
-            { dataSubjectId: "74e718c9-ff99-47f1-8ca3-950c850777d4" }
+            { dataSubjectId: td1.customerId },
+            { dataSubjectId: td2.customerId },
+            { dataSubjectId: td3.customerId }
           ]
         },
         { auth: DPI_Service }
@@ -1209,13 +1210,13 @@ describe("data subject deletion", () => {
       expect(status).toEqual(200);
       expect(data.length).toEqual(3);
       expect(data[0]).toMatchObject({
-        dataSubjectId: "9e2f2640-6866-4dcf-8f4d-3027aa831cad"
+        dataSubjectId: td1.customerId
       });
       expect(data[1]).toMatchObject({
-        dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+        dataSubjectId: td2.customerId
       });
       expect(data[2]).toMatchObject({
-        dataSubjectId: "74e718c9-ff99-47f1-8ca3-950c850777d4"
+        dataSubjectId: td3.customerId
       });
     });
 

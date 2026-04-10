@@ -42,20 +42,6 @@ jobs:
           npm link ../../
           npm install
           rm -rf ./node_modules/@sap/cds
-      - name: Install extended retention
-        shell: bash
-        run: |
-          cd ./tests/retention/extend-retention-endpoint
-          npm link ../../../
-          npm install
-          rm -rf ./node_modules/@sap/cds
-      - name: Install extended information
-        shell: bash
-        run: |
-          cd ./tests/information/extend-information-endpoint
-          npm link ../../../
-          npm install
-          rm -rf ./node_modules/@sap/cds
       - name: CDS version
         shell: bash
         run: cds v -i
