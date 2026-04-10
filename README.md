@@ -1,6 +1,6 @@
 [![REUSE status](https://api.reuse.software/badge/github.com/cap-js/data-privacy)](https://api.reuse.software/info/github.com/cap-js/data-privacy)
 
-# Data Privacy Plugin
+# CDS plugin for SAP Data Privacy Integration
 
 ## About this project
 
@@ -8,7 +8,7 @@ The `@cap-js/data-privacy` plugin provides an out of box integration for CAP bas
 
 In particular based on [`@PersonalData`](https://sap.github.io/odata-vocabularies/vocabularies/PersonalData.html) and [`@ILM`](https://sap.github.io/odata-vocabularies/vocabularies/ILM.html) annotations in the data model, the plugin automatically provides a `/dpp/information` endpoint and a `/dpp/retention` endpoint via which the SAP DPI service can request personal data to show it in its `Manage Personal Data` app and block and delete data based on retention rules defined in SAP DPI.
 
-More information how to use the plugin, can be found in the data-privacy guide in capire.
+More information about how to use the plugin, can be found in the [Data Privacy guide](https://cap.cloud.sap/docs/guides/security/data-privacy).
 
 ## Requirements and Setup
 
