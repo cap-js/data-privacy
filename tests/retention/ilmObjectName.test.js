@@ -29,10 +29,6 @@ async function runWithPrivileged(fn) {
   return await cds._with(ctx, () => fn());
 }
 
-beforeEach(async () => {
-  await runWithPrivileged(data.reset);
-});
-
 describe("data subject deletion with @ILM.ObjectName", () => {
   describe("ILM.ObjectName resolution", () => {
     test("discovery endpoint returns custom ILM name", async () => {

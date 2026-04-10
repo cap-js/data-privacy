@@ -44,14 +44,11 @@ cds._dpi.log = function log(module, options) {
 const enhanceModel = require("./lib/csn-enhancements");
 const path = require("path");
 const fs = require("fs/promises");
-const { enhanceModelForDBRestrictions } = require("./lib/build/hana-restrictions");
+require("./lib/build/hana-restrictions");
 require("./lib/csn-runtime-extensions");
 
 cds.on("loaded", (csn) => {
   enhanceModel(csn);
-  if (cds.env.requires.db?.kind === "hana") {
-    enhanceModelForDBRestrictions(csn);
-  }
 });
 
 cds.on("listening", async () => {

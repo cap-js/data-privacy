@@ -19,10 +19,6 @@ async function runWithPrivileged(fn) {
   return await cds._with(ctx, () => fn());
 }
 
-beforeEach(async () => {
-  await runWithPrivileged(data.reset);
-});
-
 describe("data subject deletion", () => {
   describe("deletion", () => {
     test("dataSubjectEndOfBusiness returns true if all objects have reached end of business", async () => {

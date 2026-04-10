@@ -73,8 +73,14 @@ runs:
     - run: cd tests/bookshop-app/ && cds deploy --to hana:cap-js-data-privacy-hana-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}
       shell: bash
 
+    - name: Create Audit Logging
+      shell: bash
+      run: cf create-service auditlog oauth2 cap-js-data-privacy-audit-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}
+
     # Bind against BTP services
     - run: cds bind db -2 cap-js-data-privacy-hana-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }} -o package.json
+      shell: bash
+    - run: cds bind audit-log -2 cap-js-data-privacy-audit-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }} -o package.json
       shell: bash
 
     # Run tests in hybrid mode
