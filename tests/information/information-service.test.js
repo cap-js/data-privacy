@@ -47,6 +47,28 @@ describe("Information service", () => {
     expect(keys[0]).toEqual("ID");
   });
 
+  test("Auto-generated UI.LineItem does not contain the data subject ID field", () => {
+    const { _getDataSubjectIDField } = require("../../lib/utils");
+
+    for (const entity of entities) {
+      const def = cds.model.definitions[`sap.dpp.InformationService.${entity}`];
+      if (!def) continue;
+
+      const lineItem = def["@UI.LineItem"];
+      if (!lineItem) continue;
+
+      const dsIdField = _getDataSubjectIDField(def.elements);
+      if (!dsIdField) continue;
+
+      // On DataSubject entities the DS ID is the primary key itself (e.g. ID on Customers)
+      // and is intentionally kept in the LineItem as a key field.
+      if (def.elements[dsIdField]?.key) continue;
+
+      const lineItemValues = lineItem.map((item) => item.Value?.["="]);
+      expect(lineItemValues).not.toContain(dsIdField);
+    }
+  });
+
   test("All entities in metadata can be requested via sap.dpp.InformationService", async () => {
     for (const entity of entities) {
       const { status: statusEntity, data: dataEntity } = await GET(`/dpp/information/${entity}`, {

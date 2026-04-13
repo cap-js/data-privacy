@@ -107,7 +107,7 @@ entity Deliveries : cuid {
   comment : String;
 }
 
-@title: ''
+@title: 'Payments'
 @Core.Description: 'Payment Document'
 entity Payments : cuid, managed {
   Order    : Association to Orders @title: 'Order';
@@ -116,7 +116,7 @@ entity Payments : cuid, managed {
   currency : Currency @title: 'Currency';
 }
 
-@title: ''
+@title: 'Marketing'
 @Core.Description: 'Marketing Document'
 entity Marketing : cuid, managed {
   Customer      : Association to Customers @title: 'Customer';
