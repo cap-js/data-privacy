@@ -23,6 +23,13 @@
     "LICENSE",
     "CHANGELOG.md"
   ],
+  "workspaces": [
+    "tests/build/scenarios/app1",
+    "tests/build/scenarios/app2",
+    "tests/build/scenarios/app3",
+    "tests/information/extend-information-endpoint",
+    "tests/retention/extend-retention-endpoint"
+  ],
   "dependencies": {
     "@sap/xsenv": "^6.1.0"
   },
@@ -55,6 +62,9 @@
     "setupExtendInformationBookshop": "cd ./tests/information/extend-information-endpoint && npm i && rm -rf ./node_modules/@sap/cds",
     "test": "npx jest --silent",
     "test:integration": "cds bind --exec -- npx jest --silent --testPathPatterns \"tests/retention/dataSubjectDeletion.test.js|tests/information/information-service.test.js\""
+  },
+  "jest": {
+    "testTimeout": 40000
   },
   "cds": {
     "requires": {

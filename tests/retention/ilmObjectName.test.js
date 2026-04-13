@@ -1,5 +1,6 @@
 const cds = require("@sap/cds");
 const path = require("path");
+const { createCustomerTestData, runWithPrivileged } = require("./testDataProvider");
 
 let { GET: _GET, POST: _POST, data } = cds.test().in(path.join(__dirname, "../bookshop-app"));
 const POST = async function () {
@@ -20,18 +21,6 @@ const DPI_Service = { username: "dpi", password: "1234" };
 
 const CUSTOM_ILM_NAME = "CustomILMName";
 const CUSTOMER_ID = "8e2f2640-6866-4dcf-8f4d-3027aa831cad";
-
-async function runWithPrivileged(fn) {
-  const user = new cds.User({ id: "privileged", roles: {} });
-  user._is_privileged = true;
-  const ctx = cds.EventContext.for({ id: cds.utils.uuid(), http: { req: null, res: null } });
-  ctx.user = user;
-  return await cds._with(ctx, () => fn());
-}
-
-beforeEach(async () => {
-  await runWithPrivileged(data.reset);
-});
 
 describe("data subject deletion with @ILM.ObjectName", () => {
   describe("ILM.ObjectName resolution", () => {
@@ -64,6 +53,12 @@ describe("data subject deletion with @ILM.ObjectName", () => {
   });
 
   describe("deletion", () => {
+    let customerData;
+
+    beforeEach(async () => {
+      customerData = await createCustomerTestData();
+    });
+
     test("dataSubjectEndOfBusiness returns true if all objects have reached end of business", async () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectEndOfBusiness",
@@ -71,7 +66,7 @@ describe("data subject deletion with @ILM.ObjectName", () => {
           applicationName: "bookshop-retention",
           iLMObjectName: CUSTOM_ILM_NAME,
           dataSubjectRoleName: "Customer",
-          dataSubjectId: CUSTOMER_ID
+          dataSubjectId: customerData.customerId
         },
         { auth: DPI_Service }
       );
@@ -90,7 +85,7 @@ describe("data subject deletion with @ILM.ObjectName", () => {
           applicationName: "bookshop-retention",
           iLMObjectName: CUSTOM_ILM_NAME,
           dataSubjectRoleName: "Customer",
-          dataSubjectId: CUSTOMER_ID,
+          dataSubjectId: customerData.customerId,
           organizationAttributeName: "sap.ilm.RetentionService.LegalEntities"
         },
         { auth: DPI_Service }
@@ -110,7 +105,7 @@ describe("data subject deletion with @ILM.ObjectName", () => {
           applicationName: "bookshop-retention",
           iLMObjectName: CUSTOM_ILM_NAME,
           dataSubjectRoleName: "Customer",
-          dataSubjectId: CUSTOMER_ID,
+          dataSubjectId: customerData.customerId,
           organizationAttributeName: "sap.capire.bookshop.LegalEntities",
           organizationAttributeValue: "SAP Ltd",
           referenceDateName: "marketingDate",
@@ -140,7 +135,7 @@ describe("data subject deletion with @ILM.ObjectName", () => {
           applicationName: "bookshop-retention",
           iLMObjectName: CUSTOM_ILM_NAME,
           dataSubjectRoleName: "Customer",
-          dataSubjectId: CUSTOMER_ID,
+          dataSubjectId: customerData.customerId,
           maxDeletionDate: "2020-04-04T22:00:00"
         },
         { auth: DPI_Service }
@@ -151,7 +146,7 @@ describe("data subject deletion with @ILM.ObjectName", () => {
       const entitiesAfterBlocking = await runWithPrivileged(() =>
         cds.run(
           SELECT.from(ILMObjectWithCustomName).where({
-            Customer_ID: CUSTOMER_ID
+            Customer_ID: customerData.customerId
           })
         )
       );
@@ -176,7 +171,7 @@ describe("data subject deletion with @ILM.ObjectName", () => {
           applicationName: "bookshop-retention",
           iLMObjectName: CUSTOM_ILM_NAME,
           dataSubjectRoleName: "Customer",
-          dataSubjectId: CUSTOMER_ID,
+          dataSubjectId: customerData.customerId,
           maxDeletionDate: "2020-04-04T22:00:00"
         },
         { auth: DPI_Service }
@@ -184,7 +179,7 @@ describe("data subject deletion with @ILM.ObjectName", () => {
       const blockingBeforeDelete = await runWithPrivileged(() =>
         cds.run(
           SELECT.from(ILMObjectWithCustomName).where({
-            Customer_ID: CUSTOMER_ID
+            Customer_ID: customerData.customerId
           })
         )
       );
@@ -209,7 +204,7 @@ describe("data subject deletion with @ILM.ObjectName", () => {
       const blockingAfter = await runWithPrivileged(() =>
         cds.run(
           SELECT.from(ILMObjectWithCustomName).where({
-            Customer_ID: CUSTOMER_ID
+            Customer_ID: customerData.customerId
           })
         )
       );
