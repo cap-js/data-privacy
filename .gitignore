@@ -6,3 +6,5 @@ package-lock.json
 coverage/
 .vscode/
 _out
+# added by cds
+.cdsrc-private.json

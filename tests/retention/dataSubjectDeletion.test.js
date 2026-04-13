@@ -1,5 +1,10 @@
 const cds = require("@sap/cds");
 const path = require("path");
+const {
+  createCustomerTestData,
+  createEmployeeTestData,
+  runWithPrivileged
+} = require("./testDataProvider");
 
 let { POST: _POST, data } = cds.test().in(path.join(__dirname, "../bookshop-app"));
 const POST = async function () {
@@ -11,20 +16,15 @@ const POST = async function () {
 };
 const DPI_Service = { username: "dpi", password: "1234" };
 
-async function runWithPrivileged(fn) {
-  const user = new cds.User({ id: "privileged", roles: {} });
-  user._is_privileged = true;
-  const ctx = cds.EventContext.for({ id: cds.utils.uuid(), http: { req: null, res: null } });
-  ctx.user = user;
-  return await cds._with(ctx, () => fn());
-}
-
-beforeEach(async () => {
-  await runWithPrivileged(data.reset);
-});
-
 describe("data subject deletion", () => {
   describe("deletion", () => {
+    let customerData, employeeData;
+
+    beforeEach(async () => {
+      customerData = await createCustomerTestData();
+      employeeData = await createEmployeeTestData();
+    });
+
     test("dataSubjectEndOfBusiness returns true if all objects have reached end of business", async () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectEndOfBusiness",
@@ -32,7 +32,7 @@ describe("data subject deletion", () => {
           applicationName: "bookshop-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+          dataSubjectId: customerData.customerId
         },
         { auth: DPI_Service }
       );
@@ -48,14 +48,16 @@ describe("data subject deletion", () => {
       const { Orders } = cds.entities("sap.capire.bookshop");
       const endOfWarrantyDate = new Date();
       endOfWarrantyDate.setFullYear(endOfWarrantyDate.getFullYear() + 1);
-      await UPDATE.entity(Orders).set({ endOfWarrantyDate: endOfWarrantyDate.toISOString() });
+      await UPDATE.entity(Orders)
+        .where({ Customer_ID: customerData.customerId })
+        .set({ endOfWarrantyDate: endOfWarrantyDate.toISOString() });
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectEndOfBusiness",
         {
           applicationName: "bookshop-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+          dataSubjectId: customerData.customerId
         },
         { auth: DPI_Service }
       );
@@ -74,7 +76,7 @@ describe("data subject deletion", () => {
           applicationName: "bookshop-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
+          dataSubjectId: customerData.customerId,
           organizationAttributeName: "sap.ilm.RetentionService.LegalEntities"
         },
         { auth: DPI_Service }
@@ -94,7 +96,7 @@ describe("data subject deletion", () => {
           applicationName: "bookshop-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
+          dataSubjectId: customerData.customerId,
           organizationAttributeName: "legalEntity_name"
         },
         { auth: DPI_Service }
@@ -111,7 +113,7 @@ describe("data subject deletion", () => {
           applicationName: "bookshop-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
+          dataSubjectId: customerData.customerId,
           organizationAttributeName: "ID"
         },
         { auth: DPI_Service }
@@ -128,7 +130,7 @@ describe("data subject deletion", () => {
           applicationName: "bookshop-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
+          dataSubjectId: customerData.customerId,
           organizationAttributeName: "ABCDEFG",
           organizationAttributeValue: "SAP Ltd",
           referenceDateName: "endOfWarrantyDate",
@@ -157,7 +159,7 @@ describe("data subject deletion", () => {
           applicationName: "bookshop-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
+          dataSubjectId: customerData.customerId,
           organizationAttributeName: "sap.capire.bookshop.LegalEntities",
           organizationAttributeValue: "SAP Ltd",
           referenceDateName: "endOfWarrantyDate",
@@ -187,7 +189,7 @@ describe("data subject deletion", () => {
           applicationName: "bookshop-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
+          dataSubjectId: customerData.customerId,
           maxDeletionDate: "2020-04-04T22:00:00"
         },
         { auth: DPI_Service }
@@ -198,7 +200,7 @@ describe("data subject deletion", () => {
       const orderAfterBlocking = await runWithPrivileged(() =>
         cds.run(
           SELECT.from(Orders)
-            .where({ ID: "5e2f2640-6866-4dcf-8f4d-3027aa831cad" })
+            .where({ ID: customerData.orderId })
             .columns((order) => {
               (order`.*`,
                 order.Items((item) => {
@@ -240,7 +242,7 @@ describe("data subject deletion", () => {
           applicationName: "bookshop-retention",
           iLMObjectName: "ILMObjectWithXPRBlockingEnabled",
           dataSubjectRoleName: "Employee",
-          dataSubjectId: "b16e120e-ac78-4433-ad00-8defdb101c40",
+          dataSubjectId: employeeData.employeeId,
           maxDeletionDate: "2020-04-04T22:00:00"
         },
         { auth: DPI_Service }
@@ -251,7 +253,7 @@ describe("data subject deletion", () => {
       const entitiesAfterBlocking = await runWithPrivileged(() =>
         cds.run(
           SELECT.from(ILMObjectWithXPRBlockingEnabled).where({
-            employee_ID: "b16e120e-ac78-4433-ad00-8defdb101c40"
+            employee_ID: employeeData.employeeId
           })
         )
       );
@@ -266,14 +268,14 @@ describe("data subject deletion", () => {
 
     test("dataSubjectILMObjectInstanceBlocking returns 204 when no instances where active", async () => {
       const { Orders } = cds.entities("sap.capire.bookshop");
-      await DELETE.from(Orders);
+      await DELETE.from(Orders).where({ Customer_ID: customerData.customerId });
       const { status } = await POST(
         "/dpp/retention/dataSubjectILMObjectInstanceBlocking",
         {
           applicationName: "bookshop-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
+          dataSubjectId: customerData.customerId,
           maxDeletionDate: "2020-04-03T22:00:00"
         },
         { auth: DPI_Service }
@@ -290,13 +292,13 @@ describe("data subject deletion", () => {
           applicationName: "bookshop-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
+          dataSubjectId: customerData.customerId,
           maxDeletionDate: "2020-04-04T22:00:00"
         },
         { auth: DPI_Service }
       );
       const blockingBeforeDelete = await runWithPrivileged(() =>
-        cds.run(SELECT.from(Orders).where({ ID: "5e2f2640-6866-4dcf-8f4d-3027aa831cad" }))
+        cds.run(SELECT.from(Orders).where({ ID: customerData.orderId }))
       );
       expect(blockingBeforeDelete.length).toEqual(1);
       expect(blockingBeforeDelete[0][Orders._dpi.blockingDateReference]).toBeTruthy();
@@ -315,7 +317,7 @@ describe("data subject deletion", () => {
       );
 
       const blockingAfter = await runWithPrivileged(() =>
-        cds.run(SELECT.from(Orders).where({ ID: "5e2f2640-6866-4dcf-8f4d-3027aa831cad" }))
+        cds.run(SELECT.from(Orders).where({ ID: customerData.orderId }))
       );
       expect(blockingAfter.length).toEqual(0);
     });
@@ -328,7 +330,7 @@ describe("data subject deletion", () => {
           applicationName: "bookshop-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
+          dataSubjectId: customerData.customerId,
           maxDeletionDate: "2020-04-04T22:00:00"
         },
         { auth: DPI_Service }
@@ -336,7 +338,7 @@ describe("data subject deletion", () => {
       const blockingBeforeDelete = await runWithPrivileged(() =>
         cds.run(
           SELECT.from(Orders)
-            .where({ ID: "5e2f2640-6866-4dcf-8f4d-3027aa831cad" })
+            .where({ ID: customerData.orderId })
             .columns((o) => {
               (o("*"),
                 o.managedComp2one("*"),
@@ -370,7 +372,7 @@ describe("data subject deletion", () => {
 
       const blockingAfter = await runWithPrivileged(() =>
         cds.run([
-          SELECT.from(Orders).where({ ID: "5e2f2640-6866-4dcf-8f4d-3027aa831cad" }),
+          SELECT.from(Orders).where({ ID: customerData.orderId }),
           SELECT.from(ManagedComp2One).where({ ID: blockingBeforeDelete[0].managedComp2one.ID }),
           //SELECT.from(UnmanagedComp2One).where({ ID: blockingBeforeDelete[0].unmanagedComp2one.ID}),
           SELECT.from(UnmanagedComp2One2).where({
@@ -392,13 +394,13 @@ describe("data subject deletion", () => {
           applicationName: "bookshop-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
+          dataSubjectId: customerData.customerId,
           maxDeletionDate: "2020-04-04T22:00:00"
         },
         { auth: DPI_Service }
       );
       const blockingBeforeDelete = await runWithPrivileged(() =>
-        cds.run(SELECT.from(Orders).where({ ID: "5e2f2640-6866-4dcf-8f4d-3027aa831cad" }))
+        cds.run(SELECT.from(Orders).where({ ID: customerData.orderId }))
       );
       expect(blockingBeforeDelete.length).toEqual(1);
       expect(blockingBeforeDelete[0][Orders._dpi.blockingDateReference]).toBeTruthy();
@@ -417,7 +419,7 @@ describe("data subject deletion", () => {
       );
 
       const blockingAfter = await runWithPrivileged(() =>
-        cds.run(SELECT.from(Orders).where({ ID: "5e2f2640-6866-4dcf-8f4d-3027aa831cad" }))
+        cds.run(SELECT.from(Orders).where({ ID: customerData.orderId }))
       );
       expect(blockingAfter.length).toEqual(0);
 
@@ -441,7 +443,7 @@ describe("data subject deletion", () => {
           applicationName: "bookshop-retention",
           iLMObjectName: "ILMObjectWithXPRBlockingEnabled",
           dataSubjectRoleName: "Employee",
-          dataSubjectId: "b16e120e-ac78-4433-ad00-8defdb101c40",
+          dataSubjectId: employeeData.employeeId,
           maxDeletionDate: "2020-04-04T22:00:00"
         },
         { auth: DPI_Service }
@@ -449,7 +451,7 @@ describe("data subject deletion", () => {
       const blockingBeforeDelete = await runWithPrivileged(() =>
         cds.run(
           SELECT.from(ILMObjectWithXPRBlockingEnabled).where({
-            ID: "375ce788-e470-449f-ac81-86e433f8690d"
+            ID: employeeData.ilmObjectIds[0]
           })
         )
       );
@@ -470,7 +472,7 @@ describe("data subject deletion", () => {
       const blockingAfter = await runWithPrivileged(() =>
         cds.run(
           SELECT.from(ILMObjectWithXPRBlockingEnabled).where({
-            ID: "375ce788-e470-449f-ac81-86e433f8690d"
+            ID: employeeData.ilmObjectIds[0]
           })
         )
       );
@@ -487,13 +489,13 @@ describe("data subject deletion", () => {
           applicationName: "bookshop-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
+          dataSubjectId: customerData.customerId,
           maxDeletionDate: maxDeletionDate.toISOString()
         },
         { auth: DPI_Service }
       );
       const blockingBeforeDelete = await runWithPrivileged(() =>
-        cds.run(SELECT.from(Orders).where({ ID: "5e2f2640-6866-4dcf-8f4d-3027aa831cad" }))
+        cds.run(SELECT.from(Orders).where({ ID: customerData.orderId }))
       );
       expect(blockingBeforeDelete.length).toEqual(1);
       expect(blockingBeforeDelete[0][Orders._dpi.blockingDateReference]).toBeTruthy();
@@ -512,7 +514,7 @@ describe("data subject deletion", () => {
       );
 
       const blockingAfter = await runWithPrivileged(() =>
-        cds.run(SELECT.from(Orders).where({ ID: "5e2f2640-6866-4dcf-8f4d-3027aa831cad" }))
+        cds.run(SELECT.from(Orders).where({ ID: customerData.orderId }))
       );
       expect(blockingAfter.length).toEqual(1);
       expect(blockingAfter[0][Orders._dpi.blockingDateReference]).toBeTruthy();
@@ -527,7 +529,7 @@ describe("data subject deletion", () => {
         {
           applicationName: "bookshop-retention",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
+          dataSubjectId: customerData.customerId,
           maxDeletionDate: "2020-04-04T22:00:00"
         },
         { auth: DPI_Service }
@@ -536,7 +538,7 @@ describe("data subject deletion", () => {
       expect(status).toEqual(400);
       const { Orders } = cds.entities("sap.capire.bookshop");
       const orders = await SELECT.from(Orders).where({
-        Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+        Customer_ID: customerData.customerId
       });
       expect(orders.length).toBeGreaterThan(0);
     });
@@ -551,26 +553,26 @@ describe("data subject deletion", () => {
         ILMObjectWithCustomName
       } = cds.entities("sap.capire.bookshop");
       await UPDATE.entity(Orders)
-        .where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" })
+        .where({ Customer_ID: customerData.customerId })
         .set({
           [Orders._dpi.blockingDateReference]: new Date().toISOString().substring(0, 10),
           [Orders._dpi.earliestDestructionDateReference]: "2020-01-02T00:00:00Z"
         });
       await UPDATE.entity(Marketing)
-        .where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" })
+        .where({ Customer_ID: customerData.customerId })
         .set({
           [Marketing._dpi.blockingDateReference]: new Date().toISOString().substring(0, 10),
           [Marketing._dpi.earliestDestructionDateReference]: "2020-01-02T00:00:00Z"
         });
       await UPDATE.entity(ILMObjectWithStaticBlockingDisabled)
-        .where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" })
+        .where({ Customer_ID: customerData.customerId })
         .set({
           legacyBlockingDate: new Date().toISOString().substring(0, 10),
           [ILMObjectWithStaticBlockingDisabled._dpi.earliestDestructionDateReference]:
             "2020-01-02T00:00:00Z"
         });
       await UPDATE.entity(ILMObjectWithEDMJSONBlockingEnabled)
-        .where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" })
+        .where({ Customer_ID: customerData.customerId })
         .set({
           [ILMObjectWithEDMJSONBlockingEnabled._dpi.blockingDateReference]: new Date()
             .toISOString()
@@ -578,7 +580,7 @@ describe("data subject deletion", () => {
           legacyDestructionDate: "2020-01-02T00:00:00Z"
         });
       await UPDATE.entity(ILMObjectWithCustomName)
-        .where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" })
+        .where({ Customer_ID: customerData.customerId })
         .set({
           [ILMObjectWithCustomName._dpi.blockingDateReference]: new Date()
             .toISOString()
@@ -592,7 +594,7 @@ describe("data subject deletion", () => {
         {
           applicationName: "bookshop-retention",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
+          dataSubjectId: customerData.customerId,
           maxDeletionDate: maxDeletionDate.toISOString()
         },
         { auth: DPI_Service }
@@ -600,7 +602,7 @@ describe("data subject deletion", () => {
 
       expect(status).toEqual(200);
       const blockingAfter = await runWithPrivileged(() =>
-        cds.run(SELECT.from(Customers).where({ ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" }))
+        cds.run(SELECT.from(Customers).where({ ID: customerData.customerId }))
       );
       expect(blockingAfter.length).toEqual(1);
       expect(blockingAfter[0][Customers._dpi.blockingDateReference]).toBeTruthy();
@@ -618,23 +620,23 @@ describe("data subject deletion", () => {
         ILMObjectWithEDMJSONBlockingEnabled,
         ILMObjectWithCustomName
       } = cds.entities("sap.capire.bookshop");
-      await DELETE.from(Orders).where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" });
-      await DELETE.from(Marketing).where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" });
+      await DELETE.from(Orders).where({ Customer_ID: customerData.customerId });
+      await DELETE.from(Marketing).where({ Customer_ID: customerData.customerId });
       await DELETE.from(ILMObjectWithStaticBlockingDisabled).where({
-        Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+        Customer_ID: customerData.customerId
       });
       await DELETE.from(ILMObjectWithEDMJSONBlockingEnabled).where({
-        Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+        Customer_ID: customerData.customerId
       });
       await DELETE.from(ILMObjectWithCustomName).where({
-        Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+        Customer_ID: customerData.customerId
       });
       const { status } = await POST(
         "/dpp/retention/dataSubjectBlocking",
         {
           applicationName: "bookshop-retention",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
+          dataSubjectId: customerData.customerId,
           maxDeletionDate: "2020-01-01"
         },
         { auth: DPI_Service }
@@ -642,7 +644,7 @@ describe("data subject deletion", () => {
 
       expect(status).toEqual(200);
       const customers = await SELECT.from(Customers).where({
-        ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+        ID: customerData.customerId
       });
       expect(customers.length).toEqual(0);
     });
@@ -656,23 +658,23 @@ describe("data subject deletion", () => {
         ILMObjectWithEDMJSONBlockingEnabled,
         ILMObjectWithCustomName
       } = cds.entities("sap.capire.bookshop");
-      await DELETE.from(Orders).where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" });
-      await DELETE.from(Marketing).where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" });
+      await DELETE.from(Orders).where({ Customer_ID: customerData.customerId });
+      await DELETE.from(Marketing).where({ Customer_ID: customerData.customerId });
       await DELETE.from(ILMObjectWithStaticBlockingDisabled).where({
-        Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+        Customer_ID: customerData.customerId
       });
       await DELETE.from(ILMObjectWithEDMJSONBlockingEnabled).where({
-        Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+        Customer_ID: customerData.customerId
       });
       await DELETE.from(ILMObjectWithCustomName).where({
-        Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+        Customer_ID: customerData.customerId
       });
       const { status } = await POST(
         "/dpp/retention/dataSubjectBlocking",
         {
           applicationName: "bookshop-retention",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
+          dataSubjectId: customerData.customerId,
           maxDeletionDate: "2020-01-01"
         },
         { auth: DPI_Service }
@@ -680,7 +682,7 @@ describe("data subject deletion", () => {
 
       expect(status).toEqual(200);
       const customers = await SELECT.from(Customers).where({
-        ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+        ID: customerData.customerId
       });
       expect(customers.length).toEqual(0);
 
@@ -689,7 +691,7 @@ describe("data subject deletion", () => {
         {
           applicationName: "bookshop-retention",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
+          dataSubjectId: customerData.customerId,
           maxDeletionDate: "2020-01-01"
         },
         { auth: DPI_Service }
@@ -700,7 +702,7 @@ describe("data subject deletion", () => {
     test("dataSubjectBlocking works with custom destruction date", async () => {
       const { ILMObjectWithXPRBlockingEnabled, Employees } = cds.entities("sap.capire.bookshop");
       await UPDATE.entity(ILMObjectWithXPRBlockingEnabled)
-        .where({ employee_ID: "b16e120e-ac78-4433-ad00-8defdb101c40" })
+        .where({ employee_ID: employeeData.employeeId })
         .set({
           legacyBlockingDate: new Date().toISOString().substring(0, 10),
           legacyDestructionDate: "2020-01-02T00:00:00Z"
@@ -712,7 +714,7 @@ describe("data subject deletion", () => {
         {
           applicationName: "bookshop-retention",
           dataSubjectRoleName: "Employee",
-          dataSubjectId: "b16e120e-ac78-4433-ad00-8defdb101c40",
+          dataSubjectId: employeeData.employeeId,
           maxDeletionDate: maxDeletionDate.toISOString()
         },
         { auth: DPI_Service }
@@ -720,7 +722,7 @@ describe("data subject deletion", () => {
 
       expect(status).toEqual(200);
       const blockingAfter = await runWithPrivileged(() =>
-        cds.run(SELECT.from(Employees).where({ ID: "b16e120e-ac78-4433-ad00-8defdb101c40" }))
+        cds.run(SELECT.from(Employees).where({ ID: employeeData.employeeId }))
       );
       expect(blockingAfter.length).toEqual(1);
       expect(blockingAfter[0].legacyBlockingDate).toBeTruthy();
@@ -732,14 +734,40 @@ describe("data subject deletion", () => {
     test("dataSubjectBlocking does not consider active records with same data subject ID but from different role", async () => {
       const { ILMObjectWithXPRBlockingEnabled, Employees, Orders } =
         cds.entities("sap.capire.bookshop");
+
+      // Create an Employee with the same ID as the customer so the same UUID
+      // exists in both roles (Customer and Employee)
+      const dualRoleId = customerData.customerId;
+      const now = new Date().toISOString();
+      await runWithPrivileged(async () => {
+        await INSERT.into(Employees).entries({
+          ID: dualRoleId,
+          modifiedAt: now,
+          createdAt: now,
+          createdBy: "dual-role@test.com",
+          modifiedBy: "dual-role@test.com",
+          email: "dual-role@test.com",
+          firstName: "Dual",
+          lastName: "Role",
+          legalEntity_title: "SAP SE"
+        });
+        await INSERT.into(ILMObjectWithXPRBlockingEnabled).entries({
+          ID: cds.utils.uuid(),
+          employee_ID: dualRoleId,
+          text: "Dual role XPR",
+          marketingDate: "2020-04-04",
+          division_ID: "d347dcc7-f176-4211-952d-3850c08ccd3e"
+        });
+      });
+
       await UPDATE.entity(ILMObjectWithXPRBlockingEnabled)
-        .where({ employee_ID: "e872239b-1283-4384-bf14-711e4b18a1b8" })
+        .where({ employee_ID: dualRoleId })
         .set({
           legacyBlockingDate: new Date().toISOString().substring(0, 10),
           legacyDestructionDate: "2020-01-02T00:00:00Z"
         });
       const orders = await runWithPrivileged(() =>
-        cds.run(SELECT.from(Orders).where({ Customer_ID: "e872239b-1283-4384-bf14-711e4b18a1b8" }))
+        cds.run(SELECT.from(Orders).where({ Customer_ID: dualRoleId }))
       );
       expect(orders.length).toEqual(1);
 
@@ -750,7 +778,7 @@ describe("data subject deletion", () => {
         {
           applicationName: "bookshop-retention",
           dataSubjectRoleName: "Employee",
-          dataSubjectId: "e872239b-1283-4384-bf14-711e4b18a1b8",
+          dataSubjectId: dualRoleId,
           maxDeletionDate: maxDeletionDate.toISOString()
         },
         { auth: DPI_Service }
@@ -758,7 +786,7 @@ describe("data subject deletion", () => {
 
       expect(status).toEqual(200);
       const blockingAfter = await runWithPrivileged(() =>
-        cds.run(SELECT.from(Employees).where({ ID: "e872239b-1283-4384-bf14-711e4b18a1b8" }))
+        cds.run(SELECT.from(Employees).where({ ID: dualRoleId }))
       );
       expect(blockingAfter.length).toEqual(1);
       expect(blockingAfter[0].legacyBlockingDate).toBeTruthy();
@@ -776,16 +804,16 @@ describe("data subject deletion", () => {
         ILMObjectWithEDMJSONBlockingEnabled,
         ILMObjectWithCustomName
       } = cds.entities("sap.capire.bookshop");
-      await DELETE.from(Orders).where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" });
-      await DELETE.from(Marketing).where({ Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" });
+      await DELETE.from(Orders).where({ Customer_ID: customerData.customerId });
+      await DELETE.from(Marketing).where({ Customer_ID: customerData.customerId });
       await DELETE.from(ILMObjectWithStaticBlockingDisabled).where({
-        Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+        Customer_ID: customerData.customerId
       });
       await DELETE.from(ILMObjectWithEDMJSONBlockingEnabled).where({
-        Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+        Customer_ID: customerData.customerId
       });
       await DELETE.from(ILMObjectWithCustomName).where({
-        Customer_ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+        Customer_ID: customerData.customerId
       });
       const maxDeletionDate = new Date();
       maxDeletionDate.setFullYear(maxDeletionDate.getFullYear() + 1);
@@ -794,14 +822,14 @@ describe("data subject deletion", () => {
         {
           applicationName: "bookshop-retention",
           dataSubjectRoleName: "Customer",
-          dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
+          dataSubjectId: customerData.customerId,
           maxDeletionDate: maxDeletionDate.toISOString()
         },
         { auth: DPI_Service }
       );
 
       const blockingBefore = await runWithPrivileged(() =>
-        cds.run(SELECT.from(Customers).where({ ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" }))
+        cds.run(SELECT.from(Customers).where({ ID: customerData.customerId }))
       );
       expect(blockingBefore.length).toEqual(1);
       expect(blockingBefore[0][Customers._dpi.blockingDateReference]).toBeTruthy();
@@ -820,7 +848,7 @@ describe("data subject deletion", () => {
       expect(status).toEqual(204);
 
       const blockingAfter = await runWithPrivileged(() =>
-        cds.run(SELECT.from(Customers).where({ ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" }))
+        cds.run(SELECT.from(Customers).where({ ID: customerData.customerId }))
       );
       expect(blockingAfter[0][Customers._dpi.blockingDateReference]).toBeTruthy();
       expect(blockingAfter[0][Customers._dpi.earliestDestructionDateReference]).toEqual(
@@ -832,7 +860,7 @@ describe("data subject deletion", () => {
     test("dataSubjectsDestroying does destroy if end of retention reached with custom destruction date", async () => {
       const { Employees } = cds.entities("sap.capire.bookshop");
       await UPDATE.entity(Employees)
-        .where({ ID: "b16e120e-ac78-4433-ad00-8defdb101c40" })
+        .where({ ID: employeeData.employeeId })
         .set({
           legacyBlockingDate: new Date().toISOString().substring(0, 10),
           legacyDestructionDate: "2020-01-02T00:00:00Z"
@@ -849,7 +877,7 @@ describe("data subject deletion", () => {
       expect(status).toEqual(200);
 
       const employeeAfterBlocking = await SELECT.from(Employees).where({
-        ID: "b16e120e-ac78-4433-ad00-8defdb101c40"
+        ID: employeeData.employeeId
       });
       expect(employeeAfterBlocking.length).toEqual(0);
     });
@@ -857,7 +885,7 @@ describe("data subject deletion", () => {
     test("dataSubjectsDestroying does destroy if end of retention reached", async () => {
       const { Customers } = cds.entities("sap.capire.bookshop");
       await UPDATE.entity(Customers)
-        .where({ ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" })
+        .where({ ID: customerData.customerId })
         .set({
           [Customers._dpi.blockingDateReference]: new Date().toISOString().substring(0, 10),
           [Customers._dpi.earliestDestructionDateReference]: "2020-01-02T00:00:00Z"
@@ -874,7 +902,7 @@ describe("data subject deletion", () => {
       expect(status).toEqual(200);
 
       const customerAfterBlocking = await SELECT.from(Customers).where({
-        ID: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+        ID: customerData.customerId
       });
       expect(customerAfterBlocking.length).toEqual(0);
     });
@@ -951,11 +979,11 @@ describe("data subject deletion", () => {
 
       expect(status).toEqual(200);
       expect(data).toMatchObject({
-        success: [
+        success: expect.arrayContaining([
           { dataSubjectId: "74e718c9-ff99-47f1-8ca3-950c850777d4" },
           { dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" },
           { dataSubjectId: "9e2f2640-6866-4dcf-8f4d-3027aa831cad" }
-        ],
+        ]),
         nonConfirmCondition: []
       });
     });
@@ -990,11 +1018,11 @@ describe("data subject deletion", () => {
 
       expect(status).toEqual(200);
       expect(data).toMatchObject({
-        success: [
+        success: expect.arrayContaining([
           { dataSubjectId: "74e718c9-ff99-47f1-8ca3-950c850777d4" },
           { dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" },
           { dataSubjectId: "9e2f2640-6866-4dcf-8f4d-3027aa831cad" }
-        ],
+        ]),
         nonConfirmCondition: []
       });
     });
@@ -1107,9 +1135,6 @@ describe("data subject deletion", () => {
     });
 
     test("dataSubjectsEndOfResidenceConfirmation returns no data subjects if no data subjects are passed", async () => {
-      const { ILMObjectWithXPRBlockingEnabled } = cds.entities("sap.capire.bookshop");
-      await DELETE.from(ILMObjectWithXPRBlockingEnabled).where("1 = 1");
-
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectsEndOfResidenceConfirmation",
         {
@@ -1143,8 +1168,12 @@ describe("data subject deletion", () => {
     });
 
     test("dataSubjectsEndOfResidenceConfirmation returns the data subjects if they do not have any business with the specified ILMObject", async () => {
-      const { ILMObjectWithXPRBlockingEnabled } = cds.entities("sap.capire.bookshop");
-      await DELETE.from(ILMObjectWithXPRBlockingEnabled).where("1 = 1");
+      // Use freshly created customers that are guaranteed to have no
+      // ILMObjectWithXPRBlockingEnabled records, instead of deleting all
+      // XPR records globally (which would break test isolation).
+      const td1 = await createCustomerTestData();
+      const td2 = await createCustomerTestData();
+      const td3 = await createCustomerTestData();
 
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectsEndOfResidenceConfirmation",
@@ -1170,9 +1199,9 @@ describe("data subject deletion", () => {
             }
           ],
           dataSubjects: [
-            { dataSubjectId: "9e2f2640-6866-4dcf-8f4d-3027aa831cad" },
-            { dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" },
-            { dataSubjectId: "74e718c9-ff99-47f1-8ca3-950c850777d4" }
+            { dataSubjectId: td1.customerId },
+            { dataSubjectId: td2.customerId },
+            { dataSubjectId: td3.customerId }
           ]
         },
         { auth: DPI_Service }
@@ -1181,13 +1210,13 @@ describe("data subject deletion", () => {
       expect(status).toEqual(200);
       expect(data.length).toEqual(3);
       expect(data[0]).toMatchObject({
-        dataSubjectId: "9e2f2640-6866-4dcf-8f4d-3027aa831cad"
+        dataSubjectId: td1.customerId
       });
       expect(data[1]).toMatchObject({
-        dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
+        dataSubjectId: td2.customerId
       });
       expect(data[2]).toMatchObject({
-        dataSubjectId: "74e718c9-ff99-47f1-8ca3-950c850777d4"
+        dataSubjectId: td3.customerId
       });
     });
 

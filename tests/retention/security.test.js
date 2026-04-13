@@ -22,13 +22,6 @@ const GET = async function () {
   }
 };
 
-beforeEach(async () => {
-  const user = new cds.User({ id: "privileged", roles: {} });
-  user._is_privileged = true;
-  const ctx = cds.EventContext.for({ id: cds.utils.uuid(), http: { req: null, res: null } });
-  ctx.user = user;
-  await cds._with(ctx, () => data.reset());
-});
 //TODO: Test that entities of DPIRetention service are not exposed via API
 
 describe("SAP DPI Retention endpoints cannot be accessed with an unauthorized user", () => {

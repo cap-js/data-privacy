@@ -5,5 +5,7 @@
   "src/gen/**/*.hdbindex",
   "src/gen/**/*.hdbconstraint",
   "src/**/*.hdbrole",
-  "src/gen/**/*.hdbrole"
+  "src/gen/**/*.hdbrole",
+  "src/gen/**/*.csv",
+  "src/gen/**/*.hdbtabledata"
 ]
