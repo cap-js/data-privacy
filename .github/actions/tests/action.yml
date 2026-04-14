@@ -1,0 +1,44 @@
+name: "Tests"
+description: "Run tests locally"
+inputs:
+  TEST_SUITE:
+    description: "test suite to run"
+    required: true
+  CDS_VERSION:
+    description: "CAP to use for tests"
+    required: true
+  NODE_VERSION:
+    description: "Node.js version to use for tests"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        clean: true
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.NODE_VERSION }}
+    - name: Install global CDS
+      shell: bash
+      run: npm i -g @sap/cds-dk@${{ inputs.CDS_VERSION }}
+    - name: Install root dependencies
+      shell: bash
+      run: |
+        npm install @sap/cds@${{ inputs.CDS_VERSION }}
+        npm install
+    - name: Install bookshop
+      shell: bash
+      run: |
+        cd ./tests/bookshop-app
+        npm link ../../
+        npm install
+        rm -rf ./node_modules/@sap/cds
+    - name: CDS version
+      shell: bash
+      run: cds v -i
+    - name: Run tests
+      shell: bash
+      env:
+        NODE_OPTIONS: "--max_old_space_size=4096"
+      run: npx jest --testPathPatterns ${{ inputs.TEST_SUITE }}

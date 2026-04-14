@@ -5,7 +5,10 @@
   "license": "Apache-2.0",
   "author": "SAP SE (https://www.sap.com)",
   "homepage": "https://cap.cloud.sap/",
-  "repository": "cap-js/data-privacy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cap-js/data-privacy.git"
+  },
   "main": "cds-plugin.js",
   "keywords": [
     "cds",
