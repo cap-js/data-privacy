@@ -13,12 +13,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: actions/checkout@v4
-      with:
-        clean: true
-    - uses: actions/setup-node@v4
-      with:
-        node-version: ${{ inputs.NODE_VERSION }}
     - name: Install global CDS
       shell: bash
       run: npm i -g @sap/cds-dk@${{ inputs.CDS_VERSION }}
