@@ -20,7 +20,7 @@ permissions:
 jobs:
   publish-npm:
     runs-on: ubuntu-latest
-    environment: npm
+    environment: npmjs:@cap-js/data-privacy
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -34,6 +34,10 @@ jobs:
           TEST_SUITE: tests/
           CDS_VERSION: latest
           NODE_VERSION: 24.x
+
+      - name: Get npm version
+        run: npm -v
+      - run: npm publish --access public --provenance --tag ${{ github.event.inputs.tag }}
 
       - name: Get Version
         id: get-version
@@ -49,6 +53,3 @@ jobs:
         with:
           tag: 'v${{ steps.get-version.outputs.version }}'
           body: '${{ steps.parse-changelog.outputs.body }}'
-      - name: Get npm version
-        run: npm -v
-      - run: npm publish --access public --provenance
