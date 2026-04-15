@@ -2,9 +2,20 @@ name: Release
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag (optional)"
+        required: false
+        type: choice
+        default: "latest"
+        options:
+          - "latest"
+          - "previous"
+          - "beta"
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   publish-npm:
@@ -14,16 +25,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           registry-url: https://registry.npmjs.org/
 
-      - name: Run Tests
-        run: |
-          npm install
-          npm run lint
-          cd tests/incidents-app && npm install 
-          cd ../..
-          npm run test
+      - name: Tests
+        uses: ./.github/actions/tests
+        with:
+          TEST_SUITE: tests/
+          CDS_VERSION: latest
+          NODE_VERSION: 24.x
 
       - name: get-version
         id: package-version
@@ -38,6 +48,4 @@ jobs:
         with:
           tag: "v${{ steps.package-version.outputs.current-version }}"
           body: "${{ steps.parse-changelog.outputs.body }}"
-      - run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+      - run: npm publish --access public --provenance --tag ${{ github.event.inputs.tag }}
