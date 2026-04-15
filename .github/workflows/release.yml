@@ -47,9 +47,9 @@ jobs:
         id: parse-changelog
         uses: schwma/parse-changelog-action@v1.0.0
         with:
-          version: '${{ steps.get-version.outputs.version }}'
+          version: "${{ steps.get-version.outputs.version }}"
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1.20.0
         with:
-          tag: 'v${{ steps.get-version.outputs.version }}'
-          body: '${{ steps.parse-changelog.outputs.body }}'
+          tag: "v${{ steps.get-version.outputs.version }}"
+          body: "${{ steps.parse-changelog.outputs.body }}"
