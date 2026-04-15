@@ -22,8 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: npm
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org/
@@ -35,17 +35,20 @@ jobs:
           CDS_VERSION: latest
           NODE_VERSION: 24.x
 
-      - name: get-version
-        id: package-version
-        uses: martinbeentjes/npm-get-version-action@v1.2.3
+      - name: Get Version
+        id: get-version
+        run: |
+          echo "version=$(npm pkg get version | tr -d '"')" >> $GITHUB_OUTPUT
       - name: Parse changelog
         id: parse-changelog
         uses: schwma/parse-changelog-action@v1.0.0
         with:
-          version: "${{ steps.package-version.outputs.current-version }}"
+          version: '${{ steps.get-version.outputs.version }}'
       - name: Create a GitHub release
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@v1.20.0
         with:
-          tag: "v${{ steps.package-version.outputs.current-version }}"
-          body: "${{ steps.parse-changelog.outputs.body }}"
+          tag: 'v${{ steps.get-version.outputs.version }}'
+          body: '${{ steps.parse-changelog.outputs.body }}'
+      - name: Get npm version
+        run: npm -v
       - run: npm publish --access public --provenance --tag ${{ github.event.inputs.tag }}
