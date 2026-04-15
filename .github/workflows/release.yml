@@ -51,4 +51,4 @@ jobs:
           body: '${{ steps.parse-changelog.outputs.body }}'
       - name: Get npm version
         run: npm -v
-      - run: npm publish --access public --provenance --tag ${{ github.event.inputs.tag }}
+      - run: npm publish --access public --provenance
