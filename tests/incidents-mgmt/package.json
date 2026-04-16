@@ -2,23 +2,21 @@
   "name": "incidents-mgmt",
   "version": "1.0.0",
   "dependencies": {
+    "@cap-js/audit-logging": "^1",
+    "@cap-js/data-privacy": "file:../../",
     "@cap-js/hana": "^2",
     "@sap/cds": "^9",
-    "@cap-js/data-privacy": "file:../../",
+    "@sap/cds-mtxs": "^3",
     "@sap/xssec": "^4",
     "express": "^4",
     "passport": "^0"
   },
   "devDependencies": {
-    "@cap-js/audit-logging": "^0.8.3",
     "@cap-js/sqlite": "^2.0.3",
     "@sap/cds-dk": "9.4.3",
     "@sap/ux-specification": "^1.108.4",
-    "axios": "^1.4.0",
-    "chai": "^4.3.7",
-    "chai-as-promised": "^7.1.1",
-    "chai-subset": "^1.6.0",
-    "jest": "^29.5.0"
+    "cds-launchpad-plugin": "^2.2.0",
+    "cds-plugin-ui5": "^0.17.0"
   },
   "scripts": {
     "watch": "cds watch",
@@ -26,10 +24,17 @@
     "test": "npx jest --silent"
   },
   "private": true,
+  "workspaces": [
+    "app/*"
+  ],
+  "sapux": [
+    "app/incidents"
+  ],
   "cds": {
     "requires": {
       "[production]": {
-        "auth": "xsuaa"
+        "auth": "xsuaa",
+        "multitenancy": true
       },
       "[development]": {
         "auth": {
@@ -64,8 +69,17 @@
         }
       },
       "sap.dpp.RetentionService": {
-        "applicationName": "incidents-mgmt-retention"
-      }
-    }
+        "applicationName": "cap-dpp-incident-mgmt"
+      },
+      "[with-mtx]": {
+        "multitenancy": true
+      },
+      "toggles": true,
+      "extensibility": true,
+      "html5-repo": true,
+      "workzone": true,
+      "application-logging": true
+    },
+    "profile": "with-mtx-sidecar"
   }
 }

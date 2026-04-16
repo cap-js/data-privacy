@@ -97,4 +97,4 @@ cds.on("served", async (all) => {
 cds.build?.register?.("data-privacy", require("./lib/build"));
 
 // REVISIT: Remove once command is in DK
-cds.add?.register?.("data-privacy", require("./_move_to_dk/add.js"));
+cds.add?.register?.("data-privacy", require("./lib/add/add.js"));

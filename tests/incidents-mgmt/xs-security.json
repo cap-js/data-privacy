@@ -3,15 +3,60 @@
     {
       "name": "$XSAPPNAME.admin",
       "description": "admin"
+    },
+    {
+      "name": "uaa.user",
+      "description": "UAA"
+    },
+    {
+      "name": "$XSAPPNAME.Callback",
+      "description": "Subscription via SaaS Registry",
+      "grant-as-authority-to-apps": [
+        "$XSAPPNAME(application,sap-provisioning,tenant-onboarding)"
+      ]
+    },
+    {
+      "name": "$XSAPPNAME.mtcallback",
+      "description": "Subscription via SaaS Registry",
+      "grant-as-authority-to-apps": [
+        "$XSAPPNAME(application,sap-provisioning,tenant-onboarding)"
+      ]
     }
   ],
   "attributes": [],
   "role-templates": [
     {
-      "name": "Admin",
+      "name": "admin",
       "description": "generated",
-      "scope-references": ["$XSAPPNAME.admin"],
+      "scope-references": [
+        "$XSAPPNAME.admin"
+      ],
       "attribute-references": []
+    },
+    {
+      "name": "Token_Exchange",
+      "description": "UAA",
+      "scope-references": [
+        "uaa.user"
+      ]
+    },
+    {
+      "name": "MultitenancyCallbackRoleTemplate",
+      "description": "Call callback-services of applications",
+      "scope-references": [
+        "$XSAPPNAME.Callback"
+      ]
+    }
+  ],
+  "role-collections": [
+    {
+      "name": "capire.dpp.sample.admin",
+      "description": "Admin role for CAP AppFnd SaaS app",
+      "role-template-references": [
+        "$XSAPPNAME.Token_Exchange",
+        "$XSAPPNAME.MultitenancyCallbackRoleTemplate",
+        "$XSAPPNAME.admin"
+      ]
     }
   ]
 }

@@ -1,0 +1,114 @@
+[
+    {
+    "_version": "3.2.0",
+    "identification": {
+      "id": "capire.dpp.sample.space",
+      "title": "CAP DPP Sample Space",
+      "entityType": "space"
+    },
+    "payload": {
+      "contentNodes": [
+        {
+          "type": "page",
+          "id": "capire.dpp.sample.workpage"
+        }
+      ]
+    }
+  },
+  {
+    "_version": "3.2",
+    "identification": {
+      "id": "capire.dpp.sample.admin",
+      "entityType": "role",
+      "title": "CAP DPP Sample Admin"
+    },
+    "payload": {
+      "apps": [
+        {
+          "id": "capire.dpp.sample.incidents"
+        }
+      ],
+      "spaces": [
+        {
+          "id": "capire.dpp.sample.space"
+        }
+      ]
+    }
+  },
+    {
+    "_version": "3.2.0",
+    "identification": {
+      "id": "capire.dpp.sample.workpage",
+      "entityType": "workpage",
+      "title": "DPP Sample Incidents App"
+    },
+    "payload": {
+      "workpageConfig": {
+        "title": "DPP Sample Incidents App"
+      },
+      "rows": [
+        {
+          "id": "apps",
+          "rowConfig": {
+            "fillRowHeight": false
+          },
+          "columns": [
+            {
+              "id": "apps-col1",
+              "columnConfig": {},
+              "cells": [
+                {
+                  "id": "apps-col1-cell1",
+                  "cellConfig": {},
+                  "widgets": [
+                    {
+                      "id": "widg-incidents",
+                      "viz": {
+                        "appId": "capire.dpp.sample.incidents",
+                        "vizId": "Incidents-display"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+      "_version": "3.2.0",
+      "identification": {
+        "id": "lepSite",
+        "entityType": "site"
+      },
+      "payload": {
+        "siteConfig": {
+          "title": "SAP Fiori launchpad site on Cloud Foundry",
+          "alias": "lepSite",
+          "displaySettings": {
+            "launchpadViewMode": "SpacesAndWorkPages"
+          },
+          "userCapabilities": {
+            "languageSelectionSupported": true,
+            "personalizationSupported": true,
+            "sapMobileStartSupported": true,
+            "mobileApplicationSupported": true,
+            "supportedLanguages": [
+              "en"
+            ],
+            "themeSelectionSupported": true
+          },
+          "browserSettings": {
+            "asynchronousModuleLoading": true,
+            "browserFeatureAccess": true,
+            "optimizedSiteLoading": true
+          },
+          "personalizationSettings": {
+            "userHomepageSupported": true
+          }
+        }
+      }
+    }
+]

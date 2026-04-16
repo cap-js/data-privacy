@@ -1,0 +1,97 @@
+modules: 
+  - name: {{appName}}-srv
+    type: {{language}} 
+    path: {{& srvPath}} 
+    requires: 
+      - name: {{appName}}-information
+      - name: {{appName}}-retention
+resources: 
+  - name: {{appName}}-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      config:
+        scopes:
+          - name: $XSAPPNAME.PersonalDataManagerUser
+            description: Technical scope to restrict access to information endpoint
+            grant-as-authority-to-apps:
+              - $XSSERVICENAME({{appName}}-information)
+          - name: $XSAPPNAME.DataRetentionManagerUser
+            description: Technical scope to restrict access to retention endpoint
+            grant-as-authority-to-apps:
+              - $XSSERVICENAME({{appName}}-retention)
+  - name: {{appName}}-information
+    type: org.cloudfoundry.managed-service
+    requires:
+      - name: srv-api
+    parameters:
+      service-name: {{appName}}-information
+      service: data-privacy-integration-service
+      service-plan: data-privacy-internal
+      config:
+        xs-security:
+          xsappname: {{appName}}-information-${org}-${space}                                                    
+          authorities:                                                                                        
+            - $ACCEPT_GRANTED_AUTHORITIES                                                                        
+        dataPrivacyConfiguration:
+          configType: information
+          applicationConfiguration:
+            applicationName: {{appName}}-information
+            applicationTitle: {{appName}}
+{{^hasMultitenancy}}
+            enableAutoSubscription : true #Only for single tenant applications to subscribe
+{{/hasMultitenancy}}
+          informationConfiguration:
+            applicationConfiguration:  
+              dataSubjectDeletionAgent: retention-manager
+              retentionApplicationName: {{appName}}
+              disableDataSubjectCorrection: true  
+              cacheControl: no-cache
+            components:
+              - componentName: {{appName}}-srv
+                componentBaseURL: ~{srv-api/srv-url}
+                serviceEndPoints:  
+                  - serviceName: {{appName}}-srv
+                    serviceFormat: odata-v4
+                    annotationFormat: v4
+                    serviceEndPoint: /dpp/information
+                    appPaginationEnabled : true  
+                    cacheControl: no-cache
+  - name: {{appName}}-retention
+    type: org.cloudfoundry.managed-service
+    requires:
+      - name: srv-api
+    parameters:
+      service-name: {{appName}}-retention
+      service: data-privacy-integration-service
+      service-plan: data-privacy-internal
+      config:
+        xs-security:
+          xsappname: {{appName}}-retention-${org}-${space}
+          authorities:
+            - $ACCEPT_GRANTED_AUTHORITIES
+        dataPrivacyConfiguration:
+          configType: retention
+          applicationConfiguration :
+            applicationName : {{appName}}
+            applicationTitle : {{appName}}
+            applicationDescription : {{appName}}
+            applicationBaseURL: ~{srv-api/srv-url}
+{{^hasMultitenancy}}
+            enableAutoSubscription : true #Only for single tenant applications to subscribe
+{{/hasMultitenancy}}
+          translationConfiguration:
+            textBundleBaseURL: ~{srv-api/srv-url}
+            textBundleEndPoint: /dpp/retention/i18n-files/i18n.properties
+            defaultLanguage: en
+            supportedLanguages:
+              - de
+              - fr
+              - es
+              - en
+          retentionConfiguration:
+            applicationConfiguration:
+              applicationType: TransactionMaster
+              # simulationSupportedForArchiving: true
+              # simulationSupportedForDestruction: true
+              iLMObjectDiscoveryEndPoint: /dpp/retention/iLMObjects
