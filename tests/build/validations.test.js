@@ -1,3 +1,4 @@
+const { execSync } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const cds = require("@sap/cds");
@@ -104,5 +105,26 @@ describe("testing cds build", () => {
         expect.objectContaining({ organizationAttributeName: "sap.capire.bookshop.LegalEntities" })
       ])
     );
+  });
+});
+
+describe("incidents-mgmt cds build --production", () => {
+  const INCIDENTS_DIR = path.join(__dirname, "..", "incidents-mgmt");
+  const GEN_DIR = path.join(INCIDENTS_DIR, "gen");
+
+  afterAll(() => {
+    fs.rmSync(GEN_DIR, { recursive: true, force: true });
+  });
+
+  test("cds build --production completes successfully", () => {
+    const result = execSync("npx cds build --production", {
+      cwd: INCIDENTS_DIR,
+      encoding: "utf-8",
+      timeout: 120_000
+    });
+
+    expect(result).toMatch(/build completed/i);
+    expect(fs.existsSync(path.join(GEN_DIR, "srv"))).toBe(true);
+    expect(fs.existsSync(path.join(GEN_DIR, "mtx", "sidecar"))).toBe(true);
   });
 });

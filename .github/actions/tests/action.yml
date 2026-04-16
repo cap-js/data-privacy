@@ -28,6 +28,12 @@ runs:
         npm link ../../
         npm install
         rm -rf ./node_modules/@sap/cds
+    - name: Install incidents-mgmt
+      shell: bash
+      run: |
+        cd ./tests/incidents-mgmt
+        npm install
+        rm -rf ./node_modules/@sap/cds
     - name: CDS version
       shell: bash
       run: cds v -i
