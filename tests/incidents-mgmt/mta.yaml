@@ -99,8 +99,7 @@ modules:
       commands:
         - npm ci
         - npm run build
-      supported-platforms:
-        []
+      supported-platforms: []
   - name: incidents
     type: approuter.nodejs
     path: app/router
@@ -110,7 +109,7 @@ modules:
       memory: 256M
     properties:
       TENANT_HOST_PATTERN: "^(.*)-${default-uri}"
-      OWN_SAP_CLOUD_SERVICE: "[\"capdppincidents\"]"
+      OWN_SAP_CLOUD_SERVICE: '["capdppincidents"]'
       COOKIE_BACKWARD_COMPATIBILITY: true
     requires:
       - name: srv-api
@@ -278,7 +277,7 @@ resources:
         appName: incidents-${org}-dpp-smpl
         displayName: incidents
         description: CAP DPP Sample for DPI MTX.
-        category: 'Category'
+        category: "Category"
         appUrls:
           getDependencies: ~{mtx-api/mtx-url}/-/cds/saas-provisioning/dependencies
           onSubscription: ~{mtx-api/mtx-url}/-/cds/saas-provisioning/tenant/{tenantId}

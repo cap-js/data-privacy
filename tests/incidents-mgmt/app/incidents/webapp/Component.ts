@@ -4,7 +4,6 @@ import BaseComponent from "sap/fe/core/AppComponent";
  * @namespace capire.dpp.sample.incidents
  */
 export default class Component extends BaseComponent {
-
   public static metadata = {
     manifest: "json"
   };

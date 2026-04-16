@@ -1,5 +1,5 @@
 [
-    {
+  {
     "_version": "3.2.0",
     "identification": {
       "id": "capire.dpp.sample.space",
@@ -35,7 +35,7 @@
       ]
     }
   },
-    {
+  {
     "_version": "3.2.0",
     "identification": {
       "id": "capire.dpp.sample.workpage",
@@ -78,37 +78,35 @@
     }
   },
   {
-      "_version": "3.2.0",
-      "identification": {
-        "id": "lepSite",
-        "entityType": "site"
-      },
-      "payload": {
-        "siteConfig": {
-          "title": "SAP Fiori launchpad site on Cloud Foundry",
-          "alias": "lepSite",
-          "displaySettings": {
-            "launchpadViewMode": "SpacesAndWorkPages"
-          },
-          "userCapabilities": {
-            "languageSelectionSupported": true,
-            "personalizationSupported": true,
-            "sapMobileStartSupported": true,
-            "mobileApplicationSupported": true,
-            "supportedLanguages": [
-              "en"
-            ],
-            "themeSelectionSupported": true
-          },
-          "browserSettings": {
-            "asynchronousModuleLoading": true,
-            "browserFeatureAccess": true,
-            "optimizedSiteLoading": true
-          },
-          "personalizationSettings": {
-            "userHomepageSupported": true
-          }
+    "_version": "3.2.0",
+    "identification": {
+      "id": "lepSite",
+      "entityType": "site"
+    },
+    "payload": {
+      "siteConfig": {
+        "title": "SAP Fiori launchpad site on Cloud Foundry",
+        "alias": "lepSite",
+        "displaySettings": {
+          "launchpadViewMode": "SpacesAndWorkPages"
+        },
+        "userCapabilities": {
+          "languageSelectionSupported": true,
+          "personalizationSupported": true,
+          "sapMobileStartSupported": true,
+          "mobileApplicationSupported": true,
+          "supportedLanguages": ["en"],
+          "themeSelectionSupported": true
+        },
+        "browserSettings": {
+          "asynchronousModuleLoading": true,
+          "browserFeatureAccess": true,
+          "optimizedSiteLoading": true
+        },
+        "personalizationSettings": {
+          "userHomepageSupported": true
         }
       }
     }
+  }
 ]
