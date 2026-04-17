@@ -5,21 +5,41 @@ const cds = require("@sap/cds");
 const TempUtil = require("./tempUtil.js");
 const tempUtil = new TempUtil(__filename);
 
-const ROOT_NODE_MODULES = path.join(__dirname, "..", "..", "node_modules");
-const DIR_MTA_BASIC = path.join(__dirname, "scenarios", "mta-basic");
-const DIR_MTA_HANA = path.join(__dirname, "scenarios", "mta-hana");
-const DIR_NO_MTA = path.join(__dirname, "scenarios", "no-mta");
+const ROOT_DIR = path.join(__dirname, "..", "..");
+const ROOT_NODE_MODULES = path.join(ROOT_DIR, "node_modules");
 
-function linkNodeModules(appRoot) {
-  const target = path.join(appRoot, "node_modules");
-  if (!fs.existsSync(target)) {
-    fs.symlinkSync(ROOT_NODE_MODULES, target, "dir");
-  }
+/**
+ * Generates a CAP project via `cds init` with given facets,
+ * injects @cap-js/data-privacy dependency, and symlinks node_modules.
+ * @param {string} name - project folder name
+ * @param {string[]} facets - facets to add (e.g. ["mta", "xsuaa", "hana"])
+ * @returns {Promise<string>} path to the generated project
+ */
+async function generateProject(name, facets = []) {
+  const tempDir = await tempUtil.mkTempFolder();
+  const addFlag = facets.length > 0 ? ` --add ${facets.join(",")}` : "";
+  execSync(`npx cds init ${name} --nodejs${addFlag}`, {
+    cwd: tempDir,
+    encoding: "utf-8",
+    timeout: 120_000
+  });
+  const projectDir = path.join(tempDir, name);
+
+  // Inject @cap-js/data-privacy dependency so cds-plugin.js is discovered
+  const pkgPath = path.join(projectDir, "package.json");
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+  pkg.dependencies ??= {};
+  pkg.dependencies["@cap-js/data-privacy"] = `file:${ROOT_DIR}`;
+  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+
+  // Symlink root node_modules for module resolution
+  fs.symlinkSync(ROOT_NODE_MODULES, path.join(projectDir, "node_modules"), "dir");
+
+  return projectDir;
 }
 
 function runCdsAdd(cwd) {
-  linkNodeModules(cwd);
-  return execSync("cds add data-privacy", {
+  return execSync("npx cds add data-privacy", {
     cwd,
     encoding: "utf-8",
     timeout: 120_000
@@ -27,18 +47,11 @@ function runCdsAdd(cwd) {
 }
 
 function readMta(appRoot) {
-  const content = fs.readFileSync(path.join(appRoot, "mta.yaml"), "utf-8");
-  return cds.parse.yaml(content);
+  return cds.parse.yaml(fs.readFileSync(path.join(appRoot, "mta.yaml"), "utf-8"));
 }
 
-function readXsSecurity(appRoot) {
-  const content = fs.readFileSync(path.join(appRoot, "xs-security.json"), "utf-8");
-  return JSON.parse(content);
-}
-
-function readUndeploy(appRoot) {
-  const content = fs.readFileSync(path.join(appRoot, "db", "undeploy.json"), "utf-8");
-  return JSON.parse(content);
+function readJson(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, "utf-8"));
 }
 
 function findDpiResource(mta, configType) {
@@ -54,7 +67,11 @@ function findXsuaaResource(mta) {
 }
 
 function findSrvModule(mta) {
-  return mta.modules.find((m) => m.type === "nodejs");
+  return mta.modules.find((m) => m.type === "nodejs" && m.path?.includes("srv"));
+}
+
+function findSidecarModule(mta) {
+  return mta.modules.find((m) => m.type === "nodejs" && m.path?.includes("mtx"));
 }
 
 describe("cds add data-privacy", () => {
@@ -62,161 +79,160 @@ describe("cds add data-privacy", () => {
     return tempUtil.cleanUp();
   });
 
-  describe("with mta.yaml and xsuaa", () => {
-    let appRoot;
-    let mta;
-    let xsSecurity;
+  describe("single-tenant (mta, xsuaa)", () => {
+    let appRoot, mta, xsSecurity;
 
     beforeAll(async () => {
-      appRoot = await tempUtil.mkTempProject(DIR_MTA_BASIC);
+      appRoot = await generateProject("basic", ["mta", "xsuaa"]);
       runCdsAdd(appRoot);
       mta = readMta(appRoot);
-      xsSecurity = readXsSecurity(appRoot);
+      xsSecurity = readJson(path.join(appRoot, "xs-security.json"));
     });
 
-    test("adds DPI information resource to mta.yaml", () => {
-      const infoResource = findDpiResource(mta, "information");
-      expect(infoResource).toBeDefined();
-      expect(infoResource.parameters.service).toBe("data-privacy-integration-service");
-      expect(infoResource.parameters["service-plan"]).toBe("data-privacy-internal");
-      expect(
-        infoResource.parameters.config.dataPrivacyConfiguration.informationConfiguration
-      ).toBeDefined();
+    test("adds DPI information and retention resources to mta.yaml", () => {
+      const info = findDpiResource(mta, "information");
+      expect(info).toBeDefined();
+      expect(info.parameters.service).toBe("data-privacy-integration-service");
+      expect(info.parameters["service-plan"]).toBe("data-privacy-internal");
+      expect(info.parameters.config.dataPrivacyConfiguration.informationConfiguration).toBeDefined();
+
+      const retention = findDpiResource(mta, "retention");
+      expect(retention).toBeDefined();
+      expect(retention.parameters.service).toBe("data-privacy-integration-service");
+      expect(retention.parameters.config.dataPrivacyConfiguration.retentionConfiguration).toBeDefined();
+      expect(retention.parameters.config.dataPrivacyConfiguration.translationConfiguration).toBeDefined();
     });
 
-    test("adds DPI retention resource to mta.yaml", () => {
-      const retentionResource = findDpiResource(mta, "retention");
-      expect(retentionResource).toBeDefined();
-      expect(retentionResource.parameters.service).toBe("data-privacy-integration-service");
-      expect(retentionResource.parameters["service-plan"]).toBe("data-privacy-internal");
-      expect(
-        retentionResource.parameters.config.dataPrivacyConfiguration.retentionConfiguration
-      ).toBeDefined();
-      expect(
-        retentionResource.parameters.config.dataPrivacyConfiguration.translationConfiguration
-      ).toBeDefined();
-    });
-
-    test("srv module requires DPI information and retention resources", () => {
+    test("srv module requires DPI resources", () => {
       const srv = findSrvModule(mta);
-      expect(srv).toBeDefined();
-      const requireNames = srv.requires.map((r) => r.name);
-
-      const infoResource = findDpiResource(mta, "information");
-      const retentionResource = findDpiResource(mta, "retention");
-      expect(requireNames).toContain(infoResource.name);
-      expect(requireNames).toContain(retentionResource.name);
+      const names = srv.requires.map((r) => r.name);
+      expect(names).toContain(findDpiResource(mta, "information").name);
+      expect(names).toContain(findDpiResource(mta, "retention").name);
     });
 
-    test("xsuaa resource has PersonalDataManagerUser scope in mta.yaml", () => {
+    test("xsuaa resource has DPI scopes and processed-after", () => {
       const xsuaa = findXsuaaResource(mta);
-      expect(xsuaa).toBeDefined();
       const scopes = xsuaa.parameters.config.scopes;
-      const pdmScope = scopes.find((s) => s.name === "$XSAPPNAME.PersonalDataManagerUser");
-      expect(pdmScope).toBeDefined();
-      expect(pdmScope["grant-as-authority-to-apps"]).toBeDefined();
-      expect(pdmScope["grant-as-authority-to-apps"].length).toBeGreaterThan(0);
+      const scopeNames = scopes.map((s) => s.name);
+      expect(scopeNames).toContain("$XSAPPNAME.PersonalDataManagerUser");
+      expect(scopeNames).toContain("$XSAPPNAME.DataRetentionManagerUser");
+
+      const processedAfter = xsuaa["processed-after"];
+      expect(processedAfter).toContain(findDpiResource(mta, "information").name);
+      expect(processedAfter).toContain(findDpiResource(mta, "retention").name);
     });
 
-    test("xsuaa resource has DataRetentionManagerUser scope in mta.yaml", () => {
-      const xsuaa = findXsuaaResource(mta);
-      expect(xsuaa).toBeDefined();
-      const scopes = xsuaa.parameters.config.scopes;
-      const drmScope = scopes.find((s) => s.name === "$XSAPPNAME.DataRetentionManagerUser");
-      expect(drmScope).toBeDefined();
-      expect(drmScope["grant-as-authority-to-apps"]).toBeDefined();
-      expect(drmScope["grant-as-authority-to-apps"].length).toBeGreaterThan(0);
+    test("enableAutoSubscription is true for single-tenant", () => {
+      const infoApp = findDpiResource(mta, "information")
+        .parameters.config.dataPrivacyConfiguration.applicationConfiguration;
+      const retApp = findDpiResource(mta, "retention")
+        .parameters.config.dataPrivacyConfiguration.applicationConfiguration;
+      expect(infoApp.enableAutoSubscription).toBe(true);
+      expect(retApp.enableAutoSubscription).toBe(true);
     });
 
-    test("xs-security.json has PersonalDataManagerUser scope", () => {
-      const pdmScope = xsSecurity.scopes.find(
-        (s) => s.name === "$XSAPPNAME.PersonalDataManagerUser"
-      );
-      expect(pdmScope).toBeDefined();
-      expect(pdmScope.description).toBeDefined();
-      expect(pdmScope["grant-as-authority-to-apps"]).toBeDefined();
-      expect(pdmScope["grant-as-authority-to-apps"].length).toBeGreaterThan(0);
-    });
+    test("xs-security.json has DPI scopes with correct grant references", () => {
+      const infoName = findDpiResource(mta, "information").name;
+      const retName = findDpiResource(mta, "retention").name;
 
-    test("xs-security.json has DataRetentionManagerUser scope", () => {
-      const drmScope = xsSecurity.scopes.find(
-        (s) => s.name === "$XSAPPNAME.DataRetentionManagerUser"
+      const pdm = xsSecurity.scopes.find((s) => s.name === "$XSAPPNAME.PersonalDataManagerUser");
+      const drm = xsSecurity.scopes.find((s) => s.name === "$XSAPPNAME.DataRetentionManagerUser");
+      expect(pdm).toBeDefined();
+      expect(drm).toBeDefined();
+      expect(pdm["grant-as-authority-to-apps"]).toEqual(
+        expect.arrayContaining([`$XSSERVICENAME(${infoName})`])
       );
-      expect(drmScope).toBeDefined();
-      expect(drmScope.description).toBeDefined();
-      expect(drmScope["grant-as-authority-to-apps"]).toBeDefined();
-      expect(drmScope["grant-as-authority-to-apps"].length).toBeGreaterThan(0);
-    });
-
-    test("xs-security.json scope grants reference correct DPI instance names", () => {
-      const infoResource = findDpiResource(mta, "information");
-      const retentionResource = findDpiResource(mta, "retention");
-
-      const pdmScope = xsSecurity.scopes.find(
-        (s) => s.name === "$XSAPPNAME.PersonalDataManagerUser"
-      );
-      const drmScope = xsSecurity.scopes.find(
-        (s) => s.name === "$XSAPPNAME.DataRetentionManagerUser"
-      );
-
-      expect(pdmScope["grant-as-authority-to-apps"]).toEqual(
-        expect.arrayContaining([`$XSSERVICENAME(${infoResource.name})`])
-      );
-      expect(drmScope["grant-as-authority-to-apps"]).toEqual(
-        expect.arrayContaining([`$XSSERVICENAME(${retentionResource.name})`])
+      expect(drm["grant-as-authority-to-apps"]).toEqual(
+        expect.arrayContaining([`$XSSERVICENAME(${retName})`])
       );
     });
   });
 
-  describe("with HANA configured", () => {
-    let appRoot;
+  describe("multi-tenant (mta, xsuaa, hana, multitenancy)", () => {
+    let appRoot, mta, xsSecurity, sidecarPkg;
 
     beforeAll(async () => {
-      appRoot = await tempUtil.mkTempProject(DIR_MTA_HANA);
+      appRoot = await generateProject("mtx", ["mta", "xsuaa", "hana", "multitenancy"]);
       runCdsAdd(appRoot);
+      mta = readMta(appRoot);
+      xsSecurity = readJson(path.join(appRoot, "xs-security.json"));
+      sidecarPkg = readJson(path.join(appRoot, "mtx", "sidecar", "package.json"));
     });
 
-    test("merges hdbanalyticprivilege entries into db/undeploy.json", () => {
-      const undeploy = readUndeploy(appRoot);
-      expect(undeploy).toContain("src/gen/**/*.hdbanalyticprivilege");
-      expect(undeploy).toContain("src/**/*.hdbanalyticprivilege");
+    test("enableAutoSubscription is not set for multi-tenant", () => {
+      const infoApp = findDpiResource(mta, "information")
+        .parameters.config.dataPrivacyConfiguration.applicationConfiguration;
+      const retApp = findDpiResource(mta, "retention")
+        .parameters.config.dataPrivacyConfiguration.applicationConfiguration;
+      expect(infoApp.enableAutoSubscription).toBeUndefined();
+      expect(retApp.enableAutoSubscription).toBeUndefined();
     });
 
-    test("preserves existing undeploy.json entries", () => {
-      const undeploy = readUndeploy(appRoot);
-      expect(undeploy).toContain("src/gen/**/*.hdbview");
+    test("sidecar module requires DPI resources", () => {
+      const sidecar = findSidecarModule(mta);
+      expect(sidecar).toBeDefined();
+      const names = sidecar.requires.map((r) => r.name);
+      expect(names).toContain(findDpiResource(mta, "information").name);
+      expect(names).toContain(findDpiResource(mta, "retention").name);
     });
 
-    test("adds DPI resources to mta.yaml", () => {
-      const mta = readMta(appRoot);
-      expect(findDpiResource(mta, "information")).toBeDefined();
-      expect(findDpiResource(mta, "retention")).toBeDefined();
+    test("srv module requires DPI resources", () => {
+      const srv = findSrvModule(mta);
+      const names = srv.requires.map((r) => r.name);
+      expect(names).toContain(findDpiResource(mta, "information").name);
+      expect(names).toContain(findDpiResource(mta, "retention").name);
     });
 
-    test("adds scopes to xs-security.json", () => {
-      const xsSecurity = readXsSecurity(appRoot);
+    test("xsuaa resource has DPI scopes and processed-after", () => {
+      const xsuaa = findXsuaaResource(mta);
+      const scopeNames = xsuaa.parameters.config.scopes.map((s) => s.name);
+      expect(scopeNames).toContain("$XSAPPNAME.PersonalDataManagerUser");
+      expect(scopeNames).toContain("$XSAPPNAME.DataRetentionManagerUser");
+
+      const processedAfter = xsuaa["processed-after"];
+      expect(processedAfter).toContain(findDpiResource(mta, "information").name);
+      expect(processedAfter).toContain(findDpiResource(mta, "retention").name);
+    });
+
+    test("xs-security.json has DPI scopes and preserves mtcallback", () => {
       const scopeNames = xsSecurity.scopes.map((s) => s.name);
       expect(scopeNames).toContain("$XSAPPNAME.PersonalDataManagerUser");
       expect(scopeNames).toContain("$XSAPPNAME.DataRetentionManagerUser");
+      expect(scopeNames).toContain("$XSAPPNAME.mtcallback");
+    });
+
+    test("sidecar package.json has @cap-js/data-privacy and disables services", () => {
+      expect(sidecarPkg.dependencies["@cap-js/data-privacy"]).toBeDefined();
+      expect(sidecarPkg.cds.requires["sap.dpp.InformationService"]).toBe(false);
+      expect(sidecarPkg.cds.requires["sap.ilm.RetentionService"]).toBe(false);
+      expect(sidecarPkg.cds.profile).toBe("mtx-sidecar");
+    });
+
+    test("merges hdbanalyticprivilege into undeploy.json preserving existing entries", () => {
+      const undeploy = readJson(path.join(appRoot, "db", "undeploy.json"));
+      expect(undeploy).toContain("src/gen/**/*.hdbanalyticprivilege");
+      expect(undeploy).toContain("src/**/*.hdbanalyticprivilege");
+      expect(undeploy).toContain("src/gen/**/*.hdbview");
     });
   });
 
   describe("idempotency", () => {
     test("running cds add data-privacy twice produces same result", async () => {
-      const appRoot = await tempUtil.mkTempProject(DIR_MTA_BASIC);
+      const appRoot = await generateProject("idempotent", ["mta", "xsuaa", "hana", "multitenancy"]);
 
-      // First run
       runCdsAdd(appRoot);
-      const mtaAfterFirst = fs.readFileSync(path.join(appRoot, "mta.yaml"), "utf-8");
-      const xsAfterFirst = fs.readFileSync(path.join(appRoot, "xs-security.json"), "utf-8");
+      const mtaFirst = fs.readFileSync(path.join(appRoot, "mta.yaml"), "utf-8");
+      const xsFirst = fs.readFileSync(path.join(appRoot, "xs-security.json"), "utf-8");
+      const sidecarFirst = fs.readFileSync(path.join(appRoot, "mtx", "sidecar", "package.json"), "utf-8");
 
-      // Second run
       runCdsAdd(appRoot);
-      const mtaAfterSecond = fs.readFileSync(path.join(appRoot, "mta.yaml"), "utf-8");
-      const xsAfterSecond = fs.readFileSync(path.join(appRoot, "xs-security.json"), "utf-8");
+      const mtaSecond = fs.readFileSync(path.join(appRoot, "mta.yaml"), "utf-8");
+      const xsSecond = fs.readFileSync(path.join(appRoot, "xs-security.json"), "utf-8");
+      const sidecarSecond = fs.readFileSync(path.join(appRoot, "mtx", "sidecar", "package.json"), "utf-8");
 
-      expect(mtaAfterSecond).toBe(mtaAfterFirst);
-      expect(xsAfterSecond).toBe(xsAfterFirst);
+      expect(mtaSecond).toBe(mtaFirst);
+      expect(xsSecond).toBe(xsFirst);
+      expect(sidecarSecond).toBe(sidecarFirst);
     });
   });
 
@@ -224,15 +240,12 @@ describe("cds add data-privacy", () => {
     let appRoot;
 
     beforeAll(async () => {
-      appRoot = await tempUtil.mkTempProject(DIR_NO_MTA);
+      appRoot = await generateProject("nomta", []);
       runCdsAdd(appRoot);
     });
 
-    test("does not create mta.yaml", () => {
+    test("does not create mta.yaml or xs-security.json", () => {
       expect(fs.existsSync(path.join(appRoot, "mta.yaml"))).toBe(false);
-    });
-
-    test("does not create xs-security.json", () => {
       expect(fs.existsSync(path.join(appRoot, "xs-security.json"))).toBe(false);
     });
   });

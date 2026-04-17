@@ -5,9 +5,20 @@ modules:
     requires: 
       - name: {{appName}}-information
       - name: {{appName}}-retention
+{{#hasMultitenancy}}
+  - name: {{appName}}-mtx
+    type: nodejs
+    path: {{#isNodejs}}gen/{{/isNodejs}}mtx/sidecar
+    requires:
+      - name: {{appName}}-information
+      - name: {{appName}}-retention
+{{/hasMultitenancy}}
 resources: 
   - name: {{appName}}-auth
     type: org.cloudfoundry.managed-service
+    processed-after:
+      - {{appName}}-information
+      - {{appName}}-retention
     parameters:
       service: xsuaa
       config:
