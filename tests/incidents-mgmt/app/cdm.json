@@ -95,7 +95,7 @@
           "personalizationSupported": true,
           "sapMobileStartSupported": true,
           "mobileApplicationSupported": true,
-          "supportedLanguages": ["en"],
+          "supportedLanguages": ["en", "default"],
           "themeSelectionSupported": true
         },
         "browserSettings": {

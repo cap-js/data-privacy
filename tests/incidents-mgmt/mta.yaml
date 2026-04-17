@@ -17,6 +17,10 @@ build-parameters:
         - sh -c 'cp "$(ls -1 | grep -E "^cap-js-data-privacy.*\.tgz$" | head -n 1)" ./gen/srv'
         - mkdir gen/app
         - cp app/cdm.json gen/app/cdm.json
+        # Sidecar version
+        - cd ./mtx/sidecar && npm unlink @cap-js/data-privacy
+        - cd ./mtx/sidecar && npm pack ../../../..
+        - cd ./mtx/sidecar && sh -c 'TGZ_FILE="$(ls -1 | grep -E "^cap-js-data-privacy.*\.tgz$" | head -n 1)" && npm install "./${TGZ_FILE}"'
 modules:
   - name: incidents-srv
     type: nodejs
@@ -32,8 +36,8 @@ modules:
           srv-url: ${default-url}
     requires:
       - name: incidents-auth
-      - name: incidents-information
-      - name: incidents-retention
+      - name: incidents-information2
+      - name: incidents-retention2
       - name: incidents-db
       - name: incidents-logging
 
@@ -48,6 +52,8 @@ modules:
       - name: incidents-auth
       - name: incidents-registry
       - name: incidents-logging
+      - name: incidents-information2
+      - name: incidents-retention2
       - name: app-api
         properties:
           SUBSCRIPTION_URL: ~{app-protocol}://\${tenant_subdomain}-~{app-uri}
@@ -99,7 +105,8 @@ modules:
       commands:
         - npm ci
         - npm run build
-      supported-platforms: []
+      supported-platforms:
+        []
   - name: incidents
     type: approuter.nodejs
     path: app/router
@@ -138,16 +145,7 @@ resources:
     parameters:
       service: xsuaa
       config:
-        scopes:
-          - name: $XSAPPNAME.PersonalDataManagerUser
-            description: Technial scope to restrict access to information endpoint
-            grant-as-authority-to-apps:
-              - $XSSERVICENAME(incidents-information)
-          - name: $XSAPPNAME.DataRetentionManagerUser
-            description: Technial scope to restrict access to retention endpoint
-            grant-as-authority-to-apps:
-              - $XSSERVICENAME(incidents-retention)
-        xsappname: incidents-${org}-dpp-smpl
+        xsappname: incidents-${org}-${space}
         tenant-mode: shared
         oauth2-configuration:
           credential-types:
@@ -159,6 +157,8 @@ resources:
       path: ./xs-security.json
     requires:
       - name: app-api
+      - name: incidents-information2
+      - name: incidents-retention2
   - name: incidents-workzone
     type: org.cloudfoundry.managed-service
     parameters:
@@ -177,25 +177,25 @@ resources:
     parameters:
       service-plan: app-host
       service: html5-apps-repo
-  - name: incidents-information
+  - name: incidents-information2
     type: org.cloudfoundry.managed-service
     requires:
       - name: srv-api
     parameters:
-      service-name: incidents-information
+      service-name: incidents-information2
       service: data-privacy-integration-service
       service-plan: data-privacy-internal
       config:
         xs-security:
-          xsappname: incidents-${org}-dpp-smpl
+          xsappname: incidents-info-${org}-${space}
           authorities:
             - $ACCEPT_GRANTED_AUTHORITIES
         dataPrivacyConfiguration:
           configType: information
           applicationConfiguration:
-            applicationName: incidents-information
-            applicationTitle: incidents-information
-            enableAutoSubscription: true
+            applicationName: incidents-information2
+            applicationTitle: incidents-information2
+            enableAutoSubscription: false
           informationConfiguration:
             applicationConfiguration:
               dataSubjectDeletionAgent: retention-manager
@@ -209,20 +209,20 @@ resources:
                   - serviceName: incidents-service
                     serviceFormat: odata-v4
                     annotationFormat: v4
-                    serviceEndPoint: /pdm
+                    serviceEndPoint: /dpp/information
                     appPaginationEnabled: true
                     cacheControl: no-cache
-  - name: incidents-retention
+  - name: incidents-retention2
     type: org.cloudfoundry.managed-service
     requires:
       - name: srv-api
     parameters:
-      service-name: incidents-retention
+      service-name: incidents-retention2
       service: data-privacy-integration-service
       service-plan: data-privacy-internal
       config:
         xs-security:
-          xsappname: incidents-${org}-dpp-smpl
+          xsappname: incidents-${org}-${space}
           authorities:
             - $ACCEPT_GRANTED_AUTHORITIES
         dataPrivacyConfiguration:
@@ -232,7 +232,7 @@ resources:
             applicationTitle: cap-dpp-incident-mgmt
             applicationDescription: cap-dpp-incident-mgmt
             applicationBaseURL: ~{srv-api/srv-url}
-            enableAutoSubscription: true
+            enableAutoSubscription: false
           translationConfiguration:
             textBundleBaseURL: ~{srv-api/srv-url}
             textBundleEndPoint: /dpp/retention/i18n-files/i18n.properties
@@ -273,8 +273,8 @@ resources:
       service: saas-registry
       service-plan: application
       config:
-        xsappname: incidents-${org}-dpp-smpl
-        appName: incidents-${org}-dpp-smpl
+        xsappname: incidents-${org}-${space}
+        appName: incidents-${org}-${space}
         displayName: incidents
         description: CAP DPP Sample for DPI MTX.
         category: "Category"
