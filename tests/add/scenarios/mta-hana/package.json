@@ -1,0 +1,30 @@
+{
+  "name": "add-mta-hana",
+  "version": "1.0.0",
+  "dependencies": {
+    "@sap/cds": "^9",
+    "@cap-js/hana": "^2",
+    "@cap-js/data-privacy": "file:../../../../"
+  },
+  "devDependencies": {
+    "@cap-js/sqlite": "^2",
+    "@sap/cds-dk": "^9"
+  },
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "hana"
+      },
+      "auth": {
+        "kind": "xsuaa",
+        "[production]": {
+          "kind": "xsuaa"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "start": "cds-serve"
+  },
+  "private": true
+}

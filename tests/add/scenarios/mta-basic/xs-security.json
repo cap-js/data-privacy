@@ -1,0 +1,7 @@
+{
+  "xsappname": "test-add-basic",
+  "tenant-mode": "dedicated",
+  "scopes": [],
+  "role-templates": [],
+  "role-collections": []
+}

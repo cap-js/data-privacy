@@ -1,0 +1,7 @@
+{
+  "xsappname": "test-add-hana",
+  "tenant-mode": "dedicated",
+  "scopes": [],
+  "role-templates": [],
+  "role-collections": []
+}
