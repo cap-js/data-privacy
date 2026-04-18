@@ -94,13 +94,19 @@ describe("cds add data-privacy", () => {
       expect(info).toBeDefined();
       expect(info.parameters.service).toBe("data-privacy-integration-service");
       expect(info.parameters["service-plan"]).toBe("data-privacy-internal");
-      expect(info.parameters.config.dataPrivacyConfiguration.informationConfiguration).toBeDefined();
+      expect(
+        info.parameters.config.dataPrivacyConfiguration.informationConfiguration
+      ).toBeDefined();
 
       const retention = findDpiResource(mta, "retention");
       expect(retention).toBeDefined();
       expect(retention.parameters.service).toBe("data-privacy-integration-service");
-      expect(retention.parameters.config.dataPrivacyConfiguration.retentionConfiguration).toBeDefined();
-      expect(retention.parameters.config.dataPrivacyConfiguration.translationConfiguration).toBeDefined();
+      expect(
+        retention.parameters.config.dataPrivacyConfiguration.retentionConfiguration
+      ).toBeDefined();
+      expect(
+        retention.parameters.config.dataPrivacyConfiguration.translationConfiguration
+      ).toBeDefined();
     });
 
     test("srv module requires DPI resources", () => {
@@ -123,10 +129,10 @@ describe("cds add data-privacy", () => {
     });
 
     test("enableAutoSubscription is true for single-tenant", () => {
-      const infoApp = findDpiResource(mta, "information")
-        .parameters.config.dataPrivacyConfiguration.applicationConfiguration;
-      const retApp = findDpiResource(mta, "retention")
-        .parameters.config.dataPrivacyConfiguration.applicationConfiguration;
+      const infoApp = findDpiResource(mta, "information").parameters.config.dataPrivacyConfiguration
+        .applicationConfiguration;
+      const retApp = findDpiResource(mta, "retention").parameters.config.dataPrivacyConfiguration
+        .applicationConfiguration;
       expect(infoApp.enableAutoSubscription).toBe(true);
       expect(retApp.enableAutoSubscription).toBe(true);
     });
@@ -160,10 +166,10 @@ describe("cds add data-privacy", () => {
     });
 
     test("enableAutoSubscription is not set for multi-tenant", () => {
-      const infoApp = findDpiResource(mta, "information")
-        .parameters.config.dataPrivacyConfiguration.applicationConfiguration;
-      const retApp = findDpiResource(mta, "retention")
-        .parameters.config.dataPrivacyConfiguration.applicationConfiguration;
+      const infoApp = findDpiResource(mta, "information").parameters.config.dataPrivacyConfiguration
+        .applicationConfiguration;
+      const retApp = findDpiResource(mta, "retention").parameters.config.dataPrivacyConfiguration
+        .applicationConfiguration;
       expect(infoApp.enableAutoSubscription).toBeUndefined();
       expect(retApp.enableAutoSubscription).toBeUndefined();
     });
@@ -223,12 +229,18 @@ describe("cds add data-privacy", () => {
       runCdsAdd(appRoot);
       const mtaFirst = fs.readFileSync(path.join(appRoot, "mta.yaml"), "utf-8");
       const xsFirst = fs.readFileSync(path.join(appRoot, "xs-security.json"), "utf-8");
-      const sidecarFirst = fs.readFileSync(path.join(appRoot, "mtx", "sidecar", "package.json"), "utf-8");
+      const sidecarFirst = fs.readFileSync(
+        path.join(appRoot, "mtx", "sidecar", "package.json"),
+        "utf-8"
+      );
 
       runCdsAdd(appRoot);
       const mtaSecond = fs.readFileSync(path.join(appRoot, "mta.yaml"), "utf-8");
       const xsSecond = fs.readFileSync(path.join(appRoot, "xs-security.json"), "utf-8");
-      const sidecarSecond = fs.readFileSync(path.join(appRoot, "mtx", "sidecar", "package.json"), "utf-8");
+      const sidecarSecond = fs.readFileSync(
+        path.join(appRoot, "mtx", "sidecar", "package.json"),
+        "utf-8"
+      );
 
       expect(mtaSecond).toBe(mtaFirst);
       expect(xsSecond).toBe(xsFirst);

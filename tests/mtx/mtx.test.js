@@ -50,10 +50,9 @@ describe("Retention service (MTX)", () => {
   });
 
   test("ILM object Incidents is enabled for tenant", async () => {
-    const { status, data } = await GET(
-      "/dpp/retention/iLMObjects/Incidents/isILMObjectEnabled",
-      { auth: ALICE }
-    );
+    const { status, data } = await GET("/dpp/retention/iLMObjects/Incidents/isILMObjectEnabled", {
+      auth: ALICE
+    });
     expect(status).toBe(200);
     expect(data.isILMObjectEnabled).toBe(true);
   });

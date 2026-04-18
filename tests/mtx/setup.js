@@ -31,7 +31,9 @@ function ensureSidecarPlugin() {
  * Remove all db*.sqlite, db*.sqlite-shm and db*.sqlite-wal files from incidents-mgmt root.
  */
 function cleanDbFiles() {
-  for (const f of fs.readdirSync(INCIDENTS_DIR).filter((f) => /^db.*\.sqlite(-shm|-wal)?$/.test(f))) {
+  for (const f of fs
+    .readdirSync(INCIDENTS_DIR)
+    .filter((f) => /^db.*\.sqlite(-shm|-wal)?$/.test(f))) {
     fs.unlinkSync(path.join(INCIDENTS_DIR, f));
   }
 }
@@ -80,20 +82,17 @@ function startSidecar() {
  * Subscribe a tenant via the sidecar's SaaS Provisioning endpoint.
  */
 async function subscribeTenant(tenant, port) {
-  const res = await fetch(
-    `http://localhost:${port}/-/cds/saas-provisioning/tenant/${tenant}`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Basic " + Buffer.from("yves:").toString("base64")
-      },
-      body: JSON.stringify({
-        subscribedTenantId: tenant,
-        subscribedSubdomain: tenant
-      })
-    }
-  );
+  const res = await fetch(`http://localhost:${port}/-/cds/saas-provisioning/tenant/${tenant}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Basic " + Buffer.from("yves:").toString("base64")
+    },
+    body: JSON.stringify({
+      subscribedTenantId: tenant,
+      subscribedSubdomain: tenant
+    })
+  });
   return res.status;
 }
 
