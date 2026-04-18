@@ -1,6 +1,7 @@
 const { spawn, execSync } = require("child_process");
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
 
 const INCIDENTS_DIR = path.join(__dirname, "..", "incidents-mgmt");
 const SIDECAR_DIR = path.join(INCIDENTS_DIR, "mtx", "sidecar");
@@ -15,11 +16,12 @@ const ALICE = { username: "alice", password: "" }; // tenant t1, DPI roles
 function ensureSidecarPlugin() {
   const pkgPath = path.join(SIDECAR_DIR, "package.json");
   const originalPkg = fs.readFileSync(pkgPath, "utf-8");
-  const tgz = execSync("npm pack --pack-destination /tmp", {
+  const tmpDir = os.tmpdir();
+  const tgz = execSync(`npm pack --pack-destination ${tmpDir}`, {
     cwd: ROOT_DIR,
     encoding: "utf-8"
   }).trim();
-  execSync(`npm install /tmp/${tgz}`, {
+  execSync(`npm install ${path.join(tmpDir, tgz)}`, {
     cwd: SIDECAR_DIR,
     encoding: "utf-8",
     stdio: "ignore"
@@ -31,10 +33,18 @@ function ensureSidecarPlugin() {
  * Remove all db*.sqlite, db*.sqlite-shm and db*.sqlite-wal files from incidents-mgmt root.
  */
 function cleanDbFiles() {
-  for (const f of fs
-    .readdirSync(INCIDENTS_DIR)
-    .filter((f) => /^db.*\.sqlite(-shm|-wal)?$/.test(f))) {
-    fs.unlinkSync(path.join(INCIDENTS_DIR, f));
+  let files;
+  try {
+    files = fs.readdirSync(INCIDENTS_DIR);
+  } catch {
+    return;
+  }
+  for (const f of files.filter((f) => /^db.*\.sqlite(-shm|-wal)?$/.test(f))) {
+    try {
+      fs.unlinkSync(path.join(INCIDENTS_DIR, f));
+    } catch {
+      /* ignore */
+    }
   }
 }
 
@@ -101,8 +111,15 @@ async function subscribeTenant(tenant, port) {
  */
 async function stopSidecar(proc) {
   if (proc && !proc.killed) {
-    proc.kill();
-    await new Promise((resolve) => proc.on("exit", resolve));
+    if (proc.exitCode !== null) {
+      // already exited
+    } else {
+      proc.kill();
+      await Promise.race([
+        new Promise((resolve) => proc.on("exit", resolve)),
+        new Promise((resolve) => setTimeout(resolve, 5_000))
+      ]);
+    }
   }
   cleanDbFiles();
 }

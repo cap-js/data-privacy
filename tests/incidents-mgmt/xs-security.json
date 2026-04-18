@@ -2,12 +2,12 @@
   "scopes": [
     {
       "name": "$XSAPPNAME.PersonalDataManagerUser",
-      "description": "Technial scope to restrict access to information endpoint",
+      "description": "Technical scope to restrict access to information endpoint",
       "grant-as-authority-to-apps": ["$XSSERVICENAME(incidents-information2)"]
     },
     {
       "name": "$XSAPPNAME.DataRetentionManagerUser",
-      "description": "Technial scope to restrict access to retention endpoint",
+      "description": "Technical scope to restrict access to retention endpoint",
       "grant-as-authority-to-apps": ["$XSSERVICENAME(incidents-retention2)"]
     },
     {
