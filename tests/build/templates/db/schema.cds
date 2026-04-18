@@ -1,4 +1,3 @@
-// Proxy for importing schema from bookshop sample
 using {
   Country,
   Currency,
@@ -10,12 +9,8 @@ using {
 namespace sap.capire.bookshop;
 
 entity Authors : managed {
-  key ID           : Integer;
-      name         : String(111);
-      dateOfBirth  : Date;
-      dateOfDeath  : Date;
-      placeOfBirth : String;
-      placeOfDeath : String;
+  key ID   : Integer;
+      name : String(111);
 }
 
 entity Genres : CodeList {
@@ -51,63 +46,41 @@ entity Deliveries : cuid {
   comment : String;
 }
 
-@title: ''
-@Core.Description: 'Payment Document'
 entity Payments : cuid, managed {
-  Order    : Association to Orders @title: 'Order';
-  payDate  : Date @title: 'Pay date';
-  amount   : Decimal(15, 2) @title: 'Amount';
-  currency : Currency @title: 'Currency';
+  Order    : Association to Orders;
+  payDate  : Date;
+  amount   : Decimal(15, 2);
+  currency : Currency;
 }
 
-@Core.Description: 'Customer'
 entity Customers : cuid, managed {
-  email         : String @title: 'Email';
-  firstName     : String @title: 'First name';
-  lastName      : String @title: 'Last name';
-  gender        : String @title: 'Gender';
-  dateOfBirth   : Date @title: 'Date of birth';
-  legalEntity   : Association to one LegalEntities @title: 'Legal entity';
+  email         : String;
+  firstName     : String;
+  lastName      : String;
+  gender        : String;
+  dateOfBirth   : Date;
+  legalEntity   : Association to one LegalEntities;
   postalAddress : Composition of one CustomerPostalAddress
-                    on postalAddress.Customer = $self
-                  @title: 'Postal address';
+                    on postalAddress.Customer = $self;
   billingData   : Composition of one CustomerBillingData
-                    on billingData.Customer = $self
-                  @title: 'Billing data';
+                    on billingData.Customer = $self;
 }
-
 
 entity CustomerBillingData : cuid, managed {
   Customer     : Association to one Customers;
-  creditCardNo : String @title: 'Credit card number';
+  creditCardNo : String;
 }
 
 entity CustomerPostalAddress : cuid, managed {
   Customer       : Association to one Customers;
   street         : String(128);
-  endOfCustomer  : Date @PersonalData.FieldSemantics: 'EndOfBusinessDate'; //To test that attributes on comp level are included
+  endOfCustomer  : Date @PersonalData.FieldSemantics: 'EndOfBusinessDate';
   town           : String(128);
   country        : Country;
   someOtherField : String(128);
-};
-
-@UI.HeaderInfo: {
-  TypeName: 'LegalEntity',
-  TypeNamePlural: 'LegalEntities',
-  Title: {Value: title, },
-  Description: {Value: description}
 }
+
 entity LegalEntities : managed {
   key title       : String;
       description : String;
 }
-
-
-annotate Payments with {
-  ID @title: 'ID';
-}
-
-annotate Orders with {
-  ID @title: 'ID';
-
-};

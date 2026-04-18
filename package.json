@@ -27,9 +27,6 @@
     "CHANGELOG.md"
   ],
   "workspaces": [
-    "tests/build/scenarios/app1",
-    "tests/build/scenarios/app2",
-    "tests/build/scenarios/app3",
     "tests/information/extend-information-endpoint",
     "tests/retention/extend-retention-endpoint"
   ],
