@@ -19,7 +19,7 @@ jobs:
       matrix:
         node-version: [20.x, 22.x]
         cds-version: [latest]
-        testSuite: [tests/csn-enhancements, tests/retention, tests/information, tests/build, tests/add]
+        testSuite: [tests/]
     steps:
       - uses: actions/checkout@v4
         with:
