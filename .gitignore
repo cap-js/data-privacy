@@ -8,3 +8,7 @@ coverage/
 _out
 # added by cds
 .cdsrc-private.json
+default-env.json
+*.tgz
+dist/
+*.mtar

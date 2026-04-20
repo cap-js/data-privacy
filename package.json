@@ -1,6 +1,6 @@
 {
   "name": "@cap-js/data-privacy",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "CDS plugin providing an integration with the SAP Data Privacy Integration service for PII data retention and information retrieval based on annotations.",
   "license": "Apache-2.0",
   "author": "SAP SE (https://www.sap.com)",
@@ -25,13 +25,6 @@
     "README.md",
     "LICENSE",
     "CHANGELOG.md"
-  ],
-  "workspaces": [
-    "tests/build/scenarios/app1",
-    "tests/build/scenarios/app2",
-    "tests/build/scenarios/app3",
-    "tests/information/extend-information-endpoint",
-    "tests/retention/extend-retention-endpoint"
   ],
   "dependencies": {
     "@sap/xsenv": "^6.1.0"
@@ -59,10 +52,6 @@
     "lint": "npx eslint .",
     "format": "prettier . --write && format-cds -f",
     "format:check": "prettier . --check && format-cds --check",
-    "test-setup": "npm run setupBookshopTest && npm run setupExtendDPIBookshop && npm run setupExtendInformationBookshop",
-    "setupBookshopTest": "cd ./tests/bookshop-app && rm -rf package-lock.json && rm -rf ./node_modules/ && npm link ../../ && npm i && rm -rf ./node_modules/@sap/cds",
-    "setupExtendDPIBookshop": "cd ./tests/retention/extend-retention-endpoint && npm i && rm -rf ./node_modules/@sap/cds",
-    "setupExtendInformationBookshop": "cd ./tests/information/extend-information-endpoint && npm i && rm -rf ./node_modules/@sap/cds",
     "test": "npx jest --silent",
     "test:integration": "cds bind --exec -- npx jest --silent --testPathPatterns \"tests/retention/dataSubjectDeletion.test.js|tests/information/information-service.test.js\""
   },
@@ -86,5 +75,12 @@
         }
       }
     }
-  }
+  },
+  "workspaces": [
+    "tests/bookshop-app",
+    "tests/incidents-mgmt",
+    "tests/incidents-mgmt/mtx/sidecar",
+    "tests/information/extend-information-endpoint",
+    "tests/retention/extend-retention-endpoint"
+  ]
 }

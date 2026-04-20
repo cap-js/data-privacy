@@ -21,13 +21,6 @@ runs:
       run: |
         npm install @sap/cds@${{ inputs.CDS_VERSION }}
         npm install
-    - name: Install bookshop
-      shell: bash
-      run: |
-        cd ./tests/bookshop-app
-        npm link ../../
-        npm install
-        rm -rf ./node_modules/@sap/cds
     - name: CDS version
       shell: bash
       run: cds v -i

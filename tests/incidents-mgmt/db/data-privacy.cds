@@ -9,8 +9,6 @@ annotate incidents.Customers with @(PersonalData: {
   lastName @PersonalData.IsPotentiallyPersonal;
   email @PersonalData.IsPotentiallyPersonal;
   phone @PersonalData.IsPotentiallyPersonal;
-  legalEntity @PersonalData.FieldSemantics: 'DataControllerID';
-
 };
 
 annotate incidents.Incidents with @(
@@ -24,12 +22,9 @@ annotate incidents.Incidents with @(
   }
 ) {
   title @PersonalData.IsPotentiallyPersonal;
-  urgency @Common.Label: 'Custom Property Name'
-  @Core.Description: 'Detailed description of urgency';
-  conversations @Common.Label: 'Conversations'
-  @Core.Description: 'Detailed description of Conversations';
-  legalEntity @PersonalData.FieldSemantics: 'DataControllerID'
-  @Common.ValueList: {
+  urgency  @Common.Label: 'Custom Property Name'  @Core.Description: 'Detailed description of urgency';
+  conversations  @Common.Label: 'Conversations'  @Core.Description: 'Detailed description of Conversations';
+  legalEntity  @PersonalData.FieldSemantics: 'DataControllerID'  @Common.ValueList: {
     CollectionPath: 'LegalEntities',
     Parameters: [
       {
