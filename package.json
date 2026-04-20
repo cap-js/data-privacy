@@ -27,6 +27,9 @@
     "CHANGELOG.md"
   ],
   "workspaces": [
+    "tests/bookshop-app",
+    "tests/incidents-mgmt",
+    "tests/incidents-mgmt/mtx/sidecar",
     "tests/information/extend-information-endpoint",
     "tests/retention/extend-retention-endpoint"
   ],
@@ -56,10 +59,6 @@
     "lint": "npx eslint .",
     "format": "prettier . --write && format-cds -f",
     "format:check": "prettier . --check && format-cds --check",
-    "test-setup": "npm run setupBookshopTest && npm run setupExtendDPIBookshop && npm run setupExtendInformationBookshop",
-    "setupBookshopTest": "cd ./tests/bookshop-app && rm -rf package-lock.json && rm -rf ./node_modules/ && npm link ../../ && npm i && rm -rf ./node_modules/@sap/cds",
-    "setupExtendDPIBookshop": "cd ./tests/retention/extend-retention-endpoint && npm i && rm -rf ./node_modules/@sap/cds",
-    "setupExtendInformationBookshop": "cd ./tests/information/extend-information-endpoint && npm i && rm -rf ./node_modules/@sap/cds",
     "test": "npx jest --silent",
     "test:integration": "cds bind --exec -- npx jest --silent --testPathPatterns \"tests/retention/dataSubjectDeletion.test.js|tests/information/information-service.test.js\""
   },

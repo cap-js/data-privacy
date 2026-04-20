@@ -8,7 +8,7 @@ build-parameters:
   before-all:
     - builder: custom
       commands:
-        - npm unlink @cap-js/data-privacy
+        - node deploy-patches.js apply
         - npm pack ../../
         - sh -c 'TGZ_FILE="$(ls -1 | grep -E "^cap-js-data-privacy.*\.tgz$" | head -n 1)" && npm install "./${TGZ_FILE}"'
         - npm ci
@@ -17,8 +17,7 @@ build-parameters:
   after-all:
     - builder: custom
       commands:
-        - npm link ../../
-        - rm -rf ./node_modules/@sap/cds
+        - node deploy-patches.js revert
 modules:
   - name: bookshop-srv
     type: nodejs

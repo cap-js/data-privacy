@@ -9,7 +9,7 @@ build-parameters:
   before-all:
     - builder: custom
       commands:
-        - npm unlink @cap-js/data-privacy
+        - node deploy-patches.js apply
         - npm pack ../../
         - sh -c 'TGZ_FILE="$(ls -1 | grep -E "^cap-js-data-privacy.*\.tgz$" | head -n 1)" && npm install "./${TGZ_FILE}"'
         - npm ci
@@ -18,9 +18,12 @@ build-parameters:
         - mkdir gen/app
         - cp app/cdm.json gen/app/cdm.json
         # Sidecar version
-        - cd ./mtx/sidecar && npm unlink @cap-js/data-privacy
         - cd ./mtx/sidecar && npm pack ../../../..
         - cd ./mtx/sidecar && sh -c 'TGZ_FILE="$(ls -1 | grep -E "^cap-js-data-privacy.*\.tgz$" | head -n 1)" && npm install "./${TGZ_FILE}"'
+  after-all:
+    - builder: custom
+      commands:
+        - node deploy-patches.js revert
 modules:
   - name: incidents-srv
     type: nodejs
