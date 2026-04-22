@@ -4,6 +4,12 @@
 - The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - This project adheres to [Semantic Versioning](https://semver.org/).
 
+## Version 0.6.1 - 22.04.2026
+
+### Fixed
+
+- Fixed an issue where entities with joins or unions would crash the data privacy service generation logic.
+
 ## Version 0.6.0 - 18.04.2026
 
 ### Added

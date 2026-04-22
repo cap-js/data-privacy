@@ -77,6 +77,10 @@ annotate bookshop.Marketing with @(
   legalEntity @PersonalData.FieldSemantics: 'DataControllerID';
 };
 
+annotate bookshop.Marketing.Campaigns with {
+  name @PersonalData.IsPotentiallyPersonal;
+};
+
 annotate bookshop.ILMObjectWithStaticBlockingDisabled with @(
   PersonalData.DataSubjectRole: 'Customer',
   PersonalData.EntitySemantics: 'Other',

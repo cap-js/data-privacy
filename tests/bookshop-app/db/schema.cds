@@ -123,6 +123,13 @@ entity Marketing : cuid, managed {
   text          : String @title: 'Text';
   marketingDate : Date @title: 'Marketing date';
   legalEntity   : Association to one LegalEntities @title: 'Legal entity';
+  // Inline composition — CAP auto-generates Marketing.Campaigns entity with up_ backlink
+  Campaigns     : Composition of many {
+    key ID      : UUID;
+        name    : String @title: 'Campaign name';
+        channel : String @title: 'Channel';
+        budget  : Decimal(15, 2) @title: 'Budget';
+  };
 }
 
 entity ILMObjectWithStaticBlockingDisabled : cuid {
