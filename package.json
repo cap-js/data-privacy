@@ -63,7 +63,8 @@
       "sap.ilm.RetentionService": {
         "kind": "TableHeaderBlocking",
         "external": false,
-        "tableRestrictions": "srv"
+        "tableRestrictions": "srv",
+        "maxProjectionDepth": 20
       },
       "sap.dpp.InformationService": {
         "external": false,
