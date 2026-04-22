@@ -13,19 +13,19 @@ const DPI_Service = { username: "dpi", password: "1234" };
 
 describe("Inline composition (up_ backlink) on ILM entity", () => {
   test("Inline composition entity is exposed in RetentionService", () => {
-    const campaigns = cds.model.definitions["sap.ilm.RetentionService.Campaigns"];
+    const campaigns = cds.model.definitions["sap.ilm.RetentionService.Marketing_Campaigns"];
     expect(campaigns).toBeTruthy();
     expect(campaigns.kind).toEqual("entity");
   });
 
   test("Inline composition entity is exposed in InformationService", () => {
-    const campaigns = cds.model.definitions["sap.dpp.InformationService.Campaigns"];
+    const campaigns = cds.model.definitions["sap.dpp.InformationService.Marketing_Campaigns"];
     expect(campaigns).toBeTruthy();
     expect(campaigns.kind).toEqual("entity");
   });
 
   test("Exposed composition in InformationService has backlink to parent", () => {
-    const campaigns = cds.model.definitions["sap.dpp.InformationService.Campaigns"];
+    const campaigns = cds.model.definitions["sap.dpp.InformationService.Marketing_Campaigns"];
     expect(campaigns).toBeTruthy();
     // Should have a backlink association pointing to Marketing in the service
     const backlink = Object.entries(campaigns.elements).find(
@@ -35,7 +35,7 @@ describe("Inline composition (up_ backlink) on ILM entity", () => {
   });
 
   test("Exposed composition in RetentionService has backlink to parent", () => {
-    const campaigns = cds.model.definitions["sap.ilm.RetentionService.Campaigns"];
+    const campaigns = cds.model.definitions["sap.ilm.RetentionService.Marketing_Campaigns"];
     expect(campaigns).toBeTruthy();
     const backlink = Object.entries(campaigns.elements).find(
       ([, e]) => e.type === "cds.Association" && e.target === "sap.ilm.RetentionService.Marketing"
@@ -44,7 +44,7 @@ describe("Inline composition (up_ backlink) on ILM entity", () => {
   });
 
   test("Inline composition has blocking aspect in RetentionService", () => {
-    const campaigns = cds.model.definitions["sap.ilm.RetentionService.Campaigns"];
+    const campaigns = cds.model.definitions["sap.ilm.RetentionService.Marketing_Campaigns"];
     expect(campaigns).toBeTruthy();
     const blockingField = Object.entries(campaigns.elements).find(
       ([, e]) => e["@PersonalData.FieldSemantics"] === "BlockingDate"
@@ -53,7 +53,7 @@ describe("Inline composition (up_ backlink) on ILM entity", () => {
   });
 
   test("InformationService Campaigns can be read via OData", async () => {
-    const { status, data } = await GET("/dpp/information/Campaigns", {
+    const { status, data } = await GET("/dpp/information/Marketing_Campaigns", {
       auth: DPI_Service
     });
     expect(status).toEqual(200);
@@ -71,7 +71,7 @@ describe("Inline composition (up_ backlink) on ILM entity", () => {
   });
 
   test("Personal data annotation on inline composition field is preserved", () => {
-    const campaigns = cds.model.definitions["sap.dpp.InformationService.Campaigns"];
+    const campaigns = cds.model.definitions["sap.dpp.InformationService.Marketing_Campaigns"];
     expect(campaigns).toBeTruthy();
     expect(campaigns.elements.name["@PersonalData.IsPotentiallyPersonal"]).toBeTruthy();
   });
@@ -109,19 +109,19 @@ describe("Inline composition via projection — up_ targets base entity, only pr
   });
 
   test("Attachments composition is exposed in InformationService", () => {
-    const attachments = model.definitions["sap.dpp.InformationService.Attachments"];
+    const attachments = model.definitions["sap.dpp.InformationService.Newsletters_Attachments"];
     expect(attachments).toBeTruthy();
     expect(attachments.kind).toEqual("entity");
   });
 
   test("Attachments composition is exposed in RetentionService", () => {
-    const attachments = model.definitions["sap.ilm.RetentionService.Attachments"];
+    const attachments = model.definitions["sap.ilm.RetentionService.Newsletters_Attachments"];
     expect(attachments).toBeTruthy();
     expect(attachments.kind).toEqual("entity");
   });
 
   test("up_ backlink is preserved on Attachments in InformationService (resolved through projection hierarchy)", () => {
-    const attachments = model.definitions["sap.dpp.InformationService.Attachments"];
+    const attachments = model.definitions["sap.dpp.InformationService.Newsletters_Attachments"];
     expect(attachments).toBeTruthy();
     const backlinkElement = Object.entries(attachments.elements).find(
       ([, e]) =>
@@ -131,7 +131,7 @@ describe("Inline composition via projection — up_ targets base entity, only pr
   });
 
   test("up_ backlink is preserved on Attachments in RetentionService (resolved through projection hierarchy)", () => {
-    const attachments = model.definitions["sap.ilm.RetentionService.Attachments"];
+    const attachments = model.definitions["sap.ilm.RetentionService.Newsletters_Attachments"];
     expect(attachments).toBeTruthy();
     const backlinkElement = Object.entries(attachments.elements).find(
       ([, e]) =>
@@ -141,7 +141,7 @@ describe("Inline composition via projection — up_ targets base entity, only pr
   });
 
   test("Personal data annotation on Attachments field is preserved", () => {
-    const attachments = model.definitions["sap.dpp.InformationService.Attachments"];
+    const attachments = model.definitions["sap.dpp.InformationService.Newsletters_Attachments"];
     expect(attachments).toBeTruthy();
     expect(attachments.elements.fileName["@PersonalData.IsPotentiallyPersonal"]).toBeTruthy();
   });
