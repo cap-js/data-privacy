@@ -1,7 +1,8 @@
 using {
   sap.capire.bookshop.Orders,
   sap.capire.bookshop.OrderItems,
-  sap.capire.bookshop.Customers
+  sap.capire.bookshop.Customers,
+  sap.capire.bookshop.Marketing
 } from './schema';
 
 
@@ -102,3 +103,19 @@ view OrdersJoinUnion as
     }
     where
       o.OrderNo like 'B%';
+
+
+// Join of two ILM entities — both have blocking dates.
+// min() must collect from ALL joined entities.
+entity OrdersWithMarketing     as
+  select from Orders as o
+  left outer join Marketing as m
+    on m.Customer = o.Customer
+  {
+    o.ID,
+    o.endOfWarrantyDate,
+    o.legalEntity,
+    o.OrderNo,
+    m.text as marketingText,
+    m.marketingDate
+  };

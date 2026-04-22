@@ -97,7 +97,7 @@ describe("Join and Union view handling", () => {
     expect(blockingField).toBeTruthy();
   });
 
-  test("Join views use min() for blocking field in query columns", async () => {
+  test("Join views add blocking field to query columns", async () => {
     const model = await cds.load([
       "db/schema.cds",
       "db/data-privacy.cds",
@@ -108,17 +108,15 @@ describe("Join and Union view handling", () => {
     const ordersWithItems = model.definitions["OrdersWithItems"];
     expect(ordersWithItems).toBeTruthy();
     const columns = ordersWithItems.query.SELECT.columns;
-    // Find the blocking date column — should use min() wrapping
     const blockingFieldName = Object.entries(ordersWithItems.elements).find(
       ([, e]) => e["@PersonalData.FieldSemantics"] === "BlockingDate"
     )?.[0];
     expect(blockingFieldName).toBeTruthy();
-    const minColumn = columns.find((c) => c.func === "min" && c.as === blockingFieldName);
-    expect(minColumn).toBeTruthy();
-    expect(minColumn.args).toEqual([{ ref: [blockingFieldName] }]);
+    const blockingCol = columns.find((c) => c.as === blockingFieldName);
+    expect(blockingCol).toBeTruthy();
   });
 
-  test("Join views use min() for end of retention field in query columns", async () => {
+  test("Join views add retention field to query columns with aliased ref", async () => {
     const model = await cds.load([
       "db/schema.cds",
       "db/data-privacy.cds",
@@ -133,9 +131,11 @@ describe("Join and Union view handling", () => {
       ([, e]) => e["@PersonalData.FieldSemantics"] === "EndOfRetentionDate"
     )?.[0];
     expect(retentionFieldName).toBeTruthy();
-    const minColumn = columns.find((c) => c.func === "min" && c.as === retentionFieldName);
-    expect(minColumn).toBeTruthy();
-    expect(minColumn.args).toEqual([{ ref: [retentionFieldName] }]);
+    const retentionCol = columns.find((c) => c.as === retentionFieldName);
+    expect(retentionCol).toBeTruthy();
+    // Single source (only Orders) — aliased ref
+    expect(retentionCol.ref).toBeTruthy();
+    expect(retentionCol.ref[0]).toEqual("o");
   });
 
   test("Union views expose blocking field in elements", async () => {
@@ -155,7 +155,7 @@ describe("Join and Union view handling", () => {
     expect(blockingField).toBeTruthy();
   });
 
-  test("Inner join entity resolves correctly and exposes blocking field with min()", async () => {
+  test("Inner join entity resolves correctly and exposes blocking field", async () => {
     const model = await cds.load([
       "db/schema.cds",
       "db/data-privacy.cds",
@@ -174,20 +174,19 @@ describe("Join and Union view handling", () => {
     );
     expect(blockingField).toBeTruthy();
 
-    // Should use min() in query columns
+    // Blocking field in query columns
     const columns = ordersInnerJoin.query.SELECT.columns;
     const blockingFieldName = blockingField[0];
-    const minColumn = columns.find((c) => c.func === "min" && c.as === blockingFieldName);
-    expect(minColumn).toBeTruthy();
-    expect(minColumn.args).toEqual([{ ref: [blockingFieldName] }]);
+    const blockingCol = columns.find((c) => c.as === blockingFieldName);
+    expect(blockingCol).toBeTruthy();
 
     // Retention field should also use min()
     const retentionField = Object.entries(ordersInnerJoin.elements).find(
       ([, e]) => e["@PersonalData.FieldSemantics"] === "EndOfRetentionDate"
     );
     expect(retentionField).toBeTruthy();
-    const retentionMinColumn = columns.find((c) => c.func === "min" && c.as === retentionField[0]);
-    expect(retentionMinColumn).toBeTruthy();
+    const retentionCol = columns.find((c) => c.as === retentionField[0]);
+    expect(retentionCol).toBeTruthy();
   });
 
   test("Union of nested joins exposes blocking field in elements and each union SELECT", async () => {
@@ -228,5 +227,81 @@ describe("Join and Union view handling", () => {
       const hasRetention = arg.SELECT.columns.some((c) => c.ref && c.ref[0] === retentionFieldName);
       expect(hasRetention).toBeTruthy();
     }
+  });
+
+  test("Join of two ILM entities uses min(CASE...) for blocking field", async () => {
+    const model = await cds.load([
+      "db/schema.cds",
+      "db/data-privacy.cds",
+      "db/join-union.cds",
+      "@cap-js/data-privacy/srv/DPIInformation",
+      "@cap-js/data-privacy/srv/TableHeaderBlocking"
+    ]);
+    const entity = model.definitions["OrdersWithMarketing"];
+    expect(entity).toBeTruthy();
+    expect(log.output).not.toContain("[ERROR]");
+
+    const blockingFieldName = Object.entries(entity.elements).find(
+      ([, e]) => e["@PersonalData.FieldSemantics"] === "BlockingDate"
+    )?.[0];
+    expect(blockingFieldName).toBeTruthy();
+
+    const columns = entity.query.SELECT.columns;
+    const caseCol = columns.find((c) => c.xpr && c.as === blockingFieldName);
+    expect(caseCol).toBeTruthy();
+
+    // CASE expression picks earliest non-null across both join sources
+    expect(caseCol.xpr[0]).toEqual("case");
+    const refEntries = caseCol.xpr.filter((x) => x.ref);
+    const aliases = [...new Set(refEntries.map((r) => r.ref[0]))];
+    expect(aliases).toContain("o");
+    expect(aliases).toContain("m");
+  });
+
+  test("Join of two ILM entities uses CASE for retention field", async () => {
+    const model = await cds.load([
+      "db/schema.cds",
+      "db/data-privacy.cds",
+      "db/join-union.cds",
+      "@cap-js/data-privacy/srv/DPIInformation",
+      "@cap-js/data-privacy/srv/TableHeaderBlocking"
+    ]);
+    const entity = model.definitions["OrdersWithMarketing"];
+    expect(entity).toBeTruthy();
+
+    const retentionFieldName = Object.entries(entity.elements).find(
+      ([, e]) => e["@PersonalData.FieldSemantics"] === "EndOfRetentionDate"
+    )?.[0];
+    expect(retentionFieldName).toBeTruthy();
+
+    const columns = entity.query.SELECT.columns;
+    const caseCol = columns.find((c) => c.xpr && c.as === retentionFieldName);
+    expect(caseCol).toBeTruthy();
+    expect(caseCol.xpr[0]).toEqual("case");
+  });
+
+  test("Join of ILM entity + non-ILM entity uses aliased ref for single-source field", async () => {
+    const model = await cds.load([
+      "db/schema.cds",
+      "db/data-privacy.cds",
+      "db/join-union.cds",
+      "@cap-js/data-privacy/srv/DPIInformation",
+      "@cap-js/data-privacy/srv/TableHeaderBlocking"
+    ]);
+    const entity = model.definitions["OrdersWithItems"];
+    expect(entity).toBeTruthy();
+
+    const retentionFieldName = Object.entries(entity.elements).find(
+      ([, e]) => e["@PersonalData.FieldSemantics"] === "EndOfRetentionDate"
+    )?.[0];
+    expect(retentionFieldName).toBeTruthy();
+
+    const columns = entity.query.SELECT.columns;
+    const retentionCol = columns.find((c) => c.as === retentionFieldName);
+    expect(retentionCol).toBeTruthy();
+    // Only Orders has destruction field — direct aliased ref, no CASE
+    expect(retentionCol.ref).toBeTruthy();
+    expect(retentionCol.ref[0]).toEqual("o");
+    expect(retentionCol.xpr).toBeUndefined();
   });
 });
