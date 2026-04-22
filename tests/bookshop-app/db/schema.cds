@@ -125,25 +125,25 @@ entity Marketing : cuid, managed {
   legalEntity   : Association to one LegalEntities @title: 'Legal entity';
   // Inline composition — CAP auto-generates Marketing.Campaigns entity with up_ backlink
   Campaigns     : Composition of many {
-    key ID      : UUID;
-        name    : String @title: 'Campaign name';
-        channel : String @title: 'Channel';
-        budget  : Decimal(15, 2) @title: 'Budget';
-  };
+                    key ID      : UUID;
+                        name    : String @title: 'Campaign name';
+                        channel : String @title: 'Channel';
+                        budget  : Decimal(15, 2) @title: 'Budget';
+                  };
 }
 
 // Base entity with inline composition + projection pattern
 entity Newsletters : cuid, managed {
-  Customer      : Association to Customers @title: 'Customer';
-  subject       : String @title: 'Subject';
-  sentDate      : Date @title: 'Sent date';
-  legalEntity   : Association to one LegalEntities @title: 'Legal entity';
+  Customer    : Association to Customers @title: 'Customer';
+  subject     : String @title: 'Subject';
+  sentDate    : Date @title: 'Sent date';
+  legalEntity : Association to one LegalEntities @title: 'Legal entity';
   // Inline composition — CAP generates Newsletters.Attachments with up_ backlink to Newsletters
-  Attachments   : Composition of many {
-    key ID       : UUID;
-        fileName : String @title: 'File name';
-        mimeType : String @title: 'MIME type';
-  };
+  Attachments : Composition of many {
+                  key ID       : UUID;
+                      fileName : String @title: 'File name';
+                      mimeType : String @title: 'MIME type';
+                };
 }
 
 // Projection on Newsletters

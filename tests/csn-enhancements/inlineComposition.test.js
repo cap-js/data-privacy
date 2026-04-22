@@ -29,9 +29,7 @@ describe("Inline composition (up_ backlink) on ILM entity", () => {
     expect(campaigns).toBeTruthy();
     // Should have a backlink association pointing to Marketing in the service
     const backlink = Object.entries(campaigns.elements).find(
-      ([, e]) =>
-        e.type === "cds.Association" &&
-        e.target === "sap.dpp.InformationService.Marketing"
+      ([, e]) => e.type === "cds.Association" && e.target === "sap.dpp.InformationService.Marketing"
     );
     expect(backlink).toBeTruthy();
   });
@@ -40,9 +38,7 @@ describe("Inline composition (up_ backlink) on ILM entity", () => {
     const campaigns = cds.model.definitions["sap.ilm.RetentionService.Campaigns"];
     expect(campaigns).toBeTruthy();
     const backlink = Object.entries(campaigns.elements).find(
-      ([, e]) =>
-        e.type === "cds.Association" &&
-        e.target === "sap.ilm.RetentionService.Marketing"
+      ([, e]) => e.type === "cds.Association" && e.target === "sap.ilm.RetentionService.Marketing"
     );
     expect(backlink).toBeTruthy();
   });
@@ -129,8 +125,7 @@ describe("Inline composition via projection — up_ targets base entity, only pr
     expect(attachments).toBeTruthy();
     const backlinkElement = Object.entries(attachments.elements).find(
       ([, e]) =>
-        e.type === "cds.Association" &&
-        e.target === "sap.dpp.InformationService.UserNewsletters"
+        e.type === "cds.Association" && e.target === "sap.dpp.InformationService.UserNewsletters"
     );
     expect(backlinkElement).toBeTruthy();
   });
@@ -140,8 +135,7 @@ describe("Inline composition via projection — up_ targets base entity, only pr
     expect(attachments).toBeTruthy();
     const backlinkElement = Object.entries(attachments.elements).find(
       ([, e]) =>
-        e.type === "cds.Association" &&
-        e.target === "sap.ilm.RetentionService.UserNewsletters"
+        e.type === "cds.Association" && e.target === "sap.ilm.RetentionService.UserNewsletters"
     );
     expect(backlinkElement).toBeTruthy();
   });
@@ -150,5 +144,116 @@ describe("Inline composition via projection — up_ targets base entity, only pr
     const attachments = model.definitions["sap.dpp.InformationService.Attachments"];
     expect(attachments).toBeTruthy();
     expect(attachments.elements.fileName["@PersonalData.IsPotentiallyPersonal"]).toBeTruthy();
+  });
+});
+
+describe("Projection with explicit columns (no *) gets blocking field added to query columns", () => {
+  // LimitedNewsletters selects only specific columns from Newsletters.
+  // The plugin must add blocking/destruction fields to both elements AND query columns.
+
+  let model;
+  beforeAll(async () => {
+    model = await cds.load([
+      "../csn-enhancements/scenarios/inlineCompProjection.cds",
+      "@cap-js/data-privacy/srv/DPIInformation",
+      "@cap-js/data-privacy/srv/TableHeaderBlocking"
+    ]);
+  });
+
+  test("LimitedNewsletters is exposed in RetentionService", () => {
+    const entity = model.definitions["sap.ilm.RetentionService.LimitedNewsletters"];
+    expect(entity).toBeTruthy();
+  });
+
+  test("Blocking field is in LimitedNewsletters elements", () => {
+    const entity = model.definitions["test.inlineComp.LimitedNewsletters"];
+    expect(entity).toBeTruthy();
+    const blockingField = Object.entries(entity.elements).find(
+      ([, e]) => e["@PersonalData.FieldSemantics"] === "BlockingDate"
+    );
+    expect(blockingField).toBeTruthy();
+  });
+
+  test("Blocking field is added to explicit query columns", () => {
+    const entity = model.definitions["test.inlineComp.LimitedNewsletters"];
+    expect(entity).toBeTruthy();
+    const columns = entity.query.SELECT.columns;
+    // Columns should NOT contain * (explicit column list)
+    expect(columns.includes("*")).toBeFalsy();
+    // Blocking field must be in columns
+    const blockingFieldName = Object.entries(entity.elements).find(
+      ([, e]) => e["@PersonalData.FieldSemantics"] === "BlockingDate"
+    )?.[0];
+    expect(blockingFieldName).toBeTruthy();
+    const blockingColumn = columns.find(
+      (c) => c.as === blockingFieldName || (c.ref && c.ref[0] === blockingFieldName)
+    );
+    expect(blockingColumn).toBeTruthy();
+  });
+
+  test("Destruction field is added to explicit query columns", () => {
+    const entity = model.definitions["test.inlineComp.LimitedNewsletters"];
+    expect(entity).toBeTruthy();
+    const columns = entity.query.SELECT.columns;
+    const retentionFieldName = Object.entries(entity.elements).find(
+      ([, e]) => e["@PersonalData.FieldSemantics"] === "EndOfRetentionDate"
+    )?.[0];
+    expect(retentionFieldName).toBeTruthy();
+    const retentionColumn = columns.find(
+      (c) => c.as === retentionFieldName || (c.ref && c.ref[0] === retentionFieldName)
+    );
+    expect(retentionColumn).toBeTruthy();
+  });
+});
+
+describe("Projection on join view — ILM entity -> join -> base entity chain", () => {
+  // ProjectedInvoices -> InvoicesWithItems (join) -> Invoices (base)
+  // Only ProjectedInvoices has DPI annotations. Plugin must walk through
+  // the join to reach the base entity, add blocking there, and propagate up.
+
+  let model;
+  beforeAll(async () => {
+    model = await cds.load([
+      "../csn-enhancements/scenarios/inlineCompProjection.cds",
+      "@cap-js/data-privacy/srv/DPIInformation",
+      "@cap-js/data-privacy/srv/TableHeaderBlocking"
+    ]);
+  });
+
+  test("Model is enhanced without errors", () => {
+    expect(model.meta["sap.ilm.enhanced"]).toEqual(true);
+  });
+
+  test("ProjectedInvoices is exposed in RetentionService", () => {
+    const entity = model.definitions["sap.ilm.RetentionService.ProjectedInvoices"];
+    expect(entity).toBeTruthy();
+    expect(entity.kind).toEqual("entity");
+  });
+
+  test("Blocking field is propagated to base entity Invoices", () => {
+    const invoices = model.definitions["test.inlineComp.Invoices"];
+    expect(invoices).toBeTruthy();
+    const blockingField = Object.entries(invoices.elements).find(
+      ([, e]) => e["@PersonalData.FieldSemantics"] === "BlockingDate"
+    );
+    expect(blockingField).toBeTruthy();
+  });
+
+  test("Blocking field is in ProjectedInvoices elements", () => {
+    const entity = model.definitions["test.inlineComp.ProjectedInvoices"];
+    expect(entity).toBeTruthy();
+    const blockingField = Object.entries(entity.elements).find(
+      ([, e]) => e["@PersonalData.FieldSemantics"] === "BlockingDate"
+    );
+    expect(blockingField).toBeTruthy();
+  });
+
+  test("Blocking field is in the intermediate join view elements", () => {
+    const joinView = model.definitions["test.inlineComp.InvoicesWithItems"];
+    expect(joinView).toBeTruthy();
+    const blockingField = Object.entries(joinView.elements).find(
+      ([, e]) => e["@PersonalData.FieldSemantics"] === "BlockingDate"
+    );
+    expect(blockingField).toBeTruthy();
   });
 });
