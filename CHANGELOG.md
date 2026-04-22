@@ -8,7 +8,10 @@
 
 ### Fixed
 
-- Fixed an issue where entities with joins or unions would crash the data privacy service generation logic.
+- Fixed an issue where entities with joins or unions would crash the data privacy service generation logic
+- Fixed an issue with handling ILM objects which are projections on top of base tables
+- Fixed an issue with handling inline compositions
+- Fixed an issue with resolving backlinks from projections
 
 ## Version 0.6.0 - 18.04.2026
 

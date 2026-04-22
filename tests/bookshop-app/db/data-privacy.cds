@@ -1,5 +1,5 @@
 // Proxy for importing schema from bookshop sample
-using {sap.capire.bookshop} from './schema';
+using {sap.capire.bookshop, } from './schema';
 
 // annotations for Data Privacy
 annotate bookshop.Customers with @(
@@ -81,7 +81,7 @@ annotate bookshop.Marketing.Campaigns with {
   name @PersonalData.IsPotentiallyPersonal;
 };
 
-annotate bookshop.Newsletters with @(
+annotate bookshop.UserNewsletters with @(
   PersonalData.DataSubjectRole: 'Customer',
   PersonalData.EntitySemantics: 'Other'
 ) {
@@ -89,11 +89,6 @@ annotate bookshop.Newsletters with @(
   sentDate @PersonalData.FieldSemantics: 'EndOfBusinessDate';
   legalEntity @PersonalData.FieldSemantics: 'DataControllerID';
 };
-
-annotate bookshop.Newsletters with @(Capabilities: {FilterRestrictions: {
-  Filterable: true,
-  RequiredProperties: [createdAt]
-}});
 
 annotate bookshop.Newsletters.Attachments with {
   fileName @PersonalData.IsPotentiallyPersonal;
