@@ -132,6 +132,25 @@ entity Marketing : cuid, managed {
   };
 }
 
+// Base entity with inline composition + projection pattern
+entity Newsletters : cuid, managed {
+  Customer      : Association to Customers @title: 'Customer';
+  subject       : String @title: 'Subject';
+  sentDate      : Date @title: 'Sent date';
+  legalEntity   : Association to one LegalEntities @title: 'Legal entity';
+  // Inline composition — CAP generates Newsletters.Attachments with up_ backlink to Newsletters
+  Attachments   : Composition of many {
+    key ID       : UUID;
+        fileName : String @title: 'File name';
+        mimeType : String @title: 'MIME type';
+  };
+}
+
+// Projection on Newsletters
+entity UserNewsletters as projection on Newsletters
+                          where
+                            subject != 'INTERNAL';
+
 entity ILMObjectWithStaticBlockingDisabled : cuid {
   Customer           : Association to Customers @title: 'Customer';
   text               : String @title: 'Text';
