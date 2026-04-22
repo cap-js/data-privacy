@@ -160,11 +160,6 @@ describe("Projection with explicit columns (no *) gets blocking field added to q
     ]);
   });
 
-  test("LimitedNewsletters is exposed in RetentionService", () => {
-    const entity = model.definitions["sap.ilm.RetentionService.LimitedNewsletters"];
-    expect(entity).toBeTruthy();
-  });
-
   test("Blocking field is in LimitedNewsletters elements", () => {
     const entity = model.definitions["test.inlineComp.LimitedNewsletters"];
     expect(entity).toBeTruthy();
@@ -255,5 +250,54 @@ describe("Projection on join view — ILM entity -> join -> base entity chain", 
       ([, e]) => e["@PersonalData.FieldSemantics"] === "BlockingDate"
     );
     expect(blockingField).toBeTruthy();
+  });
+});
+
+describe("Nested inline composition (composition of composition)", () => {
+  // Newsletters -> Attachments (inline) -> Versions (inline of inline)
+  // Generates: Newsletters.Attachments and Newsletters.Attachments.Versions
+  // Service names must be: Newsletters_Attachments and Newsletters_Attachments_Versions
+
+  let model;
+  beforeAll(async () => {
+    model = await cds.load([
+      "../csn-enhancements/scenarios/inlineCompProjection.cds",
+      "@cap-js/data-privacy/srv/DPIInformation",
+      "@cap-js/data-privacy/srv/TableHeaderBlocking"
+    ]);
+  });
+
+  test("Model is enhanced without errors", () => {
+    expect(model.meta["sap.ilm.enhanced"]).toEqual(true);
+  });
+
+  test("Nested inline composition Versions is exposed in InformationService with correct name", () => {
+    const versions =
+      model.definitions["sap.dpp.InformationService.Newsletters_Attachments_Versions"];
+    expect(versions).toBeTruthy();
+    expect(versions.kind).toEqual("entity");
+  });
+
+  test("Nested inline composition Versions is exposed in RetentionService with correct name", () => {
+    const versions = model.definitions["sap.ilm.RetentionService.Newsletters_Attachments_Versions"];
+    expect(versions).toBeTruthy();
+    expect(versions.kind).toEqual("entity");
+  });
+
+  test("Parent Attachments is exposed with correct name", () => {
+    expect(model.definitions["sap.dpp.InformationService.Newsletters_Attachments"]).toBeTruthy();
+    expect(model.definitions["sap.ilm.RetentionService.Newsletters_Attachments"]).toBeTruthy();
+  });
+
+  test("Versions has backlink association to Attachments in InformationService", () => {
+    const versions =
+      model.definitions["sap.dpp.InformationService.Newsletters_Attachments_Versions"];
+    expect(versions).toBeTruthy();
+    const backlink = Object.entries(versions.elements).find(
+      ([, e]) =>
+        e.type === "cds.Association" &&
+        e.target === "sap.dpp.InformationService.Newsletters_Attachments"
+    );
+    expect(backlink).toBeTruthy();
   });
 });

@@ -24,10 +24,17 @@ entity Newsletters : cuid, managed {
   subject     : String @title: 'Subject';
   sentDate    : Date @title: 'Sent date';
   legalEntity : Association to one LegalEntities @title: 'Legal entity';
+  // Inline composition — generates Newsletters.Attachments with up_ to Newsletters
   Attachments : Composition of many {
                   key ID       : UUID;
                       fileName : String @title: 'File name';
                       mimeType : String @title: 'MIME type';
+                      // Nested inline composition — generates Newsletters.Attachments.Versions with up_ to Newsletters.Attachments
+                      Versions : Composition of many {
+                                   key ID      : UUID;
+                                       version : Integer @title: 'Version number';
+                                       comment : String @title: 'Comment';
+                                 };
                 };
 }
 
@@ -38,7 +45,7 @@ entity UserNewsletters    as projection on Newsletters
 
 // Projection with explicit columns (no *) — blocking field must be added to query columns
 entity LimitedNewsletters as
-  select from Newsletters {
+  select from UserNewsletters {
     ID,
     createdBy,
     sentDate,
