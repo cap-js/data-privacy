@@ -189,18 +189,22 @@ entity Configuration {
 
 @Core.Description: 'Customer'
 entity Customers : cuid, managed {
-  email         : String @title: 'Email';
-  firstName     : String @title: 'First name';
-  lastName      : String @title: 'Last name';
-  gender        : String @title: 'Gender';
-  dateOfBirth   : Date @title: 'Date of birth';
-  legalEntity   : Association to one LegalEntities @title: 'Legal entity';
-  postalAddress : Composition of one CustomerPostalAddress
-                    on postalAddress.Customer = $self
-                  @title: 'Postal address';
-  billingData   : Composition of one CustomerBillingData
-                    on billingData.Customer = $self
-                  @title: 'Billing data';
+  email           : String @title: 'Email';
+  firstName       : String @title: 'First name';
+  lastName        : String @title: 'Last name';
+  gender          : String @title: 'Gender';
+  dateOfBirth     : Date @title: 'Date of birth';
+  legalEntity     : Association to one LegalEntities @title: 'Legal entity';
+  postalAddress   : Composition of one CustomerPostalAddress
+                      on postalAddress.Customer = $self
+                    @title: 'Postal address';
+  billingData     : Composition of one CustomerBillingData
+                      on billingData.Customer = $self
+                    @title: 'Billing data';
+  newsletters     : Association to many Newsletters
+                      on newsletters.Customer_ID = ID;
+  userNewsletters : Association to many UserNewsletters
+                      on userNewsletters.Customer_ID = ID;
 }
 
 @Core.Description: 'Employee'
