@@ -128,3 +128,23 @@ describe("incidents-mgmt cds build --production", () => {
     expect(fs.existsSync(path.join(GEN_DIR, "mtx", "sidecar"))).toBe(true);
   });
 });
+
+describe("bookshop-app cds build --production", () => {
+  const BOOKSHOP_DIR = path.join(__dirname, "..", "bookshop-app");
+  const GEN_DIR = path.join(BOOKSHOP_DIR, "gen");
+
+  afterAll(() => {
+    fs.rmSync(GEN_DIR, { recursive: true, force: true });
+  });
+
+  test("cds build --production completes successfully", () => {
+    const result = execSync("npx cds build --production", {
+      cwd: BOOKSHOP_DIR,
+      encoding: "utf-8",
+      timeout: 120_000
+    });
+
+    expect(result).toMatch(/build completed/i);
+    expect(fs.existsSync(path.join(GEN_DIR, "srv"))).toBe(true);
+  });
+});

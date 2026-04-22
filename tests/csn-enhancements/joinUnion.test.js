@@ -213,7 +213,10 @@ describe("Join and Union view handling", () => {
     const setArgs = ordersJoinUnion.query.SET.args;
     expect(setArgs.length).toBe(2);
     for (const arg of setArgs) {
-      const hasBlocking = arg.SELECT.columns.some((c) => c.ref && c.ref[0] === blockingFieldName);
+      const hasBlocking = arg.SELECT.columns.some(
+        (c) =>
+          c.as === blockingFieldName || (c.ref && c.ref[c.ref.length - 1] === blockingFieldName)
+      );
       expect(hasBlocking).toBeTruthy();
     }
 
@@ -224,8 +227,43 @@ describe("Join and Union view handling", () => {
     expect(retentionField).toBeTruthy();
     const retentionFieldName = retentionField[0];
     for (const arg of setArgs) {
-      const hasRetention = arg.SELECT.columns.some((c) => c.ref && c.ref[0] === retentionFieldName);
+      const hasRetention = arg.SELECT.columns.some(
+        (c) =>
+          c.as === retentionFieldName || (c.ref && c.ref[c.ref.length - 1] === retentionFieldName)
+      );
       expect(hasRetention).toBeTruthy();
+    }
+  });
+
+  test("Union of joins uses aliased refs in blocking columns to avoid ambiguity", async () => {
+    const model = await cds.load([
+      "db/schema.cds",
+      "db/data-privacy.cds",
+      "db/join-union.cds",
+      "@cap-js/data-privacy/srv/DPIInformation",
+      "@cap-js/data-privacy/srv/TableHeaderBlocking"
+    ]);
+    const ordersJoinUnion = model.definitions["OrdersJoinUnion"];
+    expect(ordersJoinUnion).toBeTruthy();
+
+    const blockingFieldName = Object.entries(ordersJoinUnion.elements).find(
+      ([, e]) => e["@PersonalData.FieldSemantics"] === "BlockingDate"
+    )?.[0];
+    expect(blockingFieldName).toBeTruthy();
+
+    // Each union arg's FROM is a join — blocking column must NOT use bare { ref: [fieldName] }
+    // because that's ambiguous when multiple join sources have the same field.
+    // Must use aliased ref or CASE expression.
+    for (const arg of ordersJoinUnion.query.SET.args) {
+      const blockingCol = arg.SELECT.columns.find(
+        (c) =>
+          c.as === blockingFieldName || (c.ref && c.ref[c.ref.length - 1] === blockingFieldName)
+      );
+      expect(blockingCol).toBeTruthy();
+      // Must NOT be a bare unaliased ref like { ref: ["dppBlockingDate"] }
+      if (blockingCol.ref) {
+        expect(blockingCol.ref.length).toBeGreaterThan(1);
+      }
     }
   });
 

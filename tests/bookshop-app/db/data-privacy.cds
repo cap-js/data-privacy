@@ -85,7 +85,7 @@ annotate bookshop.UserNewsletters with @(
   PersonalData.DataSubjectRole: 'Customer',
   PersonalData.EntitySemantics: 'Other'
 ) {
-  Customer @PersonalData.FieldSemantics: 'DataSubjectID';
+  Customer_ID @PersonalData.FieldSemantics: 'DataSubjectID';
   sentDate @PersonalData.FieldSemantics: 'EndOfBusinessDate';
   legalEntity @PersonalData.FieldSemantics: 'DataControllerID';
 };

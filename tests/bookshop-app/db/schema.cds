@@ -134,7 +134,7 @@ entity Marketing : cuid, managed {
 
 // Base entity with inline composition + projection pattern
 entity Newsletters : cuid, managed {
-  Customer    : Association to Customers @title: 'Customer';
+  Customer_ID : String @title: 'Customer';
   subject     : String @title: 'Subject';
   sentDate    : Date @title: 'Sent date';
   legalEntity : Association to one LegalEntities @title: 'Legal entity';
@@ -147,9 +147,14 @@ entity Newsletters : cuid, managed {
 }
 
 // Projection on Newsletters
-entity UserNewsletters as projection on Newsletters
-                          where
-                            subject != 'INTERNAL';
+entity UserNewsletters as
+  projection on Newsletters {
+    *,
+    Customer : Association to one Customers
+                 on Customer.ID = Customer_ID
+  }
+  where
+    subject != 'INTERNAL';
 
 entity ILMObjectWithStaticBlockingDisabled : cuid {
   Customer           : Association to Customers @title: 'Customer';
