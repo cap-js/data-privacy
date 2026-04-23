@@ -108,7 +108,8 @@ modules:
       commands:
         - npm ci
         - npm run build
-      supported-platforms: []
+      supported-platforms:
+        []
   - name: incidents
     type: approuter.nodejs
     path: app/router
