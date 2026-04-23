@@ -312,7 +312,7 @@ describe("Key association on ILM entity", () => {
       expect(entity.elements.ID).toBeTruthy();
       expect(entity.elements.ID.key).toBe(true);
       const keys = Object.entries(entity.elements).filter(([, e]) => e.key);
-      expect(keys.length).toBeGreaterThanOrEqual(1);
+      expect(keys.length).toBeGreaterThanOrEqual(2);
     }
   });
 
