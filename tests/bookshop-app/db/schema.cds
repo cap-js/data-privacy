@@ -123,7 +123,38 @@ entity Marketing : cuid, managed {
   text          : String @title: 'Text';
   marketingDate : Date @title: 'Marketing date';
   legalEntity   : Association to one LegalEntities @title: 'Legal entity';
+  // Inline composition — CAP auto-generates Marketing.Campaigns entity with up_ backlink
+  Campaigns     : Composition of many {
+                    key ID      : UUID;
+                        name    : String @title: 'Campaign name';
+                        channel : String @title: 'Channel';
+                        budget  : Decimal(15, 2) @title: 'Budget';
+                  };
 }
+
+// Base entity with inline composition + projection pattern
+entity Newsletters : cuid, managed {
+  Customer_ID : String @title: 'Customer';
+  subject     : String @title: 'Subject';
+  sentDate    : Date @title: 'Sent date';
+  legalEntity : Association to one LegalEntities @title: 'Legal entity';
+  // Inline composition — CAP generates Newsletters.Attachments with up_ backlink to Newsletters
+  Attachments : Composition of many {
+                  key ID       : UUID;
+                      fileName : String @title: 'File name';
+                      mimeType : String @title: 'MIME type';
+                };
+}
+
+// Projection on Newsletters
+entity UserNewsletters as
+  projection on Newsletters {
+    *,
+    Customer : Association to one Customers
+                 on Customer.ID = Customer_ID
+  }
+  where
+    subject != 'INTERNAL';
 
 entity ILMObjectWithStaticBlockingDisabled : cuid {
   Customer           : Association to Customers @title: 'Customer';
@@ -158,18 +189,22 @@ entity Configuration {
 
 @Core.Description: 'Customer'
 entity Customers : cuid, managed {
-  email         : String @title: 'Email';
-  firstName     : String @title: 'First name';
-  lastName      : String @title: 'Last name';
-  gender        : String @title: 'Gender';
-  dateOfBirth   : Date @title: 'Date of birth';
-  legalEntity   : Association to one LegalEntities @title: 'Legal entity';
-  postalAddress : Composition of one CustomerPostalAddress
-                    on postalAddress.Customer = $self
-                  @title: 'Postal address';
-  billingData   : Composition of one CustomerBillingData
-                    on billingData.Customer = $self
-                  @title: 'Billing data';
+  email           : String @title: 'Email';
+  firstName       : String @title: 'First name';
+  lastName        : String @title: 'Last name';
+  gender          : String @title: 'Gender';
+  dateOfBirth     : Date @title: 'Date of birth';
+  legalEntity     : Association to one LegalEntities @title: 'Legal entity';
+  postalAddress   : Composition of one CustomerPostalAddress
+                      on postalAddress.Customer = $self
+                    @title: 'Postal address';
+  billingData     : Composition of one CustomerBillingData
+                      on billingData.Customer = $self
+                    @title: 'Billing data';
+  newsletters     : Association to many Newsletters
+                      on newsletters.Customer_ID = ID;
+  userNewsletters : Association to many UserNewsletters
+                      on userNewsletters.Customer_ID = ID;
 }
 
 @Core.Description: 'Employee'

@@ -1,0 +1,8 @@
+{
+  "minimum_feature_version": "1000",
+  "file_suffixes": {
+    "hdbrole": {
+      "plugin_name": "com.sap.hana.di.role"
+    }
+  }
+}

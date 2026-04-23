@@ -5,6 +5,7 @@ const {
   createEmployeeTestData,
   runWithPrivileged
 } = require("./testDataProvider");
+const { _getDataSubjectIDField } = require("../../lib/utils");
 
 let { POST: _POST, data } = cds.test().in(path.join(__dirname, "../bookshop-app"));
 const POST = async function () {
@@ -796,25 +797,14 @@ describe("data subject deletion", () => {
     });
 
     test("dataSubjectsDestroying does not destroy if end of retention not reached", async () => {
-      const {
-        Orders,
-        Marketing,
-        Customers,
-        ILMObjectWithStaticBlockingDisabled,
-        ILMObjectWithEDMJSONBlockingEnabled,
-        ILMObjectWithCustomName
-      } = cds.entities("sap.capire.bookshop");
-      await DELETE.from(Orders).where({ Customer_ID: customerData.customerId });
-      await DELETE.from(Marketing).where({ Customer_ID: customerData.customerId });
-      await DELETE.from(ILMObjectWithStaticBlockingDisabled).where({
-        Customer_ID: customerData.customerId
-      });
-      await DELETE.from(ILMObjectWithEDMJSONBlockingEnabled).where({
-        Customer_ID: customerData.customerId
-      });
-      await DELETE.from(ILMObjectWithCustomName).where({
-        Customer_ID: customerData.customerId
-      });
+      const { Customers } = cds.entities("sap.capire.bookshop");
+      const RetentionSrv = await cds.connect.to("sap.ilm.RetentionService");
+      const iLMObjects = RetentionSrv.definition._dpi.iLMObjectsForRole("Customer");
+      for (const iLMObject of Object.values(iLMObjects)) {
+        await DELETE.from(iLMObject).where({
+          [_getDataSubjectIDField(iLMObject.elements)]: customerData.customerId
+        });
+      }
       const maxDeletionDate = new Date();
       maxDeletionDate.setFullYear(maxDeletionDate.getFullYear() + 1);
       await POST(
