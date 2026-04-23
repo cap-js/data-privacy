@@ -156,6 +156,16 @@ entity UserNewsletters as
   where
     subject != 'INTERNAL';
 
+// Entity with key association to non-DPI entity — tests that FK from key association
+// keeps key property when fixRelationTarget removes the association (target not in service)
+entity ProjectAssignments : cuid, managed {
+  key project     : Association to Books;
+      Customer    : Association to Customers @title: 'Customer';
+      role        : String @title: 'Role';
+      assignDate  : Date @title: 'Assignment date';
+      legalEntity : Association to one LegalEntities @title: 'Legal entity';
+}
+
 entity ILMObjectWithStaticBlockingDisabled : cuid {
   Customer           : Association to Customers @title: 'Customer';
   text               : String @title: 'Text';

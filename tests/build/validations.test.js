@@ -5,7 +5,7 @@ const cds = require("@sap/cds");
 const TempUtil = require("./tempUtil.js");
 const tempUtil = new TempUtil(__filename);
 process.env.NO_COLOR = true; // Required to parse build tasks
-const { _processTasks } = require("./util.js");
+const { _build } = require("./util.js");
 const { register } = require("@sap/cds-dk/lib/build");
 const {
   generateBuildProject,
@@ -57,7 +57,7 @@ describe("testing cds build", () => {
     // Delete the role file that cds add created
     fs.rmSync(path.join(appRoot, "db/src/defaults/default_access_role.hdbrole"));
     setRequires(appRoot, "db", { kind: "hana" });
-    await _processTasks(appRoot, buildTasks);
+    await _build(appRoot, buildTasks);
     expect(log.output).toMatch(/default_access_role\.hdbrole.*missing/);
     expect(log.output).toMatch(/cds add data-privacy/);
   });
@@ -65,14 +65,14 @@ describe("testing cds build", () => {
   test("Build does not emit error when default_access_role.hdbrole exists", async () => {
     const appRoot = await generateBuildProject(tempUtil, "app-role-exists");
     setRequires(appRoot, "db", { kind: "hana" });
-    await _processTasks(appRoot, buildTasks);
+    await _build(appRoot, buildTasks);
     expect(log.output).not.toMatch(/default_access_role\.hdbrole.*missing/);
   });
 
   test("Throw warning when outdated org attribute is given", async () => {
     const appRoot = await generateBuildProject(tempUtil, "app-stale");
     injectStaleRetentionEntries(appRoot);
-    await _processTasks(appRoot, buildTasks);
+    await _build(appRoot, buildTasks);
     expect(log.output).toMatch(
       /Your current deployment configuration contains an outdated organizational attribute/
     );
@@ -82,7 +82,7 @@ describe("testing cds build", () => {
   test("No warning for correct model", async () => {
     const appRoot = await generateBuildProject(tempUtil, "app-correct");
     injectCorrectRetentionEntries(appRoot);
-    await _processTasks(appRoot, buildTasks);
+    await _build(appRoot, buildTasks);
     expect(log.output).not.toMatch(
       /Your current deployment configuration contains an outdated organizational attribute/
     );
@@ -91,7 +91,7 @@ describe("testing cds build", () => {
 
   test("Build adds dataSubjectRoles and organizationAttributes to fresh mta.yaml", async () => {
     const appRoot = await generateBuildProject(tempUtil, "app-fresh");
-    await _processTasks(appRoot, buildTasks);
+    await _build(appRoot, buildTasks);
     const retentionConfig = readMtaRetentionConfig(appRoot);
 
     expect(retentionConfig.dataSubjectRoles).toHaveLength(1);
@@ -109,7 +109,7 @@ describe("testing cds build", () => {
   test("Build does not change existing retention config idempotently", async () => {
     const appRoot = await generateBuildProject(tempUtil, "app-idempotent");
     injectCorrectRetentionEntries(appRoot);
-    await _processTasks(appRoot, buildTasks);
+    await _build(appRoot, buildTasks);
     const retentionConfig = readMtaRetentionConfig(appRoot);
 
     expect(retentionConfig.dataSubjectRoles).toHaveLength(1);
@@ -127,14 +127,14 @@ describe("testing cds build", () => {
   test("Build completes when RetentionService is disabled", async () => {
     const appRoot = await generateBuildProject(tempUtil, "app-no-retention");
     setRequires(appRoot, "sap.ilm.RetentionService", false);
-    await _processTasks(appRoot, buildTasks);
+    await _build(appRoot, buildTasks);
     expect(log.output).toMatch(/build completed/);
   });
 
   test("Build completes when InformationService is disabled", async () => {
     const appRoot = await generateBuildProject(tempUtil, "app-no-info");
     setRequires(appRoot, "sap.dpp.InformationService", false);
-    await _processTasks(appRoot, buildTasks);
+    await _build(appRoot, buildTasks);
     expect(log.output).toMatch(/build completed/);
   });
 });
