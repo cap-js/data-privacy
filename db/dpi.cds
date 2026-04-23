@@ -1,12 +1,12 @@
 namespace sap.ilm;
 
 aspect destruction {
-  ilmEarliestDestructionDate : Date  @UI.HiddenFilter  @PersonalData.FieldSemantics: 'EndOfRetentionDate';
-  ilmLatestDestructionDate   : Date @UI.HiddenFilter;
+  ilmEarliestDestructionDate : Date  @UI.HiddenFilter  @PersonalData.FieldSemantics: 'EndOfRetentionDate'  @title: '{i18n>EARLIEST_DESTRUCTION_DATE}';
+  ilmLatestDestructionDate   : Date  @UI.HiddenFilter  @title: '{i18n>LATEST_DESTRUCTION_DATE}';
 }
 
 aspect blocking {
-  dppBlockingDate : Date  @UI.HiddenFilter  @PersonalData.FieldSemantics: 'BlockingDate';
+  dppBlockingDate : Date  @UI.HiddenFilter  @PersonalData.FieldSemantics: 'BlockingDate'  @title: '{i18n>RECORD_BLOCKED}';
 }
 
 type Condition : {

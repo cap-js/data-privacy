@@ -38,6 +38,37 @@ describe("testing cds build", () => {
     return tempUtil.cleanUp();
   });
 
+  test("cds add data-privacy creates default_access_role.hdbrole for HANA projects", async () => {
+    const appRoot = await generateBuildProject(tempUtil, "app-add-role");
+    expect(fs.existsSync(path.join(appRoot, "db/src/defaults/default_access_role.hdbrole"))).toBe(
+      true
+    );
+    expect(fs.existsSync(path.join(appRoot, "db/src/defaults/.hdiconfig"))).toBe(true);
+
+    const role = JSON.parse(
+      fs.readFileSync(path.join(appRoot, "db/src/defaults/default_access_role.hdbrole"), "utf-8")
+    );
+    expect(role.role.name).toEqual("default_access_role");
+    expect(role.role.schema_roles[0].names).toContain("sap.ilm.RestrictBlockedDataAccess");
+  });
+
+  test("Build emits error when default_access_role.hdbrole is missing", async () => {
+    const appRoot = await generateBuildProject(tempUtil, "app-missing-role");
+    // Delete the role file that cds add created
+    fs.rmSync(path.join(appRoot, "db/src/defaults/default_access_role.hdbrole"));
+    setRequires(appRoot, "db", { kind: "hana" });
+    await _processTasks(appRoot, buildTasks);
+    expect(log.output).toMatch(/default_access_role\.hdbrole.*missing/);
+    expect(log.output).toMatch(/cds add data-privacy/);
+  });
+
+  test("Build does not emit error when default_access_role.hdbrole exists", async () => {
+    const appRoot = await generateBuildProject(tempUtil, "app-role-exists");
+    setRequires(appRoot, "db", { kind: "hana" });
+    await _processTasks(appRoot, buildTasks);
+    expect(log.output).not.toMatch(/default_access_role\.hdbrole.*missing/);
+  });
+
   test("Throw warning when outdated org attribute is given", async () => {
     const appRoot = await generateBuildProject(tempUtil, "app-stale");
     injectStaleRetentionEntries(appRoot);
