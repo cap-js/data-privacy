@@ -94,6 +94,20 @@ annotate bookshop.Newsletters.Attachments with {
   fileName @PersonalData.IsPotentiallyPersonal;
 };
 
+annotate bookshop.ProjectAssignments with @(
+  PersonalData.DataSubjectRole: 'Customer',
+  PersonalData.EntitySemantics: 'Other'
+) {
+  Customer @PersonalData.FieldSemantics: 'DataSubjectID';
+  assignDate @PersonalData.FieldSemantics: 'EndOfBusinessDate';
+  legalEntity @PersonalData.FieldSemantics: 'DataControllerID';
+};
+
+annotate bookshop.ProjectAssignments with @(Capabilities: {FilterRestrictions: {
+  Filterable: true,
+  RequiredProperties: [createdAt]
+}});
+
 annotate bookshop.ILMObjectWithStaticBlockingDisabled with @(
   PersonalData.DataSubjectRole: 'Customer',
   PersonalData.EntitySemantics: 'Other',

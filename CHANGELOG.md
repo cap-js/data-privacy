@@ -16,6 +16,7 @@
 - Fixed an issue with handling ILM objects which are projections on top of base tables
 - Fixed an issue with handling inline compositions
 - Fixed an issue with resolving backlinks from projections
+- Fixed an issue where key associations were not correctly handled
 
 ## Version 0.6.0 - 18.04.2026
 

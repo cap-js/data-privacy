@@ -301,3 +301,29 @@ describe("Nested inline composition (composition of composition)", () => {
     expect(backlink).toBeTruthy();
   });
 });
+
+describe("Key association on ILM entity", () => {
+  test("Key association is preserved in both DPI services to retain primary key", () => {
+    for (const srv of ["sap.dpp.InformationService", "sap.ilm.RetentionService"]) {
+      const entity = cds.model.definitions[`${srv}.ProjectAssignments`];
+      expect(entity).toBeTruthy();
+      expect(entity.elements.project_ID).toBeTruthy();
+      expect(entity.elements.project_ID.key).toBe(true);
+      expect(entity.elements.ID).toBeTruthy();
+      expect(entity.elements.ID.key).toBe(true);
+      const keys = Object.entries(entity.elements).filter(([, e]) => e.key);
+      expect(keys.length).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  test("InformationService ProjectAssignments can be read via OData", async () => {
+    const { status, data } = await GET("/dpp/information/ProjectAssignments", {
+      auth: DPI_Service
+    });
+    expect(status).toEqual(200);
+    expect(data.value).toBeDefined();
+    expect(data.value.length).toBeGreaterThan(0);
+    expect(data.value[0].ID).toBeDefined();
+    expect(data.value[0].project_ID).toBeDefined();
+  });
+});
