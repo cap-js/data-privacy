@@ -39,8 +39,8 @@ modules:
       - name: bookshop-auth
       - name: bookshop-cf-logging
       - name: bookshop-auditlog
-      - name: bookshop-information
-      - name: bookshop-retention
+      - name: books-information
+      - name: books-retention
       - name: bookshop-ias
         parameters:
           config:
@@ -112,8 +112,8 @@ resources:
   - name: bookshop-auth
     type: org.cloudfoundry.managed-service
     processed-after:
-      - bookshop-information
-      - bookshop-retention
+      - books-information
+      - books-retention
     parameters:
       service: xsuaa
       service-plan: application
@@ -124,69 +124,69 @@ resources:
           - name: $XSAPPNAME.PersonalDataManagerUser
             description: Technical scope to restrict access to information endpoint
             grant-as-authority-to-apps:
-              - $XSSERVICENAME(bookshop-information)
+              - $XSSERVICENAME(books-information)
           - name: $XSAPPNAME.DataRetentionManagerUser
             description: Technical scope to restrict access to retention endpoint
             grant-as-authority-to-apps:
-              - $XSSERVICENAME(bookshop-retention)
+              - $XSSERVICENAME(books-retention)
   - name: bookshop-cf-logging
     type: org.cloudfoundry.managed-service
     parameters:
       service: application-logs
       service-plan: lite
-  - name: bookshop-information
+  - name: books-information
     type: org.cloudfoundry.managed-service
     requires:
       - name: srv-api
     parameters:
-      service-name: bookshop-information
+      service-name: books-information
       service: data-privacy-integration-service
       service-plan: data-privacy-internal
       config:
         xs-security:
-          xsappname: bookshop-information-${org}-${space}
+          xsappname: books-information-${org}-${space}
           authorities:
             - $ACCEPT_GRANTED_AUTHORITIES
         dataPrivacyConfiguration:
           configType: information
           applicationConfiguration:
-            applicationName: bookshop-information
+            applicationName: books-information
             applicationTitle: bookshop
             enableAutoSubscription: true
           informationConfiguration:
             applicationConfiguration:
               dataSubjectDeletionAgent: retention-manager
-              retentionApplicationName: bookshop-retention
+              retentionApplicationName: books-retention
               disableDataSubjectCorrection: true
               cacheControl: no-cache
             components:
-              - componentName: bookshop-srv
+              - componentName: bookshop-dpi-srv
                 componentBaseURL: ~{srv-api/srv-url}
                 serviceEndPoints:
-                  - serviceName: bookshop-service
+                  - serviceName: bookshop-dpi-service
                     serviceFormat: odata-v4
                     annotationFormat: v4
                     serviceEndPoint: /dpp/information
                     appPaginationEnabled: true
                     cacheControl: no-cache
-  - name: bookshop-retention
+  - name: books-retention
     type: org.cloudfoundry.managed-service
     requires:
       - name: srv-api
     parameters:
-      service-name: bookshop-retention
+      service-name: books-retention
       service: data-privacy-integration-service
       service-plan: data-privacy-internal
       config:
         xs-security:
-          xsappname: bookshop-retention-${org}-${space}
+          xsappname: books-retention-${org}-${space}
           authorities:
             - $ACCEPT_GRANTED_AUTHORITIES
         dataPrivacyConfiguration:
           configType: retention
           applicationConfiguration:
-            applicationName: bookshop-retention
-            applicationDescription: bookshop-retention
+            applicationName: books-retention
+            applicationDescription: books-retention
             applicationDescriptionKey: APPLICATION_NAME
             applicationBaseURL: ~{srv-api/srv-url}
             applicationTitle: bookshop

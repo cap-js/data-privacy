@@ -30,7 +30,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectEndOfBusiness",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId
@@ -55,7 +55,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectEndOfBusiness",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId
@@ -74,7 +74,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectOrganizationAttributeValues",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
@@ -94,7 +94,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectOrganizationAttributeValues",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
@@ -111,7 +111,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectOrganizationAttributeValues",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
@@ -128,7 +128,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectLatestRetentionStartDates",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
@@ -157,7 +157,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectLatestRetentionStartDates",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
@@ -187,7 +187,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectILMObjectInstanceBlocking",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
@@ -240,7 +240,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectILMObjectInstanceBlocking",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "ILMObjectWithXPRBlockingEnabled",
           dataSubjectRoleName: "Employee",
           dataSubjectId: employeeData.employeeId,
@@ -273,7 +273,7 @@ describe("data subject deletion", () => {
       const { status } = await POST(
         "/dpp/retention/dataSubjectILMObjectInstanceBlocking",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
@@ -290,7 +290,7 @@ describe("data subject deletion", () => {
       await POST(
         "/dpp/retention/dataSubjectILMObjectInstanceBlocking",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
@@ -310,7 +310,7 @@ describe("data subject deletion", () => {
       await POST(
         "/dpp/retention/dataSubjectsILMObjectInstancesDestroying",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer"
         },
@@ -328,7 +328,7 @@ describe("data subject deletion", () => {
       await POST(
         "/dpp/retention/dataSubjectILMObjectInstanceBlocking",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
@@ -364,7 +364,7 @@ describe("data subject deletion", () => {
       await POST(
         "/dpp/retention/dataSubjectsILMObjectInstancesDestroying",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer"
         },
@@ -392,7 +392,7 @@ describe("data subject deletion", () => {
       await POST(
         "/dpp/retention/dataSubjectILMObjectInstanceBlocking",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
@@ -412,7 +412,7 @@ describe("data subject deletion", () => {
       await POST(
         "/dpp/retention/dataSubjectsILMObjectInstancesDestroying",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer"
         },
@@ -427,7 +427,7 @@ describe("data subject deletion", () => {
       const { status } = await POST(
         "/dpp/retention/dataSubjectsILMObjectInstancesDestroying",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer"
         },
@@ -441,7 +441,7 @@ describe("data subject deletion", () => {
       await POST(
         "/dpp/retention/dataSubjectILMObjectInstanceBlocking",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "ILMObjectWithXPRBlockingEnabled",
           dataSubjectRoleName: "Employee",
           dataSubjectId: employeeData.employeeId,
@@ -463,7 +463,7 @@ describe("data subject deletion", () => {
       await POST(
         "/dpp/retention/dataSubjectsILMObjectInstancesDestroying",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "ILMObjectWithXPRBlockingEnabled",
           dataSubjectRoleName: "Employee"
         },
@@ -487,7 +487,7 @@ describe("data subject deletion", () => {
       await POST(
         "/dpp/retention/dataSubjectILMObjectInstanceBlocking",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
@@ -507,7 +507,7 @@ describe("data subject deletion", () => {
       await POST(
         "/dpp/retention/dataSubjectsILMObjectInstancesDestroying",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer"
         },
@@ -528,7 +528,7 @@ describe("data subject deletion", () => {
       const { status } = await POST(
         "/dpp/retention/dataSubjectBlocking",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
           maxDeletionDate: "2020-04-04T22:00:00"
@@ -593,7 +593,7 @@ describe("data subject deletion", () => {
       const { status } = await POST(
         "/dpp/retention/dataSubjectBlocking",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
           maxDeletionDate: maxDeletionDate.toISOString()
@@ -635,7 +635,7 @@ describe("data subject deletion", () => {
       const { status } = await POST(
         "/dpp/retention/dataSubjectBlocking",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
           maxDeletionDate: "2020-01-01"
@@ -673,7 +673,7 @@ describe("data subject deletion", () => {
       const { status } = await POST(
         "/dpp/retention/dataSubjectBlocking",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
           maxDeletionDate: "2020-01-01"
@@ -690,7 +690,7 @@ describe("data subject deletion", () => {
       const { status: status2 } = await POST(
         "/dpp/retention/dataSubjectBlocking",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
           maxDeletionDate: "2020-01-01"
@@ -713,7 +713,7 @@ describe("data subject deletion", () => {
       const { status } = await POST(
         "/dpp/retention/dataSubjectBlocking",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           dataSubjectRoleName: "Employee",
           dataSubjectId: employeeData.employeeId,
           maxDeletionDate: maxDeletionDate.toISOString()
@@ -777,7 +777,7 @@ describe("data subject deletion", () => {
       const { status } = await POST(
         "/dpp/retention/dataSubjectBlocking",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           dataSubjectRoleName: "Employee",
           dataSubjectId: dualRoleId,
           maxDeletionDate: maxDeletionDate.toISOString()
@@ -810,7 +810,7 @@ describe("data subject deletion", () => {
       await POST(
         "/dpp/retention/dataSubjectBlocking",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
           maxDeletionDate: maxDeletionDate.toISOString()
@@ -830,7 +830,7 @@ describe("data subject deletion", () => {
       const { status } = await POST(
         "/dpp/retention/dataSubjectsDestroying",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           dataSubjectRoleName: "Customer"
         },
         { auth: DPI_Service }
@@ -859,7 +859,7 @@ describe("data subject deletion", () => {
       const { status } = await POST(
         "/dpp/retention/dataSubjectsDestroying",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           dataSubjectRoleName: "Employee"
         },
         { auth: DPI_Service }
@@ -884,7 +884,7 @@ describe("data subject deletion", () => {
       const { status } = await POST(
         "/dpp/retention/dataSubjectsDestroying",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           dataSubjectRoleName: "Customer"
         },
         { auth: DPI_Service }
@@ -943,7 +943,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectsEndOfResidence",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           referenceDates: [
@@ -982,7 +982,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectsEndOfResidence",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           referenceDates: [
@@ -1021,7 +1021,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectsEndOfResidence",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           referenceDates: [
@@ -1056,7 +1056,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectsEndOfResidenceConfirmation",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           referenceDates: [
@@ -1092,7 +1092,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectsEndOfResidenceConfirmation",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           referenceDates: [
@@ -1128,7 +1128,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectsEndOfResidenceConfirmation",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "ILMObjectWithXPRBlockingEnabled",
           dataSubjectRoleName: "Customer",
           referenceDates: [
@@ -1168,7 +1168,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectsEndOfResidenceConfirmation",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "ILMObjectWithXPRBlockingEnabled",
           dataSubjectRoleName: "Customer",
           referenceDates: [
@@ -1214,7 +1214,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectsEndOfResidenceConfirmation",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           referenceDates: [
@@ -1247,7 +1247,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectsEndOfResidenceConfirmation",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           iLMObjectName: "Orders",
           dataSubjectRoleName: "Customer",
           referenceDates: [],
@@ -1268,7 +1268,7 @@ describe("data subject deletion", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectInformation",
         {
-          applicationName: "bookshop-retention",
+          applicationName: "books-retention",
           dataSubjectRoleName: "Customer",
           dataSubjects: [{ dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" }]
         },
