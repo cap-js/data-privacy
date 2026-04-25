@@ -117,18 +117,10 @@ resources:
     parameters:
       service: xsuaa
       service-plan: application
+      path: ./xs-security.json
       config:
         xsappname: bookshop-${org}-${space}
         tenant-mode: dedicated
-        scopes:
-          - name: $XSAPPNAME.PersonalDataManagerUser
-            description: Technical scope to restrict access to information endpoint
-            grant-as-authority-to-apps:
-              - $XSSERVICENAME(books-information)
-          - name: $XSAPPNAME.DataRetentionManagerUser
-            description: Technical scope to restrict access to retention endpoint
-            grant-as-authority-to-apps:
-              - $XSSERVICENAME(books-retention)
   - name: bookshop-cf-logging
     type: org.cloudfoundry.managed-service
     parameters:
