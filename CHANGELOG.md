@@ -4,7 +4,14 @@
 - The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - This project adheres to [Semantic Versioning](https://semver.org/).
 
-## Version 0.6.1 - 22.04.2026
+## Version 0.6.2 - 23.04.2026
+
+### Fixed
+
+- Fixed another issue where key associations were not correctly handled
+- Fixed an issue with `cds add` adding redundant xsuaa scope information
+
+## Version 0.6.1 - 23.04.2026
 
 ### Changed
 

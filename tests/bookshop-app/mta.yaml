@@ -1,7 +1,7 @@
 _schema-version: "3.1"
-ID: capire.gdpr
+ID: bookshop
 version: 1.0.0
-description: bookshop
+description: DPI testing bookshop
 parameters:
   enable-parallel-deployments: true
 build-parameters:
@@ -24,12 +24,16 @@ modules:
     path: gen/srv
     parameters:
       buildpack: nodejs_buildpack
+      routes:
+        - route: "${default-url}"
+        - route: "${default-host}.cert.${default-domain}"
     build-parameters:
       builder: npm-ci
     provides:
       - name: srv-api
         properties:
           srv-url: ${default-url}
+          srv-cert-url: '${protocol}://${default-host}.cert.${default-domain}'
     requires:
       - name: bookshop-db
       - name: bookshop-auth
@@ -37,6 +41,15 @@ modules:
       - name: bookshop-auditlog
       - name: bookshop-information
       - name: bookshop-retention
+      - name: bookshop-ias
+        parameters:
+          config:
+            credential-type: X509_GENERATED
+            app-identifier: srv
+    deployed-after:
+      - gdpr-ams-policies-deployer
+    properties:
+      AMS_DCL_ROOT: ams/dcl
   - name: bookshop-db-deployer
     type: hdb
     path: gen/db
@@ -46,6 +59,50 @@ modules:
       - name: bookshop-db
       - name: bookshop-auth
       - name: bookshop-cf-logging
+
+  - name: gdpr-ams-policies-deployer
+    type: javascript.nodejs
+    path: gen/policies
+    parameters:
+      buildpack: nodejs_buildpack
+      no-route: true
+      no-start: true
+      tasks:
+        - name: deploy-dcl
+          command: npm start
+          memory: 512M
+    requires:
+      - name: bookshop-ias
+        parameters:
+          config:
+            credential-type: X509_GENERATED
+            app-identifier: ams-policy-deployer
+
+  - name: bookshop
+    type: approuter.nodejs
+    path: app/router
+    requires:
+      - name: bookshop-ias
+        parameters:
+          config:
+            credential-type: X509_GENERATED
+            app-identifier: approuter
+      - name: srv-api
+        group: destinations
+        properties:
+          url: ~{srv-cert-url}
+          forwardAuthCertificates: true
+          forwardAuthToken: true
+          strictSSL: true
+    parameters:
+      keep-existing-routes: true
+      disk-quota: 256M
+      memory: 256M
+    provides:
+      - name: app-api
+        properties:
+          app-protocol: ${protocol}
+          app-uri: ${default-uri}
 resources:
   - name: bookshop-db
     type: com.sap.xs.hdi-container
@@ -188,3 +245,27 @@ resources:
     parameters:
       service: auditlog
       service-plan: oauth2
+  - name: bookshop-ias
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: identity
+      service-name: bookshop-ias
+      service-plan: application
+      config:
+        provided-apis:
+          - name: bookshop-ias-api
+            description: API exposed by the application
+        display-name: DPI Bookshop test
+        oauth2-configuration:
+          token-policy:
+            access-token-format: "jwt"
+          redirect-uris:
+            - http://localhost:5000/login/callback?authType=ias
+            - ~{app-api/app-protocol}://*~{app-api/app-uri}/login/callback
+          post-logout-redirect-uris:
+            - ~{app-api/app-protocol}://*~{app-api/app-uri}/*/logout.html
+        xsuaa-cross-consumption: true
+        authorization:
+          enabled: true
+    requires:
+      - name: app-api
