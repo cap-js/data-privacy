@@ -8,7 +8,7 @@ The `@cap-js/data-privacy` plugin provides an out of box integration for CAP bas
 
 In particular based on [`@PersonalData`](https://sap.github.io/odata-vocabularies/vocabularies/PersonalData.html) and [`@ILM`](https://sap.github.io/odata-vocabularies/vocabularies/ILM.html) annotations in the data model, the plugin automatically provides a `/dpp/information` endpoint and a `/dpp/retention` endpoint via which the SAP DPI service can request personal data to show it in its `Manage Personal Data` app and block and delete data based on retention rules defined in SAP DPI.
 
-More information about how to use the plugin, can be found in the [Data Privacy guide](https://cap.cloud.sap/docs/guides/security/data-privacy).
+More information about how to use the plugin, can be found in the [Data Privacy guide - Retention](https://github.com/capire/docs/blob/289b0d0ce3fbd9079e192d57d4363cc93145bcde/guides/security/dpp-drm.md) and [Data Privacy guide - Information](https://github.com/capire/docs/blob/289b0d0ce3fbd9079e192d57d4363cc93145bcde/guides/security/dpp-pdm.md).
 
 ## Requirements and Setup
 
