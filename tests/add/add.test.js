@@ -62,10 +62,6 @@ function findDpiResource(mta, configType) {
   );
 }
 
-function findXsuaaResource(mta) {
-  return mta.resources.find((r) => r.parameters?.service === "xsuaa");
-}
-
 function findSrvModule(mta) {
   return mta.modules.find((m) => m.type === "nodejs" && m.path?.includes("srv"));
 }
@@ -116,16 +112,10 @@ describe("cds add data-privacy", () => {
       expect(names).toContain(findDpiResource(mta, "retention").name);
     });
 
-    test("xsuaa resource has DPI scopes and processed-after", () => {
-      const xsuaa = findXsuaaResource(mta);
-      const scopes = xsuaa.parameters.config.scopes;
-      const scopeNames = scopes.map((s) => s.name);
+    test("xs-security.json has DPI scopes", () => {
+      const scopeNames = xsSecurity.scopes.map((s) => s.name);
       expect(scopeNames).toContain("$XSAPPNAME.PersonalDataManagerUser");
       expect(scopeNames).toContain("$XSAPPNAME.DataRetentionManagerUser");
-
-      const processedAfter = xsuaa["processed-after"];
-      expect(processedAfter).toContain(findDpiResource(mta, "information").name);
-      expect(processedAfter).toContain(findDpiResource(mta, "retention").name);
     });
 
     test("enableAutoSubscription is true for single-tenant", () => {
@@ -187,17 +177,6 @@ describe("cds add data-privacy", () => {
       const names = srv.requires.map((r) => r.name);
       expect(names).toContain(findDpiResource(mta, "information").name);
       expect(names).toContain(findDpiResource(mta, "retention").name);
-    });
-
-    test("xsuaa resource has DPI scopes and processed-after", () => {
-      const xsuaa = findXsuaaResource(mta);
-      const scopeNames = xsuaa.parameters.config.scopes.map((s) => s.name);
-      expect(scopeNames).toContain("$XSAPPNAME.PersonalDataManagerUser");
-      expect(scopeNames).toContain("$XSAPPNAME.DataRetentionManagerUser");
-
-      const processedAfter = xsuaa["processed-after"];
-      expect(processedAfter).toContain(findDpiResource(mta, "information").name);
-      expect(processedAfter).toContain(findDpiResource(mta, "retention").name);
     });
 
     test("xs-security.json has DPI scopes and preserves mtcallback", () => {

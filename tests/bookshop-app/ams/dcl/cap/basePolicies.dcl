@@ -7,10 +7,16 @@ POLICY "DataRetentionManagerUser" {
 	ASSIGN ROLE "DataRetentionManagerUser";
 }
 
-POLICY "InvalidRoleSoEntitiesCannotBeAccessedViaAPI" {
-	ASSIGN ROLE "InvalidRoleSoEntitiesCannotBeAccessedViaAPI";
-}
-
 POLICY "PersonalDataManagerUser" {
 	ASSIGN ROLE "PersonalDataManagerUser";
+}
+
+POLICY "CATALOG_AUDITOR" {
+	ASSIGN ROLE "CATALOG_AUDITOR";
+}
+POLICY "CUSTOMER_AUDITOR" {
+	ASSIGN ROLE "CUSTOMER_AUDITOR";
+}
+POLICY "Auditor" {
+	ASSIGN ROLE "Auditor";
 }

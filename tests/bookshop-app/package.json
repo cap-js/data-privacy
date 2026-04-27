@@ -35,16 +35,16 @@
           "users": {
             "dpi": {
               "password": "1234",
-              "roles": [
-                "PersonalDataManagerUser",
-                "DataRetentionManagerUser"
+              "policies": [
+                "cap.PersonalDataManagerUser",
+                "cap.DataRetentionManagerUser"
               ]
             },
             "alice": {
               "password": "1234",
-              "roles": [
-                "PersonalDataManagerUser",
-                "DataRetentionManagerUser"
+              "policies": [
+                "cap.PersonalDataManagerUser",
+                "cap.DataRetentionManagerUser"
               ]
             },
             "catalog-auditor": {
