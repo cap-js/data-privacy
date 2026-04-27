@@ -48,7 +48,7 @@ describe("Extending sap.ilm.RetentionService to customize the endpoint", () => {
     const { status, data } = await POST(
       "/dpp/retention/dataSubjectInformation",
       {
-        applicationName: "books-retention",
+        applicationName: "bookshop-retention",
         dataSubjectRoleName: "Customer",
         dataSubjects: [{ dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" }]
       },

@@ -95,7 +95,7 @@
         "auth": "ias"
       },
       "sap.ilm.RetentionService": {
-        "applicationName": "books-retention"
+        "applicationName": "bookshop-retention"
       }
     },
     "features": {

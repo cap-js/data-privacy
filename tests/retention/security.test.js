@@ -30,7 +30,7 @@ describe("SAP DPI Retention endpoints cannot be accessed with an unauthorized us
     const { status } = await POST(
       "/dpp/retention/dataSubjectEndOfBusiness",
       {
-        applicationName: "books-retention",
+        applicationName: "bookshop-retention",
         iLMObjectName: "Orders",
         dataSubjectRoleName: "Customer",
         dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad"
@@ -44,7 +44,7 @@ describe("SAP DPI Retention endpoints cannot be accessed with an unauthorized us
     const { status } = await POST(
       "/dpp/retention/dataSubjectOrganizationAttributeValues",
       {
-        applicationName: "books-retention",
+        applicationName: "bookshop-retention",
         iLMObjectName: "Orders",
         dataSubjectRoleName: "Customer",
         dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
@@ -59,7 +59,7 @@ describe("SAP DPI Retention endpoints cannot be accessed with an unauthorized us
     const { status } = await POST(
       "/dpp/retention/dataSubjectLatestRetentionStartDates",
       {
-        applicationName: "books-retention",
+        applicationName: "bookshop-retention",
         iLMObjectName: "Orders",
         dataSubjectRoleName: "Customer",
         dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
@@ -82,7 +82,7 @@ describe("SAP DPI Retention endpoints cannot be accessed with an unauthorized us
     const { status } = await POST(
       "/dpp/retention/dataSubjectILMObjectInstanceBlocking",
       {
-        applicationName: "books-retention",
+        applicationName: "bookshop-retention",
         iLMObjectName: "Orders",
         dataSubjectRoleName: "Customer",
         dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
@@ -97,7 +97,7 @@ describe("SAP DPI Retention endpoints cannot be accessed with an unauthorized us
     const { status } = await POST(
       "/dpp/retention/dataSubjectBlocking",
       {
-        applicationName: "books-retention",
+        applicationName: "bookshop-retention",
         dataSubjectRoleName: "Customer",
         dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad",
         maxDeletionDate: "2020-04-04T22:00:00"
@@ -111,7 +111,7 @@ describe("SAP DPI Retention endpoints cannot be accessed with an unauthorized us
     const { status } = await POST(
       "/dpp/retention/dataSubjectsILMObjectInstancesDestroying",
       {
-        applicationName: "books-retention",
+        applicationName: "bookshop-retention",
         iLMObjectName: "Orders",
         dataSubjectRoleName: "Customer"
       },
@@ -124,7 +124,7 @@ describe("SAP DPI Retention endpoints cannot be accessed with an unauthorized us
     const { status } = await POST(
       "/dpp/retention/dataSubjectsDestroying",
       {
-        applicationName: "books-retention",
+        applicationName: "bookshop-retention",
         dataSubjectRoleName: "Customer"
       },
       { auth: DPI_Service }
@@ -136,7 +136,7 @@ describe("SAP DPI Retention endpoints cannot be accessed with an unauthorized us
     const { status } = await POST(
       "/dpp/retention/dataSubjectsEndOfResidence",
       {
-        applicationName: "books-retention",
+        applicationName: "bookshop-retention",
         iLMObjectName: "Orders",
         dataSubjectRoleName: "Customer",
         referenceDates: [
@@ -166,7 +166,7 @@ describe("SAP DPI Retention endpoints cannot be accessed with an unauthorized us
     const { status } = await await POST(
       "/dpp/retention/dataSubjectsEndOfResidenceConfirmation",
       {
-        applicationName: "books-retention",
+        applicationName: "bookshop-retention",
         iLMObjectName: "Orders",
         dataSubjectRoleName: "Customer",
         referenceDates: [
@@ -197,7 +197,7 @@ describe("SAP DPI Retention endpoints cannot be accessed with an unauthorized us
     const { status } = await POST(
       "/dpp/retention/dataSubjectInformation",
       {
-        applicationName: "books-retention",
+        applicationName: "bookshop-retention",
         dataSubjectRoleName: "Customer",
         dataSubjects: [{ dataSubjectId: "8e2f2640-6866-4dcf-8f4d-3027aa831cad" }]
       },

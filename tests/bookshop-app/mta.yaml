@@ -39,8 +39,8 @@ modules:
       - name: bookshop-auth
       - name: bookshop-cf-logging
       - name: bookshop-auditlog
-      - name: books-information
-      - name: books-retention
+      - name: bookshop-information
+      - name: bookshop-retention
       - name: bookshop-ias
         parameters:
           config:
@@ -112,8 +112,8 @@ resources:
   - name: bookshop-auth
     type: org.cloudfoundry.managed-service
     processed-after:
-      - books-information
-      - books-retention
+      - bookshop-information
+      - bookshop-retention
     parameters:
       service: xsuaa
       service-plan: application
@@ -126,29 +126,29 @@ resources:
     parameters:
       service: application-logs
       service-plan: lite
-  - name: books-information
+  - name: bookshop-information
     type: org.cloudfoundry.managed-service
     requires:
       - name: srv-api
     parameters:
-      service-name: books-information
+      service-name: bookshop-information
       service: data-privacy-integration-service
       service-plan: data-privacy-internal
       config:
         xs-security:
-          xsappname: books-information-${org}-${space}
+          xsappname: bookshop-information-${org}-${space}
           authorities:
             - $ACCEPT_GRANTED_AUTHORITIES
         dataPrivacyConfiguration:
           configType: information
           applicationConfiguration:
-            applicationName: books-information
+            applicationName: bookshop-information
             applicationTitle: bookshop
             enableAutoSubscription: true
           informationConfiguration:
             applicationConfiguration:
               dataSubjectDeletionAgent: retention-manager
-              retentionApplicationName: books-retention
+              retentionApplicationName: bookshop-retention
               disableDataSubjectCorrection: true
               cacheControl: no-cache
             components:
@@ -161,24 +161,24 @@ resources:
                     serviceEndPoint: /dpp/information
                     appPaginationEnabled: true
                     cacheControl: no-cache
-  - name: books-retention
+  - name: bookshop-retention
     type: org.cloudfoundry.managed-service
     requires:
       - name: srv-api
     parameters:
-      service-name: books-retention
+      service-name: bookshop-retention
       service: data-privacy-integration-service
       service-plan: data-privacy-internal
       config:
         xs-security:
-          xsappname: books-retention-${org}-${space}
+          xsappname: bookshop-retention-${org}-${space}
           authorities:
             - $ACCEPT_GRANTED_AUTHORITIES
         dataPrivacyConfiguration:
           configType: retention
           applicationConfiguration:
-            applicationName: books-retention
-            applicationDescription: books-retention
+            applicationName: bookshop-retention
+            applicationDescription: bookshop-retention
             applicationDescriptionKey: APPLICATION_NAME
             applicationBaseURL: ~{srv-api/srv-url}
             applicationTitle: bookshop

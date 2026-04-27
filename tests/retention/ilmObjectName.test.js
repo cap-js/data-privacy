@@ -39,7 +39,7 @@ describe("data subject deletion with @ILM.ObjectName", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectEndOfBusiness",
         {
-          applicationName: "books-retention",
+          applicationName: "bookshop-retention",
           iLMObjectName: "ILMObjectWithCustomName",
           dataSubjectRoleName: "Customer",
           dataSubjectId: CUSTOMER_ID
@@ -63,7 +63,7 @@ describe("data subject deletion with @ILM.ObjectName", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectEndOfBusiness",
         {
-          applicationName: "books-retention",
+          applicationName: "bookshop-retention",
           iLMObjectName: CUSTOM_ILM_NAME,
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId
@@ -82,7 +82,7 @@ describe("data subject deletion with @ILM.ObjectName", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectOrganizationAttributeValues",
         {
-          applicationName: "books-retention",
+          applicationName: "bookshop-retention",
           iLMObjectName: CUSTOM_ILM_NAME,
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
@@ -102,7 +102,7 @@ describe("data subject deletion with @ILM.ObjectName", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectLatestRetentionStartDates",
         {
-          applicationName: "books-retention",
+          applicationName: "bookshop-retention",
           iLMObjectName: CUSTOM_ILM_NAME,
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
@@ -132,7 +132,7 @@ describe("data subject deletion with @ILM.ObjectName", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectILMObjectInstanceBlocking",
         {
-          applicationName: "books-retention",
+          applicationName: "bookshop-retention",
           iLMObjectName: CUSTOM_ILM_NAME,
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
@@ -168,7 +168,7 @@ describe("data subject deletion with @ILM.ObjectName", () => {
       await POST(
         "/dpp/retention/dataSubjectILMObjectInstanceBlocking",
         {
-          applicationName: "books-retention",
+          applicationName: "bookshop-retention",
           iLMObjectName: CUSTOM_ILM_NAME,
           dataSubjectRoleName: "Customer",
           dataSubjectId: customerData.customerId,
@@ -194,7 +194,7 @@ describe("data subject deletion with @ILM.ObjectName", () => {
       await POST(
         "/dpp/retention/dataSubjectsILMObjectInstancesDestroying",
         {
-          applicationName: "books-retention",
+          applicationName: "bookshop-retention",
           iLMObjectName: CUSTOM_ILM_NAME,
           dataSubjectRoleName: "Customer"
         },
@@ -217,7 +217,7 @@ describe("data subject deletion with @ILM.ObjectName", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectsEndOfResidence",
         {
-          applicationName: "books-retention",
+          applicationName: "bookshop-retention",
           iLMObjectName: CUSTOM_ILM_NAME,
           dataSubjectRoleName: "Customer",
           referenceDates: [
@@ -252,7 +252,7 @@ describe("data subject deletion with @ILM.ObjectName", () => {
       const { status, data } = await POST(
         "/dpp/retention/dataSubjectsEndOfResidenceConfirmation",
         {
-          applicationName: "books-retention",
+          applicationName: "bookshop-retention",
           iLMObjectName: CUSTOM_ILM_NAME,
           dataSubjectRoleName: "Customer",
           referenceDates: [
