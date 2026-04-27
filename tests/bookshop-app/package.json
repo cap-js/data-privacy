@@ -85,14 +85,16 @@
       "db": {
         "kind": "sql"
       },
-      "uaa": {
-        "kind": "xsuaa"
-      },
       "[production]": {
         "db": {
           "kind": "hana-cloud"
         },
-        "auth": "ias"
+        "auth": "ias",
+        "xsuaa": true
+      },
+      "[hybrid]": {
+        "auth": "ias",
+        "xsuaa": true
       },
       "sap.ilm.RetentionService": {
         "applicationName": "bookshop-retention"
