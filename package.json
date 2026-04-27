@@ -43,12 +43,14 @@
     "@sap/cds-lsp": "^9.2.1",
     "eslint": "^10",
     "jest": "^30.2.0",
+    "patch-package": "^8",
     "prettier": "^3.8.1"
   },
   "engines": {
     "node": ">=20"
   },
   "scripts": {
+    "postinstall": "npx patch-package",
     "lint": "npx eslint .",
     "format": "prettier . --write && format-cds -f",
     "format:check": "prettier . --check && format-cds --check",
