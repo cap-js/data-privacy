@@ -158,7 +158,8 @@ entity UserNewsletters as
 
 // Entity with key association to non-DPI entity — tests that FK from key association
 // keeps key property when fixRelationTarget removes the association (target not in service)
-entity ProjectAssignments : cuid, managed {
+entity ProjectAssignments : managed {
+  key ID          : UUID;
   key project     : Association to Books;
       Customer    : Association to Customers @title: 'Customer';
       role        : String @title: 'Role';

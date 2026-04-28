@@ -124,6 +124,37 @@ describe("testing cds build", () => {
     );
   });
 
+  test("Build uses custom deploymentDescriptor path for mta.yaml", async () => {
+    const appRoot = await generateBuildProject(tempUtil, "app-custom-descriptor");
+
+    // Move mta.yaml to a subdirectory
+    const customDir = path.join(appRoot, "deploy");
+    fs.mkdirSync(customDir, { recursive: true });
+    fs.renameSync(path.join(appRoot, "mta.yaml"), path.join(customDir, "mta.yaml"));
+    expect(fs.existsSync(path.join(appRoot, "mta.yaml"))).toBe(false);
+
+    // Configure custom deploymentDescriptor path
+    setRequires(appRoot, "sap.ilm.RetentionService", { deploymentDescriptor: "deploy/mta.yaml" });
+
+    await _build(appRoot, buildTasks);
+
+    // Verify retention config was written to the custom path
+    const retentionConfig = readMtaRetentionConfig(appRoot, "deploy/mta.yaml");
+    expect(retentionConfig.dataSubjectRoles).toHaveLength(1);
+    expect(retentionConfig.dataSubjectRoles).toEqual(
+      expect.arrayContaining([expect.objectContaining({ dataSubjectRoleName: "Customer" })])
+    );
+    expect(retentionConfig.organizationAttributes).toHaveLength(1);
+    expect(retentionConfig.organizationAttributes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ organizationAttributeName: "sap.capire.bookshop.LegalEntities" })
+      ])
+    );
+
+    // Original location should still not exist
+    expect(fs.existsSync(path.join(appRoot, "mta.yaml"))).toBe(false);
+  });
+
   test("Build completes when RetentionService is disabled", async () => {
     const appRoot = await generateBuildProject(tempUtil, "app-no-retention");
     setRequires(appRoot, "sap.ilm.RetentionService", false);

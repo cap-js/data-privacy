@@ -6,6 +6,7 @@
     "@cap-js/audit-logging": "^1.0.0",
     "@cap-js/data-privacy": "file:../../",
     "@cap-js/hana": "^2",
+    "@sap/ams": "^3",
     "@sap/cds": "^9",
     "@sap/cds-common-content": "^3",
     "@sap/xsenv": "^6",
@@ -15,6 +16,7 @@
   },
   "devDependencies": {
     "@cap-js/sqlite": "^2",
+    "@sap/ams-dev": "^2",
     "@sap/cds-dk": "^9",
     "@sap/ux-specification": "^1.102.15"
   },
@@ -33,16 +35,16 @@
           "users": {
             "dpi": {
               "password": "1234",
-              "roles": [
-                "PersonalDataManagerUser",
-                "DataRetentionManagerUser"
+              "policies": [
+                "cap.PersonalDataManagerUser",
+                "cap.DataRetentionManagerUser"
               ]
             },
             "alice": {
               "password": "1234",
-              "roles": [
-                "PersonalDataManagerUser",
-                "DataRetentionManagerUser"
+              "policies": [
+                "cap.PersonalDataManagerUser",
+                "cap.DataRetentionManagerUser"
               ]
             },
             "catalog-auditor": {
@@ -83,14 +85,12 @@
       "db": {
         "kind": "sql"
       },
-      "uaa": {
-        "kind": "xsuaa"
-      },
       "[production]": {
         "db": {
           "kind": "hana-cloud"
         },
-        "auth": "xsuaa"
+        "auth": "ias",
+        "xsuaa": true
       },
       "sap.ilm.RetentionService": {
         "applicationName": "bookshop-retention"

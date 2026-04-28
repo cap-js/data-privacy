@@ -12,14 +12,16 @@ build-parameters:
         - node deploy-patches.js apply
         - npm pack ../../
         - sh -c 'TGZ_FILE="$(ls -1 | grep -E "^cap-js-data-privacy.*\.tgz$" | head -n 1)" && npm install "./${TGZ_FILE}"'
+        # Sidecar version
+        - sh -c 'cp "$(ls -1 | grep -E "^cap-js-data-privacy.*\.tgz$" | head -n 1)" ./mtx/sidecar'
+        - sh -c 'cd ./mtx/sidecar && TGZ_FILE="$(ls -1 | grep -E "^cap-js-data-privacy.*\.tgz$" | head -n 1)" && npm install "./${TGZ_FILE}"'
+        # Regular install
         - npm ci
         - npx -p @sap/cds-dk cds build --production
         - sh -c 'cp "$(ls -1 | grep -E "^cap-js-data-privacy.*\.tgz$" | head -n 1)" ./gen/srv'
+        - sh -c 'cp "$(ls -1 | grep -E "^cap-js-data-privacy.*\.tgz$" | head -n 1)" ./gen/mtx/sidecar'
         - mkdir gen/app
         - cp app/cdm.json gen/app/cdm.json
-        # Sidecar version
-        - cd ./mtx/sidecar && npm pack ../../../..
-        - cd ./mtx/sidecar && sh -c 'TGZ_FILE="$(ls -1 | grep -E "^cap-js-data-privacy.*\.tgz$" | head -n 1)" && npm install "./${TGZ_FILE}"'
   after-all:
     - builder: custom
       commands:
@@ -161,6 +163,9 @@ resources:
       - name: app-api
       - name: incidents-information2
       - name: incidents-retention2
+    processed-after:
+      - incidents-information2
+      - incidents-retention2
   - name: incidents-workzone
     type: org.cloudfoundry.managed-service
     parameters:

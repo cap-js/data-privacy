@@ -1,0 +1,14 @@
+{
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.PersonalDataManagerUser",
+      "description": "Technical scope to restrict access to information endpoint",
+      "grant-as-authority-to-apps": ["$XSSERVICENAME(bookshop-information)"]
+    },
+    {
+      "name": "$XSAPPNAME.DataRetentionManagerUser",
+      "description": "Technical scope to restrict access to retention endpoint",
+      "grant-as-authority-to-apps": ["$XSSERVICENAME(bookshop-retention)"]
+    }
+  ]
+}

@@ -42,8 +42,8 @@ async function generateBuildProject(tempUtil, name, facets = ["mta", "xsuaa", "h
   return projectDir;
 }
 
-function readMtaRetentionConfig(appRoot) {
-  const mtaContent = fs.readFileSync(path.join(appRoot, "mta.yaml"), "utf-8");
+function readMtaRetentionConfig(appRoot, mtaRelPath = "mta.yaml") {
+  const mtaContent = fs.readFileSync(path.join(appRoot, mtaRelPath), "utf-8");
   const mta = cds.parse.yaml(mtaContent);
   const retentionResource = mta.resources.find(
     (r) =>

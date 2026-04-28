@@ -90,6 +90,11 @@ runs:
       run: cf delete-service-key cap-js-data-privacy-hana-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }} cap-js-data-privacy-hana-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}-key -f
       shell: bash
 
+    - name: Delete Audit logging service
+      if: ${{ always() }}
+      run: cf delete-service cap-js-data-privacy-audit-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }} -f
+      shell: bash
+
     # Note: The initial delete attempt often fails due to an "ongoing operation on service binding" error.
     - name: Delete HDI Container
       if: ${{ always() }}

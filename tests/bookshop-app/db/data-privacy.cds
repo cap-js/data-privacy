@@ -103,11 +103,6 @@ annotate bookshop.ProjectAssignments with @(
   legalEntity @PersonalData.FieldSemantics: 'DataControllerID';
 };
 
-annotate bookshop.ProjectAssignments with @(Capabilities: {FilterRestrictions: {
-  Filterable: true,
-  RequiredProperties: [createdAt]
-}});
-
 annotate bookshop.ILMObjectWithStaticBlockingDisabled with @(
   PersonalData.DataSubjectRole: 'Customer',
   PersonalData.EntitySemantics: 'Other',
