@@ -1,0 +1,65 @@
+# Data Privacy Integration Service Configurations
+# This file is merged into chart/values.yaml by `cds add data-privacy`
+
+information:
+  serviceOfferingName: data-privacy-integration-service
+  servicePlanName: data-privacy-internal
+  parameters:
+    xs-security:
+      xsappname: "{{ .Release.Name }}-information"
+      authorities:
+        - $ACCEPT_GRANTED_AUTHORITIES
+      oauth2-configuration:
+        credential-types:
+          - binding-secret
+          - x509
+    dataPrivacyConfiguration:
+      applicationConfiguration:
+        applicationName: "{{ .Release.Name }}-information"
+        applicationTitle: "{{ .Release.Name }}"
+        enableAutoSubscription: true
+      configType: information
+      informationConfiguration:
+        applicationConfiguration:
+          cacheControl: no-cache
+          dataSubjectDeletionAgent: retention-manager
+          disableDataSubjectCorrection: true
+          retentionApplicationName: "{{ .Release.Name }}-retention"
+        components:
+          - componentBaseURL: "https://{{ .Release.Name }}-srv-{{ .Release.Namespace }}.{{ .Values.global.domain }}"
+            componentName: "{{ .Release.Name }}-srv"
+            serviceEndPoints:
+              - annotationFormat: v4
+                appPaginationEnabled: true
+                cacheControl: no-cache
+                serviceEndPoint: /dpp/information
+                serviceFormat: odata-v4
+                serviceName: "{{ .Release.Name }}-service"
+
+retention:
+  serviceOfferingName: data-privacy-integration-service
+  servicePlanName: data-privacy-internal
+  parameters:
+    xs-security:
+      xsappname: "{{ .Release.Name }}-retention"
+      authorities:
+        - $ACCEPT_GRANTED_AUTHORITIES
+      oauth2-configuration:
+        credential-types:
+          - binding-secret
+          - x509
+    dataPrivacyConfiguration:
+      applicationConfiguration:
+        applicationBaseURL: "https://{{ .Release.Name }}-srv-{{ .Release.Namespace }}.{{ .Values.global.domain }}"
+        applicationName: "{{ .Release.Name }}-retention"
+        applicationTitle: "{{ .Release.Name }}"
+        applicationDescription: "{{ .Release.Name }}-retention"
+        applicationDescriptionKey: APPLICATION_NAME
+        enableAutoSubscription: true
+      configType: retention
+      retentionConfiguration:
+        applicationConfiguration:
+          applicationType: TransactionMaster
+          iLMObjectDiscoveryEndPoint: /dpp/retention/iLMObjects
+        # Note: dataSubjectRoles and organizationAttributes are added during build
+        # based on your CDS model annotations

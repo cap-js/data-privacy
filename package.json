@@ -75,6 +75,9 @@
           "model": "@cap-js/data-privacy/srv/TableHeaderBlocking"
         }
       }
+    },
+    "templates": {
+      "data-privacy": "./lib/init/template/data-privacy"
     }
   },
   "workspaces": [
