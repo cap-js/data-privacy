@@ -35,10 +35,15 @@ runs:
 
     - name: Authenticate with Cloud Foundry
       shell: bash
+      env:
+        CF_USERNAME: ${{inputs.CF_USERNAME}}
+        CF_PASSWORD: ${{inputs.CF_PASSWORD}}
       run: |
         echo "::debug::CF_API=${{ inputs.CF_API }}"
         for i in {1..5}; do
-          cf login -a ${{ inputs.CF_API }} -u ${{ inputs.CF_USERNAME }} -p ${{ inputs.CF_PASSWORD }} -o ${{ inputs.CF_ORG }} -s ${{ inputs.CF_SPACE }} && break
+          cf api ${{ inputs.CF_API }} && \
+          cf auth && \
+          cf target -o ${{ inputs.CF_ORG }} -s ${{ inputs.CF_SPACE }} && break
           echo "cf login failed, retrying ($i/5)..."
           sleep 10
           if [ "$i" -eq 5 ]; then
