@@ -12,24 +12,27 @@ permissions:
 
 jobs:
   test:
-    name: Running ${{ matrix.testSuite }} for CAP ${{ matrix.cds-version }} and node ${{ matrix.node-version }}
+    name: Tests
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         node-version: [20.x, 22.x]
         cds-version: [latest]
-        testSuite: [tests/]
     steps:
-      - uses: actions/checkout@v4
+      - name: Harden Runner
+        uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           clean: true
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: ${{ matrix.node-version }}
       - name: Tests
         uses: ./.github/actions/tests
         with:
-          TEST_SUITE: ${{ matrix.testSuite }}
+          TEST_SUITE: tests/
           CDS_VERSION: ${{ matrix.cds-version }}
           NODE_VERSION: ${{ matrix.node-version }}
