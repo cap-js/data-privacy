@@ -119,3 +119,43 @@ entity OrdersWithMarketing     as
     m.text as marketingText,
     m.marketingDate
   };
+
+// --- Multi-level projection (projection -> projection -> composition target) ---
+entity OrderItemsL2            as projection on OrderItems;
+entity OrderItemsL3            as projection on OrderItemsL2;
+
+// --- Union view on composition target ---
+entity OrderItemsUnion         as
+    select from OrderItems {
+      ID,
+      parent_ID,
+      amount
+    }
+    where
+      amount > 10
+  union all
+    select from OrderItems {
+      ID,
+      parent_ID,
+      amount
+    }
+    where
+      amount <= 10;
+
+// --- Union on union (union -> union -> table) ---
+entity OrderItemsUnionL2       as
+    select from OrderItemsUnion {
+      ID,
+      parent_ID,
+      amount
+    }
+    where
+      amount > 5
+  union all
+    select from OrderItemsUnion {
+      ID,
+      parent_ID,
+      amount
+    }
+    where
+      amount <= 5;
