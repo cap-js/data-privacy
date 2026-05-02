@@ -323,7 +323,10 @@ describe("bookshop-app cds build --production", () => {
     const withoutPrivilegeCheck = [];
     for (const file of viewsToCheck) {
       const filePath = path.join(genDbDir, file);
-      if (!fs.existsSync(filePath)) continue;
+      if (!fs.existsSync(filePath)) {
+        withoutPrivilegeCheck.push(`${file} (missing)`);
+        continue;
+      }
       const content = fs.readFileSync(filePath, "utf-8");
       if (!content.includes("STRUCTURED PRIVILEGE CHECK")) {
         withoutPrivilegeCheck.push(file);
