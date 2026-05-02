@@ -4,12 +4,13 @@
 - The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - This project adheres to [Semantic Versioning](https://semver.org/).
 
-## Version 0.6.2 - 23.04.2026
+## Version 0.6.2 - Unreleased
 
 ### Fixed
 
 - Fixed another issue where key associations were not correctly handled
 - Fixed an issue with `cds add` adding redundant xsuaa scope information
+- Fixed an issue where the `dppBlockingDate` field was not correctly propagated across entities in the project, particularly entities containing a union or joins
 
 ## Version 0.6.1 - 23.04.2026
 
