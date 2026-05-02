@@ -11,6 +11,7 @@
 - Fixed another issue where key associations were not correctly handled
 - Fixed an issue with `cds add` adding redundant xsuaa scope information
 - Fixed an issue where the `dppBlockingDate` field was not correctly propagated across entities in the project, particularly entities containing a union or joins
+- Fixed an issue where HANA Analytic Privileges where not correctly generated for views with joins or unions
 
 ## Version 0.6.1 - 23.04.2026
 
