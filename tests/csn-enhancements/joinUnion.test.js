@@ -342,4 +342,77 @@ describe("Join and Union view handling", () => {
     expect(retentionCol.ref[0]).toEqual("o");
     expect(retentionCol.xpr).toBeUndefined();
   });
+
+  // --- Right-hand-only blocking in joins ---
+  // These tests verify that blocking field propagates when only the non-primary
+  // (right-hand) join participant has the field, not just the leftmost source.
+
+  describe("Blocking propagation with non-primary (right-hand) source only", () => {
+    let model;
+    beforeAll(async () => {
+      model = await cds.load([
+        "db/schema.cds",
+        "db/data-privacy.cds",
+        "db/join-union.cds",
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
+      ]);
+    });
+
+    function expectBlocking(entityName) {
+      const entity = model.definitions[entityName];
+      expect(entity).toBeTruthy();
+      const blockingField = Object.entries(entity.elements).find(
+        ([, e]) => e["@PersonalData.FieldSemantics"] === "BlockingDate"
+      );
+      expect(blockingField).toBeTruthy();
+      return blockingField[0];
+    }
+
+    function expectNoBlocking(entityName) {
+      const entity = model.definitions[entityName];
+      expect(entity).toBeTruthy();
+      const blockingField = Object.entries(entity.elements).find(
+        ([, e]) => e["@PersonalData.FieldSemantics"] === "BlockingDate"
+      );
+      expect(blockingField).toBeUndefined();
+    }
+
+    test("Precondition: Books has NO blocking field", () => {
+      expectNoBlocking("sap.capire.bookshop.Books");
+    });
+
+    test("Precondition: Authors has NO blocking field", () => {
+      expectNoBlocking("sap.capire.bookshop.Authors");
+    });
+
+    test("Left outer join: left=Books (no blocking), right=Orders (blocking) propagates field", () => {
+      expectBlocking("BooksWithOrdersRightBlocking");
+    });
+
+    test("Inner join: left=Authors (no blocking), right=OrderItems (blocking) propagates field", () => {
+      expectBlocking("AuthorsWithItemsRightBlocking");
+    });
+
+    test("Three-way join: only middle participant (Orders) has blocking → field propagated", () => {
+      expectBlocking("MiddleJoinBlocking");
+    });
+
+    test("Projection on right-blocking join propagates field transitively", () => {
+      expectBlocking("ProjectedRightBlockingJoin");
+    });
+
+    test("Right-blocking join adds blocking column with aliased ref to query", () => {
+      const entity = model.definitions["BooksWithOrdersRightBlocking"];
+      const blockingFieldName = Object.entries(entity.elements).find(
+        ([, e]) => e["@PersonalData.FieldSemantics"] === "BlockingDate"
+      )?.[0];
+      const columns = entity.query.SELECT.columns;
+      const blockingCol = columns.find((c) => c.as === blockingFieldName);
+      expect(blockingCol).toBeTruthy();
+      // Single source with blocking (Orders aliased as 'o') — should be aliased ref
+      expect(blockingCol.ref).toBeTruthy();
+      expect(blockingCol.ref[0]).toEqual("o");
+    });
+  });
 });
