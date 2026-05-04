@@ -61,11 +61,14 @@ runs:
       uses: actions/setup-node@v6
       with:
         node-version: ${{ inputs.NODE_VERSION }}
-    - run: npm i -g @sap/cds-dk
+    - name: Install global CDS
       shell: bash
-    - name: Install dependencies
+      run: npm i -g @sap/cds-dk@${{ matrix.cds-version }}
+    - name: Install root dependencies
       shell: bash
-      run: npm i
+      run: |
+        npm install @sap/cds@${{ matrix.cds-version }}
+        npm install
     - name: CDS Versions being used
       run: cds v -i
       shell: bash
