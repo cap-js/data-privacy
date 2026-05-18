@@ -18,31 +18,34 @@ permissions:
   id-token: write
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20.x, 22.x]
+        cds-version: [latest]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm i -g @sap/cds-dk@${{ matrix.cds-version }}
+      - run: npm i
+      - run: npm run test
+
   publish-npm:
+    needs: test
     runs-on: ubuntu-latest
     environment: npmjs:@cap-js/data-privacy
     steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
-        with:
-          egress-policy: audit
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org/
-
-      - name: Tests
-        uses: ./.github/actions/tests
-        with:
-          TEST_SUITE: tests/
-          CDS_VERSION: latest
-          NODE_VERSION: 24.x
-
-      - name: Get npm version
-        run: npm -v
-      - run: npm publish --access public --provenance --tag ${{ github.event.inputs.tag }}
-
+      - run: npm i
       - name: Get Version
         id: get-version
         run: |
@@ -57,3 +60,4 @@ jobs:
         with:
           tag: "v${{ steps.get-version.outputs.version }}"
           body: "${{ steps.parse-changelog.outputs.body }}"
+      - run: npm publish --access public --provenance --tag ${{ github.event.inputs.tag }}
