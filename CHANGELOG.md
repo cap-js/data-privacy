@@ -4,14 +4,15 @@
 - The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - This project adheres to [Semantic Versioning](https://semver.org/).
 
-## Version 0.6.2 - 23.04.2026
+## Version 0.6.2 - 2026-05-18
 
 ### Fixed
 
-- Fixed another issue where key associations were not correctly handled
+- Fixed an issue where key associations were not correctly handled
 - Fixed an issue with `cds add` adding redundant xsuaa scope information
+- Fixed an issue that caused a server crash when no db connection was available during HANA role cleanup
 
-## Version 0.6.1 - 23.04.2026
+## Version 0.6.1 - 2026-04-23
 
 ### Changed
 
@@ -25,7 +26,7 @@
 - Fixed an issue with resolving backlinks from projections
 - Fixed an issue where key associations were not correctly handled
 
-## Version 0.6.0 - 18.04.2026
+## Version 0.6.0 - 2026-04-18
 
 ### Added
 
@@ -35,7 +36,7 @@
 
 - Fixed multiple issues regarding MTXs model handling
 
-## Version 0.5.0 - 15.04.2026
+## Version 0.5.0 - 2026-04-15
 
 ### Added
 
