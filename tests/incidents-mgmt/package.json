@@ -2,13 +2,13 @@
   "name": "incidents-mgmt",
   "version": "1.0.0",
   "dependencies": {
-    "@cap-js/audit-logging": "^1",
+    "@cap-js/audit-logging": "^1.0.0",
     "@cap-js/data-privacy": "file:../../",
     "@cap-js/hana": "^2",
     "@sap/cds": "^9",
     "@sap/cds-mtxs": "^3",
     "@sap/xssec": "^4",
-    "express": "^5",
+    "express": "^5.2.1",
     "passport": "^0"
   },
   "devDependencies": {
