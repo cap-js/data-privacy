@@ -4,6 +4,11 @@
 - The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - This project adheres to [Semantic Versioning](https://semver.org/).
 
+## Version 0.6.3 - 2026-06-09
+
+- Fixed an issue where the `dppBlockingDate` field was not correctly propagated across entities in the project, particularly entities containing a union or joins
+- Fixed an issue where HANA Analytic Privileges were not correctly generated for views with joins or unions
+
 ## Version 0.6.2 - 2026-05-18
 
 ### Fixed
