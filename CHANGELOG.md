@@ -4,18 +4,15 @@
 - The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - This project adheres to [Semantic Versioning](https://semver.org/).
 
-## Version 0.6.3 - 2026-06-09
-
-- Fixed an issue where the `dppBlockingDate` field was not correctly propagated across entities in the project, particularly entities containing a union or joins
-- Fixed an issue where HANA Analytic Privileges were not correctly generated for views with joins or unions
-
-## Version 0.6.2 - 2026-05-18
+## Version 0.6.2 - 2026-06-09
 
 ### Fixed
 
 - Fixed an issue where key associations were not correctly handled
 - Fixed an issue with `cds add` adding redundant xsuaa scope information
 - Fixed an issue that caused a server crash when no db connection was available during HANA role cleanup
+- Fixed an issue where the `dppBlockingDate` field was not correctly propagated across entities in the project, particularly entities containing a union or joins
+- Fixed an issue where HANA Analytic Privileges were not correctly generated for views with joins or unions
 
 ## Version 0.6.1 - 2026-04-23
 
