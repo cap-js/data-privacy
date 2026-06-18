@@ -209,4 +209,130 @@ describe("bookshop-app cds build --production", () => {
     expect(result).toMatch(/build completed/i);
     expect(fs.existsSync(path.join(GEN_DIR, "srv"))).toBe(true);
   });
+
+  test("No analytic privilege contains 'null is null' in whereSql", () => {
+    const genDbDir = path.join(GEN_DIR, "db", "src", "gen");
+    const privilegeFiles = fs
+      .readdirSync(genDbDir)
+      .filter((f) => f.endsWith(".hdbanalyticprivilege"));
+
+    expect(privilegeFiles.length).toBeGreaterThan(0);
+
+    // Join views are excluded: their blocking field is added by index.js (in-process)
+    // but the hana-restrictions hook that generates the whereSql runs in a separate
+    // build context where the field is not yet resolved. This is a known limitation.
+    const joinViewPrefixes = [
+      "OrdersWithItems",
+      "OrdersInnerJoin",
+      "OrdersWithManyItemJoins",
+      "OrdersWithMarketing",
+      "OrdersJoinUnion"
+    ];
+
+    const violations = [];
+    for (const file of privilegeFiles) {
+      if (joinViewPrefixes.some((p) => file.startsWith(p))) continue;
+      const content = fs.readFileSync(path.join(genDbDir, file), "utf-8");
+      if (content.includes("null is null")) {
+        violations.push(file);
+      }
+    }
+
+    expect(violations).toEqual([]);
+  });
+
+  test("All service projections of ILM-relevant entities have a DPPRestriction analytic privilege", () => {
+    const genDbDir = path.join(GEN_DIR, "db", "src", "gen");
+    const privilegeFiles = fs
+      .readdirSync(genDbDir)
+      .filter((f) => f.endsWith(".DPPRestriction.hdbanalyticprivilege"));
+
+    // Collect entity names that have a privilege
+    const entitiesWithPrivilege = privilegeFiles.map((f) =>
+      f.replace(".DPPRestriction.hdbanalyticprivilege", "")
+    );
+
+    // These service projections on ILM-relevant tables must each have a privilege
+    const expectedEntities = [
+      // Service projections on ILM root
+      "CatalogService.Orders",
+      "AdminService.Orders",
+      // Service projections on composition targets
+      "CatalogService.OrderItems",
+      "CatalogService.Deliveries",
+      "CatalogService.Payments",
+      "CatalogService.ManagedComp2One",
+      "CatalogService.UnmanagedComp2One2",
+      "AdminService.OrderItems",
+      "AdminService.Deliveries",
+      "AdminService.Payments",
+      "AdminService.ManagedComp2One",
+      "AdminService.UnmanagedComp2One2",
+      // DataSubject projections
+      "CatalogService.Customers",
+      "CatalogService.CustomerPostalAddress",
+      "CatalogService.CustomerBillingData",
+      // Multi-level projections (projection -> projection -> composition target)
+      "OrderItemsL2",
+      "OrderItemsL3",
+      // Join views
+      "OrdersWithItems",
+      "OrdersInnerJoin",
+      "OrdersWithManyItemJoins",
+      "OrdersWithMarketing",
+      // Union views
+      "CustomersUnion",
+      "OrderItemsUnion",
+      // Union with join
+      "OrdersJoinUnion",
+      // Union on union
+      "OrderItemsUnionL2"
+    ];
+
+    const missing = expectedEntities.filter((e) => !entitiesWithPrivilege.includes(e));
+    expect(missing).toEqual([]);
+  });
+
+  test("Views referencing ILM tables include WITH STRUCTURED PRIVILEGE CHECK", () => {
+    const genDbDir = path.join(GEN_DIR, "db", "src", "gen");
+
+    const viewsToCheck = [
+      // Simple projections
+      "CatalogService.Orders.hdbview",
+      "CatalogService.OrderItems.hdbview",
+      "CatalogService.Deliveries.hdbview",
+      "AdminService.Orders.hdbview",
+      "AdminService.OrderItems.hdbview",
+      // Multi-level projections
+      "OrderItemsL2.hdbview",
+      "OrderItemsL3.hdbview",
+      // Join views
+      "OrdersWithItems.hdbview",
+      "OrdersInnerJoin.hdbview",
+      "OrdersWithManyItemJoins.hdbview",
+      "OrdersWithMarketing.hdbview",
+      // Union views
+      "CustomersUnion.hdbview",
+      "OrderItemsUnion.hdbview",
+      // Union with join
+      "OrdersJoinUnion.hdbview",
+      // Union on union
+      "OrderItemsUnionL2.hdbview"
+    ];
+
+    const withoutPrivilegeCheck = [];
+    for (const file of viewsToCheck) {
+      const filePath = path.join(genDbDir, file);
+      if (!fs.existsSync(filePath)) {
+        withoutPrivilegeCheck.push(`${file} (missing)`);
+        continue;
+      }
+      const content = fs.readFileSync(filePath, "utf-8");
+      if (!content.includes("STRUCTURED PRIVILEGE CHECK")) {
+        withoutPrivilegeCheck.push(file);
+      }
+    }
+
+    expect(withoutPrivilegeCheck).toEqual([]);
+  });
 });

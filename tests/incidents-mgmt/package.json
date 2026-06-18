@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@cap-js/sqlite": "^2.0.3",
-    "@sap/cds-dk": "9.4.3",
+    "@sap/cds-dk": "9.9.2",
     "@sap/ux-specification": "^1.108.4",
     "cds-launchpad-plugin": "^2.2.0",
     "cds-plugin-ui5": "^0.17.0"
