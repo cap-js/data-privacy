@@ -34,7 +34,7 @@
     "@sap/cds": ">=9.8"
   },
   "devDependencies": {
-    "@cap-js/cds-test": "^0.4.0",
+    "@cap-js/cds-test": "^1.0.1",
     "@cap-js/cds-types": "^0.17.0",
     "@cap-js/sqlite": "^2",
     "@eslint/js": "^10",
