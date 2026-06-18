@@ -48,6 +48,7 @@ jobs:
     name: Integration Tests
     needs: requires-approval
     if: always() && (needs.requires-approval.result == 'success' || needs.requires-approval.result == 'skipped')
+    environment: CI
     strategy:
       fail-fast: false
       matrix:
