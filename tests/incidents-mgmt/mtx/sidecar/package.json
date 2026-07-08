@@ -2,7 +2,7 @@
   "name": "incidents-mgmt-mtx",
   "dependencies": {
     "@cap-js/data-privacy": "file:../../../../",
-    "@cap-js/hana": "^2",
+    "@cap-js/hana": "^3",
     "@sap/cds": "^9",
     "@sap/cds-mtxs": "^3",
     "@sap/xssec": "^4"

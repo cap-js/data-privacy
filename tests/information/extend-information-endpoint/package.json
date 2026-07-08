@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "dependencies": {
     "@cap-js/audit-logging": "^1.0.0",
-    "@cap-js/hana": "^2",
+    "@cap-js/hana": "^3",
     "@sap/cds": "^9",
     "@cap-js/data-privacy": "file:../../../",
     "express": "^5.2.1"
