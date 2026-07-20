@@ -5,9 +5,9 @@
   "dependencies": {
     "@cap-js/audit-logging": "^1.0.0",
     "@cap-js/data-privacy": "file:../../",
-    "@cap-js/hana": "^2",
+    "@cap-js/hana": ">=2",
     "@sap/ams": "^3",
-    "@sap/cds": "^9",
+    "@sap/cds": ">=9",
     "@sap/cds-common-content": "^3",
     "@sap/xsenv": "^6",
     "@sap/xssec": "^4",
@@ -15,9 +15,9 @@
     "path": "^0.12.7"
   },
   "devDependencies": {
-    "@cap-js/sqlite": "^2",
+    "@cap-js/sqlite": ">=2",
     "@sap/ams-dev": "^2",
-    "@sap/cds-dk": "^9",
+    "@sap/cds-dk": ">=9",
     "@sap/ux-specification": "^1.102.15"
   },
   "scripts": {
@@ -25,7 +25,7 @@
     "watch": "cds watch"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "cds": {
     "requires": {
