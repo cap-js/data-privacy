@@ -105,11 +105,16 @@ module.exports = class RetentionService extends cds.ApplicationService {
           req.query.SELECT.from?.ref?.[0].where?.[2]
         ) {
           const entity = this.definition._dpi.iLMObjects[req.query.SELECT.from.ref[0].where[2].val];
-          if (entity["@ILM.BlockingEnabled"]?.xpr) {
-            const SRV = entity["@ILM.BlockingEnabled"]._service
-              ? await cds.connect.to(entity["@ILM.BlockingEnabled"]._service)
-              : cds;
-            const res = await SRV.run(entity["@ILM.BlockingEnabled"].xpr[0]);
+          // REVISIT: Use xpr once cds compiler supports sub selects in expressions
+          if (
+            entity["@ILM.BlockingEnabled"]?.xpr ||
+            entity["@ILM.BlockingEnabled"]?._query ||
+            entity._blockingEnabledQuery
+          ) {
+            const blocking = entity._blockingEnabledQuery || entity["@ILM.BlockingEnabled"];
+            const query = blocking._query || blocking.xpr?.[0];
+            const SRV = blocking._service ? await cds.connect.to(blocking._service) : cds;
+            const res = await SRV.run(query);
             return {
               isILMObjectEnabled:
                 Array.isArray(res) && res.length
