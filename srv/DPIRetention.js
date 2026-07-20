@@ -211,10 +211,16 @@ module.exports = class RetentionService extends cds.ApplicationService {
 };
 
 const buildBaseUrl = (req) => {
-  let url = "";
-  if (process.env.NODE_ENV === "production") url += "https://";
-  url += req._req ? req._req.get("host") : req.req.get("host");
-  return url;
+  // Prefer configured app URL or CF platform-provided URL over client-supplied Host header
+  if (cds.env.app?.url) return cds.env.app.url.replace(/\/$/, "");
+  const vcap = process.env.VCAP_APPLICATION && JSON.parse(process.env.VCAP_APPLICATION);
+  if (vcap?.application_uris?.[0]) {
+    return `https://${vcap.application_uris[0].replace(/^https?:\/\//, "")}`;
+  }
+  // Fallback to request (development/local only)
+  const _req = req._req || req.req;
+  const protocol = _req.protocol || "https";
+  return `${protocol}://${_req.get("host")}`;
 };
 
 // function getSelectionCriteria(entity) {

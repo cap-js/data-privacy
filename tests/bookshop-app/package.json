@@ -78,6 +78,12 @@
                 "PersonalDataManagerUser",
                 "DataRetentionManagerUser"
               ]
+            },
+            "external-auditor": {
+              "password": "1234",
+              "roles": [
+                "ExternalAuditor"
+              ]
             }
           }
         }

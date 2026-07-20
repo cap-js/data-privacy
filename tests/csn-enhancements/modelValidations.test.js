@@ -620,4 +620,48 @@ describe("Model validations to ensure a working model for DPI", () => {
       );
     });
   });
+
+  describe("@Auditing.AuditorScopes validations", () => {
+    test("Error if @Auditing.AuditorScopes contains non-ASCII-word characters", async () => {
+      await cds.load([
+        "../csn-enhancements/scenarios/invalidAuditorScopes.cds",
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
+      ]);
+      expect(log.output.length).toBeGreaterThan(0);
+      expect(log.output).toContain(
+        `Invalid @Auditing.AuditorScopes value "Invalid%Role" on InvalidAuditorScope1. Only ASCII word characters (a-z, A-Z, 0-9, _) are allowed!`
+      );
+    });
+
+    test("Error if @Auditing.AuditorScopes contains spaces", async () => {
+      await cds.load([
+        "../csn-enhancements/scenarios/invalidAuditorScopes.cds",
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
+      ]);
+      expect(log.output.length).toBeGreaterThan(0);
+      expect(log.output).toContain(
+        `Invalid @Auditing.AuditorScopes value "Role With Spaces" on InvalidAuditorScope2. Only ASCII word characters (a-z, A-Z, 0-9, _) are allowed!`
+      );
+    });
+
+    test("No error for valid @Auditing.AuditorScopes with ASCII word characters", async () => {
+      await cds.load([
+        "../csn-enhancements/scenarios/invalidAuditorScopes.cds",
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
+      ]);
+      expect(log.output).not.toContain(`ValidAuditorScope`);
+    });
+
+    test("No error for valid @Auditing.AuditorScopes value within invalid entity", async () => {
+      await cds.load([
+        "../csn-enhancements/scenarios/invalidAuditorScopes.cds",
+        "@cap-js/data-privacy/srv/DPIInformation",
+        "@cap-js/data-privacy/srv/TableHeaderBlocking"
+      ]);
+      expect(log.output).not.toContain(`Invalid @Auditing.AuditorScopes value "Valid_Role"`);
+    });
+  });
 });

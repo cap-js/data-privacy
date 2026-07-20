@@ -336,6 +336,16 @@ describe("Access Restrictions for blocked entities", () => {
     expect(orders.some((o) => o.ID === "5e2f2640-6866-4dcf-8f4d-3027aa831cad")).toBeFalsy();
   });
 
+  test("Blocked records cannot be read by user whose role name is a suffix of the auditor role (e.g. ExternalAuditor vs Auditor)", async () => {
+    const externalAuditor = { username: "external-auditor", password: "1234" };
+    const {
+      data: { value: orders },
+      status
+    } = await GET("/odata/v4/admin/Orders", { auth: externalAuditor });
+    expect(status).toEqual(200);
+    expect(orders.some((o) => o.ID === "5e2f2640-6866-4dcf-8f4d-3027aa831cad")).toBeFalsy();
+  });
+
   test("Draft tables of DPP entities are not blocked", async () => {
     const { data: newOrder } = await POST(
       "/odata/v4/admin/Orders",
