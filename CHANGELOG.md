@@ -9,6 +9,7 @@
 ### Fixed
 
 - Fixed gap in evaluation of auditor scopes on HANA, where 'ABCAuditor' would be accepted for the required scope 'Auditor'
+- Fixed an issue where the logic for adding a backlink to the parent entity on a composition caused failures when deleting blocked data
 
 ## Version 0.6.2 - 2026-06-18
 
