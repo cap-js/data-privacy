@@ -68,6 +68,19 @@ runs:
     - name: Install global CDS
       shell: bash
       run: npm i -g @sap/cds-dk@${{ inputs.CDS_VERSION }}
+    - name: Pin CDS 9 compatible stack
+      if: inputs.CDS_VERSION == '9'
+      shell: bash
+      run: |
+        npm pkg set "overrides.@cap-js/sqlite=^2"
+        npm pkg set "overrides.@cap-js/hana=^2"
+        npm pkg set "overrides.@sap/cds-mtxs=^3"
+        npm pkg set "devDependencies.@sap/cds=^9"
+        npm pkg set "devDependencies.@sap/cds-dk=^9"
+        npm pkg set "devDependencies.@cap-js/sqlite=^2"
+        npm pkg set --workspace=tests/bookshop-app "dependencies.@sap/cds=^9"
+        npm pkg set --workspace=tests/bookshop-app "devDependencies.@cap-js/sqlite=^2"
+        npm pkg set --workspace=tests/bookshop-app "devDependencies.@sap/cds-dk=^9"
     - name: Install all dependencies
       shell: bash
       run: npm install

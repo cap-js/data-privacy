@@ -55,7 +55,7 @@
     "format": "prettier . --write && format-cds -f",
     "format:check": "prettier . --check && format-cds --check",
     "test": "npx jest --silent --forceExit",
-    "test:integration": "cds bind --exec -- npx jest --silent --forceExit --testPathPatterns \"tests/retention/dataSubjectDeletion.test.js|tests/information/information-service.test.js|tests/csn-enhancements/joinUnionRuntime.test.js\""
+    "test:integration": "cds bind --exec --profile hybrid,integration -- npx jest --silent --forceExit --testPathPatterns \"tests/retention/dataSubjectDeletion.test.js|tests/information/information-service.test.js|tests/csn-enhancements/joinUnionRuntime.test.js\""
   },
   "jest": {
     "testTimeout": 40000

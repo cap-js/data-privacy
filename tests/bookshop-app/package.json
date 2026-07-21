@@ -98,6 +98,29 @@
         "auth": "ias",
         "xsuaa": true
       },
+      "[integration]": {
+        "db": {
+          "kind": "hana-cloud"
+        },
+        "auth": {
+          "strategy": "dummy",
+          "users": {
+            "dpi": {
+              "password": "1234",
+              "roles": [
+                "PersonalDataManagerUser",
+                "DataRetentionManagerUser"
+              ]
+            },
+            "external-auditor": {
+              "password": "1234",
+              "roles": [
+                "ExternalAuditor"
+              ]
+            }
+          }
+        }
+      },
       "sap.ilm.RetentionService": {
         "applicationName": "bookshop-retention"
       }
