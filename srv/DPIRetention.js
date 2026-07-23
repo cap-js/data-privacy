@@ -105,11 +105,16 @@ module.exports = class RetentionService extends cds.ApplicationService {
           req.query.SELECT.from?.ref?.[0].where?.[2]
         ) {
           const entity = this.definition._dpi.iLMObjects[req.query.SELECT.from.ref[0].where[2].val];
-          if (entity["@ILM.BlockingEnabled"]?.xpr) {
-            const SRV = entity["@ILM.BlockingEnabled"]._service
-              ? await cds.connect.to(entity["@ILM.BlockingEnabled"]._service)
-              : cds;
-            const res = await SRV.run(entity["@ILM.BlockingEnabled"].xpr[0]);
+          // REVISIT: Use xpr once cds compiler supports sub selects in expressions
+          if (
+            entity["@ILM.BlockingEnabled"]?.xpr ||
+            entity["@ILM.BlockingEnabled"]?._query ||
+            entity._blockingEnabledQuery
+          ) {
+            const blocking = entity._blockingEnabledQuery || entity["@ILM.BlockingEnabled"];
+            const query = blocking._query || blocking.xpr?.[0];
+            const SRV = blocking._service ? await cds.connect.to(blocking._service) : cds;
+            const res = await SRV.run(query);
             return {
               isILMObjectEnabled:
                 Array.isArray(res) && res.length
@@ -211,10 +216,16 @@ module.exports = class RetentionService extends cds.ApplicationService {
 };
 
 const buildBaseUrl = (req) => {
-  let url = "";
-  if (process.env.NODE_ENV === "production") url += "https://";
-  url += req._req ? req._req.get("host") : req.req.get("host");
-  return url;
+  // Prefer configured app URL or CF platform-provided URL over client-supplied Host header
+  if (cds.env.app?.url) return cds.env.app.url.replace(/\/$/, "");
+  const vcap = process.env.VCAP_APPLICATION && JSON.parse(process.env.VCAP_APPLICATION);
+  if (vcap?.application_uris?.[0]) {
+    return `https://${vcap.application_uris[0].replace(/^https?:\/\//, "")}`;
+  }
+  // Fallback to request (development/local only)
+  const _req = req._req || req.req;
+  const protocol = _req.protocol || "https";
+  return `${protocol}://${_req.get("host")}`;
 };
 
 // function getSelectionCriteria(entity) {

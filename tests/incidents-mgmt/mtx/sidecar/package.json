@@ -2,16 +2,16 @@
   "name": "incidents-mgmt-mtx",
   "dependencies": {
     "@cap-js/data-privacy": "file:../../../../",
-    "@cap-js/hana": "^2",
-    "@sap/cds": "^9",
-    "@sap/cds-mtxs": "^3",
+    "@cap-js/hana": ">=2",
+    "@sap/cds": ">=9",
+    "@sap/cds-mtxs": ">=3",
     "@sap/xssec": "^4"
   },
   "devDependencies": {
-    "@cap-js/sqlite": "^2"
+    "@cap-js/sqlite": ">=2"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "start": "cds-serve"

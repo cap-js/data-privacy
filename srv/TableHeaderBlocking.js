@@ -711,6 +711,7 @@ module.exports = class TableHeaderBlockingService extends require("./DPIRetentio
             e === `backlink_${comp}`
         );
         if (backlink) {
+          const targetEntity = entity.compositions[comp]._target;
           const subSelectWhere = structuredClone(where);
           for (const ele of subSelectWhere) {
             if (ele.ref) {
@@ -718,18 +719,14 @@ module.exports = class TableHeaderBlockingService extends require("./DPIRetentio
             }
           }
           acc.push(
-            UPDATE.entity(entity.compositions[comp]._target)
+            UPDATE.entity(targetEntity)
               .where(subSelectWhere)
               .set({
-                [entity.compositions[comp]._target._dpi.blockingDateReference]: new Date()
-                  .toISOString()
-                  .substring(0, 10)
+                [targetEntity._dpi.blockingDateReference]: new Date().toISOString().substring(0, 10)
               })
           );
-          if (entity.compositions[comp]._target.compositions) {
-            acc.push(
-              ...blockCompositions(entity.compositions[comp]._target, where, [backlink, ...path])
-            );
+          if (targetEntity.compositions) {
+            acc.push(...blockCompositions(targetEntity, where, [backlink, ...path]));
           }
         } else {
           LOG.error(

@@ -241,6 +241,31 @@ describe("bookshop-app cds build --production", () => {
     expect(violations).toEqual([]);
   });
 
+  test("Analytic privilege ROLES check uses comma-delimited pattern to prevent substring bypass", () => {
+    const genDbDir = path.join(GEN_DIR, "db", "src", "gen");
+    const privilegeFiles = fs
+      .readdirSync(genDbDir)
+      .filter((f) => f.endsWith(".DPPRestriction.hdbanalyticprivilege"));
+
+    expect(privilegeFiles.length).toBeGreaterThan(0);
+
+    const violations = [];
+    for (const file of privilegeFiles) {
+      const content = fs.readFileSync(path.join(genDbDir, file), "utf-8");
+      // Match ROLES like patterns that don't use comma delimiters on both sides
+      // Valid:   '%,SomeRole,%'
+      // Invalid: '%SomeRole,%' (missing leading comma — allows suffix bypass)
+      const rolesPatterns = content.match(/like\s+'[^']+'/g) || [];
+      for (const pattern of rolesPatterns) {
+        if (!pattern.includes("%,") || !pattern.includes(",%")) {
+          violations.push({ file, pattern });
+        }
+      }
+    }
+
+    expect(violations).toEqual([]);
+  });
+
   test("All service projections of ILM-relevant entities have a DPPRestriction analytic privilege", () => {
     const genDbDir = path.join(GEN_DIR, "db", "src", "gen");
     const privilegeFiles = fs
