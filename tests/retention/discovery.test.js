@@ -125,8 +125,8 @@ describe("iLMObject discovery", () => {
 
           const purposeField =
             iLMObjectDef.elements[
-              iLMObjectDef._dpi.elementByVHId(condition.conditionFieldName) ??
-                condition.conditionFieldName
+            iLMObjectDef._dpi.elementByVHId(condition.conditionFieldName) ??
+            condition.conditionFieldName
             ];
           if (purposeField["@PersonalData.FieldSemantics"]) {
             expect(purposeField["@PersonalData.FieldSemantics"]).toEqual("PurposeID");

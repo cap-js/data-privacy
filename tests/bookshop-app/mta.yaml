@@ -33,7 +33,7 @@ modules:
       - name: srv-api
         properties:
           srv-url: ${default-url}
-          srv-cert-url: '${protocol}://${default-host}.cert.${default-domain}'
+          srv-cert-url: "${protocol}://${default-host}.cert.${default-domain}"
     requires:
       - name: bookshop-db
       - name: bookshop-auth
