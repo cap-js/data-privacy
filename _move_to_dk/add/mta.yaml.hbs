@@ -1,13 +1,14 @@
-modules: 
+modules:
   - name: {{appName}}-srv
-    type: {{language}} 
-    path: {{& srvPath}} 
-    requires: 
+    type: {{language}}
+    path: {{& srvPath}}
+    requires:
       - name: {{appName}}-information
       - name: {{appName}}-retention
       - name: {{appName}}-auth
       - name: {{appName}}-auditlog
-resources: 
+
+resources:
   - name: {{appName}}-information
     type: org.cloudfoundry.managed-service
     requires:
@@ -18,33 +19,34 @@ resources:
       service-plan: data-privacy-internal
       config:
         xs-security:
-          xsappname: {{appName}}-information-${org}-${space}                                                    
-          authorities:                                                                                        
-            - $ACCEPT_GRANTED_AUTHORITIES                                                                        
+          xsappname: {{appName}}-information-${org}-${space}
+          authorities:
+            - $ACCEPT_GRANTED_AUTHORITIES
         dataPrivacyConfiguration:
           configType: information
           applicationConfiguration:
             applicationName: {{appName}}-information
             applicationTitle: {{appName}}
 {{^hasMultitenancy}}
-            enableAutoSubscription : true #Only for single tenant applications to subscribe
+            enableAutoSubscription: true #Only for single tenant applications to subscribe
 {{/hasMultitenancy}}
           informationConfiguration:
-            applicationConfiguration:  
+            applicationConfiguration:
               dataSubjectDeletionAgent: retention-manager
               retentionApplicationName: {{appName}}
-              disableDataSubjectCorrection: true  
+              disableDataSubjectCorrection: true
               cacheControl: no-cache
             components:
               - componentName: {{appName}}-srv
                 componentBaseURL: ~{srv-api/srv-url}
-                serviceEndPoints:  
+                serviceEndPoints:
                   - serviceName: {{appName}}-srv
                     serviceFormat: odata-v4
                     annotationFormat: v4
                     serviceEndPoint: /dpp/information
-                    appPaginationEnabled : true  
+                    appPaginationEnabled: true
                     cacheControl: no-cache
+
   - name: {{appName}}-retention
     type: org.cloudfoundry.managed-service
     requires:
@@ -60,13 +62,13 @@ resources:
             - $ACCEPT_GRANTED_AUTHORITIES
         dataPrivacyConfiguration:
           configType: retention
-          applicationConfiguration :
-            applicationName : {{appName}}
-            applicationTitle : {{appName}}
-            applicationDescription : {{appName}}
+          applicationConfiguration:
+            applicationName: {{appName}}
+            applicationTitle: {{appName}}
+            applicationDescription: {{appName}}
             applicationBaseURL: ~{srv-api/srv-url}
 {{^hasMultitenancy}}
-            enableAutoSubscription : true #Only for single tenant applications to subscribe
+            enableAutoSubscription: true #Only for single tenant applications to subscribe
 {{/hasMultitenancy}}
           translationConfiguration:
             textBundleBaseURL: ~{srv-api/srv-url}
@@ -82,13 +84,15 @@ resources:
               applicationType: TransactionMaster
               # simulationSupportedForArchiving: true
               # simulationSupportedForDestruction: true
-              iLMObjectDiscoveryEndPoint: /dpp/retention/iLMObjects        
+              iLMObjectDiscoveryEndPoint: /dpp/retention/iLMObjects
+
   - name: {{appName}}-auditlog
     type: org.cloudfoundry.managed-service
     parameters:
       service: auditlog
       service-plan: standard
       service-name: {{appName}}-auditlog
+
   - name: {{appName}}-auth
     type: org.cloudfoundry.managed-service
     parameters:
@@ -107,4 +111,3 @@ resources:
         tenant-mode: dedicated
       service-plan: application
       path: ./xs-security.json
- 
