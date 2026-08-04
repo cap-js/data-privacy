@@ -1,4 +1,4 @@
 @requires: 'PersonalDataManagerUser'
-service sap.ilm.InformationService @(path : '/dpp/information') {
+service sap.dpp.InformationService @(path: '/dpp/information') {
 
 };

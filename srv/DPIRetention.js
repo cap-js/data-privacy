@@ -1,12 +1,12 @@
-const cds = require('@sap/cds');
-const { getTranslationKey, mapCDStoRetentionDataType } = require('../lib/utils');
-const LOG = cds.log('data-privacy');
+const cds = require("@sap/cds");
+const { getTranslationKey, mapCDStoRetentionDataType } = require("../lib/utils");
+const LOG = cds.log("data-privacy");
 
 module.exports = class RetentionService extends cds.ApplicationService {
   async init() {
     const { iLMObjects } = this.entities;
 
-    this.on('READ', iLMObjects, async (req) => {
+    this.on("READ", iLMObjects, async (req) => {
       const iLMObjects = Object.keys(this.definition._dpi.iLMObjects).reduce(
         (allILMObjects, iLMObject) => {
           const entity = this.definition._dpi.iLMObjects[iLMObject];
@@ -14,29 +14,29 @@ module.exports = class RetentionService extends cds.ApplicationService {
 
           if (!entity._dpi.orgAttributeReference) {
             LOG.error(
-              `${iLMObject} cannot be exposed as an iLMObject because it does not have a property annotated with @PersonalData.FieldSemantics : 'DataControllerID' or annotated with @ILM.FieldSemantics : 'LineOrganizationAttribute'`,
+              `${iLMObject} cannot be exposed as an iLMObject because it does not have a property annotated with @PersonalData.FieldSemantics : 'DataControllerID' or annotated with @ILM.FieldSemantics : 'LineOrganizationID'`
             );
             return allILMObjects;
           }
           if (!entity._dpi.iLMObject.endOfBusinessDates?.length) {
             LOG.error(
-              `${iLMObject} cannot be exposed as an iLMObject because it does not have any property annotated with @PersonalData.FieldSemantics : 'EndOfBusinessDate'`,
+              `${iLMObject} cannot be exposed as an iLMObject because it does not have any property annotated with @PersonalData.FieldSemantics : 'EndOfBusinessDate'`
             );
             return allILMObjects;
           }
 
           const conditions = Object.keys(entity.elements).reduce((conditions, elementName) => {
             const element = entity.elements[elementName];
-            if (element['@ILM.ValueHelp.Type'] === 'condition') {
+            if (element["@ILM.ValueHelp.Type"] === "condition") {
               const condition = {
                 conditionFieldName:
-                  entity.elements[elementName]['@ILM.ValueHelp.Id'] ?? elementName,
+                  entity.elements[elementName]["@ILM.ValueHelp.Id"] ?? elementName,
                 conditionFieldType: mapCDStoRetentionDataType(element.type),
                 conditionFieldDescription: cds.i18n.labels.for(element) ?? elementName,
                 conditionFieldDescriptionKey: undefined,
-                conditionFieldValueHelpEndPoint: element['@ILM.ValueHelp.Path'],
+                conditionFieldValueHelpEndPoint: element["@ILM.ValueHelp.Path"]
               };
-              const labelI18nKey = getTranslationKey(element['@Common.Label']);
+              const labelI18nKey = getTranslationKey(element["@Common.Label"]);
               if (labelI18nKey) {
                 condition.conditionFieldDescriptionKey = labelI18nKey;
               }
@@ -46,18 +46,19 @@ module.exports = class RetentionService extends cds.ApplicationService {
           }, []);
 
           allILMObjects.push({
-            iLMObjectName: iLMObject,
-            iLMObjectType: 'Transaction',
+            iLMObjectName:
+              typeof entity["@ILM.ObjectName"] === "string" ? entity["@ILM.ObjectName"] : iLMObject,
+            iLMObjectType: "Transaction",
             // Mandatory property - if not given DPI crashes
             iLMObjectDescription:
-              cds.i18n.labels.for(getTranslationKey(entity['@Core.Description'])) ||
+              cds.i18n.labels.for(getTranslationKey(entity["@Core.Description"])) ||
               cds.i18n.labels.for(entity) ||
               `Generated description for ${entity.name}`,
-            iLMObjectDescriptionKey: getTranslationKey(entity['@Core.Description']) ?? undefined,
+            iLMObjectDescriptionKey: getTranslationKey(entity["@Core.Description"]) ?? undefined,
             iLMObjectBaseURL: buildBaseUrl(req),
             iLMObjectCheckEndPoint: `${this.path}/iLMObjects/${iLMObject}/isILMObjectEnabled`,
             organizationAttributeName:
-              entity.elements[entity._dpi.orgAttributeReference]['@ILM.ValueHelp.Id'] ??
+              entity.elements[entity._dpi.orgAttributeReference]["@ILM.ValueHelp.Id"] ??
               entity._dpi.orgAttributeReference,
             referenceDates: entity._dpi.iLMObject.endOfBusinessDates,
             conditions: conditions.length ? conditions : undefined,
@@ -68,72 +69,73 @@ module.exports = class RetentionService extends cds.ApplicationService {
               dataSubjectsEndOfResidenceEndPoint: `${this.path}/dataSubjectsEndOfResidence`,
               dataSubjectsEndOfResidenceConfirmationEndPoint: `${this.path}/dataSubjectsEndOfResidenceConfirmation`,
               dataSubjectILMObjectBlockingEndPoint: `${this.path}/dataSubjectILMObjectInstanceBlocking`,
-              dataSubjectsILMObjectDestroyingEndPoint: `${this.path}/dataSubjectsILMObjectInstancesDestroying`,
-
-              //configuration for unblocking an ILM object instance in case of wrong blocking 
-              dataSubjectILMObjectUnblockingEndPoint: `${this.path}/dataSubjectILMObjectInstanceUnblocking`,
-              dataSubjectUnblockingEndPoint: `${this.path}/dataSubjectUnblocking`
+              dataSubjectsILMObjectDestroyingEndPoint: `${this.path}/dataSubjectsILMObjectInstancesDestroying`
             },
             // destructionConfiguration: {
             //   iLMObjectDestructionEndPoint: `${this.path}/destruction`,
             //   iLMObjectDestructionSimulationEndPoint: `${this.path}/simulateDestruction`,
             //   selectionCriteria: selectionCriteria
             // },
-            dataSubjectRoles: entity['@PersonalData.DataSubjectRole']['=']?.enum
-              ? Object.keys(entity.elements[entity['@PersonalData.DataSubjectRole']['=']].enum).map(
-                (ds) => ({ dataSubjectRoleName: ds }),
+            dataSubjectRoles: entity["@PersonalData.DataSubjectRole"]["="]?.enum
+              ? Object.keys(entity.elements[entity["@PersonalData.DataSubjectRole"]["="]].enum).map(
+                (ds) => ({ dataSubjectRoleName: ds })
               )
               : [
                 {
-                  dataSubjectRoleName: entity['@PersonalData.DataSubjectRole'],
-                },
-              ],
+                  dataSubjectRoleName: entity["@PersonalData.DataSubjectRole"]
+                }
+              ]
           });
           return allILMObjects;
         },
-        [],
+        []
       );
-      LOG.debug('Transactional data discovery:', JSON.stringify(iLMObjects));
+      LOG.debug("Transactional data discovery:", JSON.stringify(iLMObjects));
       req.reply(iLMObjects);
     });
 
     //Handle ILMObjectCheckEndpoint
     this.prepend(() =>
-      this.on('READ', iLMObjects, async (req, next) => {
+      this.on("READ", iLMObjects, async (req, next) => {
         if (
           req.query.SELECT.columns &&
           req.query.SELECT.columns.length === 2 &&
-          req.query.SELECT.columns[0].ref?.[0] === 'isILMObjectEnabled' &&
+          req.query.SELECT.columns[0].ref?.[0] === "isILMObjectEnabled" &&
           req.query.SELECT.one &&
           req.query.SELECT.from?.ref?.[0].where?.[2]
         ) {
           const entity = this.definition._dpi.iLMObjects[req.query.SELECT.from.ref[0].where[2].val];
-          if (entity['@ILM.BlockingEnabled']?.xpr) {
-            const SRV = entity['@ILM.BlockingEnabled']._service
-              ? await cds.connect.to(entity['@ILM.BlockingEnabled']._service)
-              : cds;
-            const res = await SRV.run(entity['@ILM.BlockingEnabled'].xpr[0]);
+          // REVISIT: Use xpr once cds compiler supports sub selects in expressions
+          if (
+            entity["@ILM.BlockingEnabled"]?.xpr ||
+            entity["@ILM.BlockingEnabled"]?._query ||
+            entity._blockingEnabledQuery
+          ) {
+            const blocking = entity._blockingEnabledQuery || entity["@ILM.BlockingEnabled"];
+            const query = blocking._query || blocking.xpr?.[0];
+            const SRV = blocking._service ? await cds.connect.to(blocking._service) : cds;
+            const res = await SRV.run(query);
             return {
               isILMObjectEnabled:
                 Array.isArray(res) && res.length
                   ? res[0][Object.keys(res[0])[0]]
-                  : res[Object.keys(res)[0]],
+                  : res[Object.keys(res)[0]]
             };
           } else {
             return {
-              isILMObjectEnabled: entity['@ILM.BlockingEnabled'] !== false,
+              isILMObjectEnabled: entity["@ILM.BlockingEnabled"] !== false
             };
           }
         } else {
           return next();
         }
-      }),
+      })
     );
 
-    this.on('READ', this.entities['i18n-files'], async (req) => {
+    this.on("READ", this.entities["i18n-files"], async (req) => {
       const bundle = cds.i18n.bundle4(this.definition);
       const getFile = (language) => {
-        let file = '';
+        let file = "";
         for (const key in bundle.defaults) {
           const translation = cds.i18n.labels.for(key, language);
           file += `${key}=${translation}\n`;
@@ -142,29 +144,29 @@ module.exports = class RetentionService extends cds.ApplicationService {
       };
       if (!req.data.file) {
         return [
-          { file: 'i18n.properties' },
-          { file: 'i18n_en.properties' },
-          { file: 'i18n_de.properties' },
-          { file: 'i18n_fr.properties' },
-          { file: 'i18n_es.properties' },
+          { file: "i18n.properties" },
+          { file: "i18n_en.properties" },
+          { file: "i18n_de.properties" },
+          { file: "i18n_fr.properties" },
+          { file: "i18n_es.properties" }
         ];
       }
-      let file = '';
-      if (req.data.file.startsWith('i18n_en')) {
-        file = getFile('en');
-      } else if (req.data.file.startsWith('i18n_de')) {
-        file = getFile('de');
-      } else if (req.data.file.startsWith('i18n_fr')) {
-        file = getFile('fr');
-      } else if (req.data.file.startsWith('i18n_es')) {
-        file = getFile('es');
+      let file;
+      if (req.data.file.startsWith("i18n_en")) {
+        file = getFile("en");
+      } else if (req.data.file.startsWith("i18n_de")) {
+        file = getFile("de");
+      } else if (req.data.file.startsWith("i18n_fr")) {
+        file = getFile("fr");
+      } else if (req.data.file.startsWith("i18n_es")) {
+        file = getFile("es");
       } else {
-        file = getFile('en');
+        file = getFile("en");
       }
-      req.res.set('Content-Type', 'text/plain');
+      req.res.set("Content-Type", "text/plain");
       req.res.set(
-        'Content-disposition',
-        `attachment; filename=${req.data.file ?? 'i18n.properties'}`,
+        "Content-disposition",
+        `attachment; filename=${req.data.file ?? "i18n.properties"}`
       );
       req.res.status(200);
       req.res.end(file);
@@ -173,27 +175,39 @@ module.exports = class RetentionService extends cds.ApplicationService {
     /**
      * Validations for all DPI Retention actions
      */
-    this.before('*', (req) => {
+    this.before("*", (req) => {
       if (
         req.data.applicationName &&
-        req.data.applicationName !== cds.env.requires['sap.ilm.RetentionService'].applicationName
+        req.data.applicationName !== cds.env.requires["sap.ilm.RetentionService"].applicationName
       ) {
         return req.error({
           status: 400,
-          code: 'WRONG_APPLICATION_NAME',
-          message: 'WRONG_APPLICATION_NAME',
-          target: 'applicationName',
+          code: "WRONG_APPLICATION_NAME",
+          message: "WRONG_APPLICATION_NAME",
+          target: "applicationName",
           args: [
             req.data.applicationName,
-            cds.env.requires['sap.ilm.RetentionService'].applicationName,
-          ],
+            cds.env.requires["sap.ilm.RetentionService"].applicationName
+          ]
         });
       }
-
-      if (req.data.iLMObjectName && !this.entities[req.data.iLMObjectName]) {
-        return req.error(400, `The ILM object ${req.data.iLMObjectName} does not exist!`);
-      } else if (req.data.iLMObjectName && this.entities[req.data.iLMObjectName]) {
-        req.data.iLMObject = this.entities[req.data.iLMObjectName];
+      if (req.data.iLMObjectName) {
+        const iLMObjects = this.definition._dpi.iLMObjects;
+        const iLMObjectEntityName = Object.keys(iLMObjects).find(
+          (iLMObjectName) =>
+            iLMObjects[iLMObjectName]._dpi.iLMObject.name === req.data.iLMObjectName
+        );
+        if (iLMObjectEntityName) {
+          req.data.iLMObject = this.entities[iLMObjectEntityName];
+        } else {
+          return req.error({
+            status: 400,
+            code: "ILM_OBJECT_DOES_NOT_EXIST",
+            message: "ILM_OBJECT_DOES_NOT_EXIST",
+            target: "iLMObjectName",
+            args: [req.data.iLMObjectName]
+          });
+        }
       }
     });
 
@@ -202,10 +216,16 @@ module.exports = class RetentionService extends cds.ApplicationService {
 };
 
 const buildBaseUrl = (req) => {
-  let url = '';
-  if (process.env.NODE_ENV === 'production') url += 'https://';
-  url += req._req ? req._req.get('host') : req.req.get('host');
-  return url;
+  // Prefer configured app URL or CF platform-provided URL over client-supplied Host header
+  if (cds.env.app?.url) return cds.env.app.url.replace(/\/$/, "");
+  const vcap = process.env.VCAP_APPLICATION && JSON.parse(process.env.VCAP_APPLICATION);
+  if (vcap?.application_uris?.[0]) {
+    return `https://${vcap.application_uris[0].replace(/^https?:\/\//, "")}`;
+  }
+  // Fallback to request (development/local only)
+  const _req = req._req || req.req;
+  const protocol = _req.protocol || "https";
+  return `${protocol}://${_req.get("host")}`;
 };
 
 // function getSelectionCriteria(entity) {

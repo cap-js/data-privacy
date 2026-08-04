@@ -1,5 +1,14 @@
+.DS_Store
 node_modules/
+gen/
+package-lock.json
+
 coverage/
 .vscode/
-
-package-lock.json
+_out
+# added by cds
+.cdsrc-private.json
+default-env.json
+*.tgz
+dist/
+*.mtar

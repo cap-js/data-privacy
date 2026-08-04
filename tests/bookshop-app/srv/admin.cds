@@ -4,5 +4,5 @@ using {sap.capire.bookshop as db} from '../db/schema';
 service AdminService {
 
   @odata.draft.enabled
-  entity Orders             as projection on db.Orders;
+  entity Orders as projection on db.Orders;
 };

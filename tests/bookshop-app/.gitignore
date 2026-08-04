@@ -7,3 +7,6 @@ gen/
 **/*.mtar
 **/*.log
 *.tgz
+# added by cds
+.cdsrc-private.json
+.env

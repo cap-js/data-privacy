@@ -1,0 +1,4 @@
+ID;modifiedAt;createdAt;createdBy;modifiedBy;Customer_ID;subject;sentDate;legalEntity_title
+b1a2c3d4-0001-0001-0001-000000000001;2019-04-04;2019-01-31;john.doe@test.com;john.doe@test.com;8e2f2640-6866-4dcf-8f4d-3027aa831cad;Weekly Update;2020-04-04;SAP Ltd
+b1a2c3d4-0001-0001-0001-000000000002;2019-04-04;2019-01-31;peter.doe@test.com;peter.doe@test.com;9e2f2640-6866-4dcf-8f4d-3027aa831cad;Monthly Digest;2020-05-04;SAP Ltd
+b1a2c3d4-0001-0001-0001-000000000003;2020-06-01;2020-06-01;jane.doe@test.com;jane.doe@test.com;74e718c9-ff99-47f1-8ca3-950c850777d4;INTERNAL Memo;2021-01-01;SAP Ltd

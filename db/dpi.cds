@@ -1,12 +1,12 @@
 namespace sap.ilm;
 
 aspect destruction {
-  ilmEarliestDestructionDate : Date  @UI.HiddenFilter  @PersonalData.FieldSemantics: 'EndOfRetentionDate';
-  ilmLatestDestructionDate : Date  @UI.HiddenFilter;
+  ilmEarliestDestructionDate : Date  @UI.HiddenFilter  @PersonalData.FieldSemantics: 'EndOfRetentionDate'  @title: '{i18n>EARLIEST_DESTRUCTION_DATE}';
+  ilmLatestDestructionDate   : Date  @UI.HiddenFilter  @title: '{i18n>LATEST_DESTRUCTION_DATE}';
 }
 
 aspect blocking {
-  dppBlockingDate            : Date  @UI.HiddenFilter  @PersonalData.FieldSemantics: 'BlockingDate';
+  dppBlockingDate : Date  @UI.HiddenFilter  @PersonalData.FieldSemantics: 'BlockingDate'  @title: '{i18n>RECORD_BLOCKED}';
 }
 
 type Condition : {
@@ -25,15 +25,19 @@ type SelectionCriteria {
 
 type ReferenceDate {
   /**
-   * The date field or property in the business application which is used as the reference for denoting the start of retention to calculate the end of retention date based on the rules
+   * The date field or property in the business application which is used as the
+   * reference for denoting the start of retention to calculate the end of retention
+   * date based on the rules
    */
   referenceDateName                 : String;
   /**
-   * List of the organization attribute values configured for a reference date along with the corresponding residence sets
+   * List of the organization attribute values configured for a reference date along
+   * with the corresponding residence sets
    */
   organizationAttributeResidenceSet : many {
     /**
-     * Name of the attribute or field or property which defines the organizational structure of the business
+     * Name of the attribute or field or property which defines the organizational
+     * structure of the business
      */
     organizationAttributeName  : String;
     /**
@@ -41,16 +45,19 @@ type ReferenceDate {
      */
     organizationAttributeValue : String;
     /**
-     * List of the residence set information which contains the retention start date provided by DPI NextGen Retention Management along with the condition sets
+     * List of the residence set information which contains the retention start date
+     * provided by DPI NextGen Retention Management along with the condition sets
      */
     residenceSet               : many {
       /**
-       * The latest start date of the retention or the end of business date calculated by DPI NextGen Retention Management based on the configured rules for data subjects
+       * The latest start date of the retention or the end of business date calculated by
+       * DPI NextGen Retention Management based on the configured rules for data subjects
        * to be eligible for blocking or deletion
        */
       retentionStartDate : String; //REVISIT: String instead of DateTime because SAP DPI Retention sends data in wrong format
       /**
-       * List of condition field name and value that is configured as part of the business purpose
+       * List of condition field name and value that is configured as part of the
+       * business purpose
        */
       conditionSet       : many Condition;
     }

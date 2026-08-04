@@ -1,0 +1,299 @@
+_schema-version: "3.1"
+ID: capire.incidents
+version: 1.0.0
+description: incidents
+parameters:
+  enable-parallel-deployments: true
+  deploy_mode: html5-repo
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - node deploy-patches.js apply
+        - npm pack ../../
+        - sh -c 'TGZ_FILE="$(ls -1 | grep -E "^cap-js-data-privacy.*\.tgz$" | head -n 1)" && npm install "./${TGZ_FILE}"'
+        # Sidecar version
+        - sh -c 'cp "$(ls -1 | grep -E "^cap-js-data-privacy.*\.tgz$" | head -n 1)" ./mtx/sidecar'
+        - sh -c 'cd ./mtx/sidecar && TGZ_FILE="$(ls -1 | grep -E "^cap-js-data-privacy.*\.tgz$" | head -n 1)" && npm install "./${TGZ_FILE}"'
+        # Regular install
+        - npm ci
+        - npx -p @sap/cds-dk cds build --production
+        - sh -c 'cp "$(ls -1 | grep -E "^cap-js-data-privacy.*\.tgz$" | head -n 1)" ./gen/srv'
+        - sh -c 'cp "$(ls -1 | grep -E "^cap-js-data-privacy.*\.tgz$" | head -n 1)" ./gen/mtx/sidecar'
+        - mkdir gen/app
+        - cp app/cdm.json gen/app/cdm.json
+  after-all:
+    - builder: custom
+      commands:
+        - node deploy-patches.js revert
+modules:
+  - name: incidents-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      buildpack: nodejs_buildpack
+      memory: 256MB
+    build-parameters:
+      builder: npm-ci
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: incidents-auth
+      - name: incidents-information2
+      - name: incidents-retention2
+      - name: incidents-db
+      - name: incidents-logging
+
+  - name: incidents-mtx
+    type: nodejs
+    path: gen/mtx/sidecar
+    requires:
+      - name: incidents-db
+      - name: incidents-html5-repo-host
+      - name: incidents-html5-repo-runtime
+      - name: incidents-workzone
+      - name: incidents-auth
+      - name: incidents-registry
+      - name: incidents-logging
+      - name: incidents-information2
+      - name: incidents-retention2
+      - name: app-api
+        properties:
+          SUBSCRIPTION_URL: ~{app-protocol}://\${tenant_subdomain}-~{app-uri}
+    build-parameters:
+      builder: npm-ci
+    parameters:
+      instances: 1
+      memory: 256M
+      disk-quota: 512M
+    hooks:
+      - name: upgrade-all
+        type: task
+        phases:
+          - blue-green.application.before-start.idle
+          - deploy.application.before-start
+        parameters:
+          name: upgrade
+          memory: 512M # increase as required
+          disk-quota: 768M # increase as required
+          command: cds-mtx upgrade '*'
+    provides:
+      - name: mtx-api
+        properties:
+          mtx-url: ${default-url}
+
+  - name: incidents-app-deployer
+    type: com.sap.application.content
+    path: gen
+    build-parameters:
+      build-result: app/
+      requires:
+        - name: incidentsmgmtincidents
+          artifacts:
+            - incidents.zip
+          target-path: app/
+    requires:
+      - name: srv-api
+      - name: incidents-html5-repo-host
+        parameters:
+          content-target: true
+      - name: incidents-workzone
+
+  - name: incidentsmgmtincidents
+    type: html5
+    path: app/incidents
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      supported-platforms: []
+  - name: incidents
+    type: approuter.nodejs
+    path: app/router
+    parameters:
+      keep-existing-routes: true
+      disk-quota: 256M
+      memory: 256M
+    properties:
+      TENANT_HOST_PATTERN: "^(.*)-${default-uri}"
+      OWN_SAP_CLOUD_SERVICE: '["capdppincidents"]'
+      COOKIE_BACKWARD_COMPATIBILITY: true
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api # must be used in xs-app.json as well
+          url: ~{srv-url}
+          forwardAuthToken: true
+      - name: mtx-api
+        group: destinations
+        properties:
+          name: mtx-api # must be used in xs-app.json as well
+          url: ~{mtx-url}
+      - name: incidents-auth
+      - name: incidents-html5-repo-runtime
+      - name: incidents-logging
+      - name: incidents-workzone
+    provides:
+      - name: app-api
+        properties:
+          app-protocol: ${protocol}
+          app-uri: ${default-uri}
+resources:
+  - name: incidents-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      config:
+        xsappname: incidents-${org}-${space}
+        tenant-mode: shared
+        oauth2-configuration:
+          credential-types:
+            - "binding-secret"
+            - "x509"
+          redirect-uris:
+            - https://*~{app-api/app-uri}/**
+      service-plan: application
+      path: ./xs-security.json
+    requires:
+      - name: app-api
+      - name: incidents-information2
+      - name: incidents-retention2
+    processed-after:
+      - incidents-information2
+      - incidents-retention2
+  - name: incidents-workzone
+    type: org.cloudfoundry.managed-service
+    parameters:
+      config:
+        providerId: capdppincidents # 20 chars, no dashes
+        exposureId: capdppincidents
+      service: build-workzone-standard
+      service-plan: local-entry-point
+  - name: incidents-html5-repo-runtime
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service-plan: app-runtime
+      service: html5-apps-repo
+  - name: incidents-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service-plan: app-host
+      service: html5-apps-repo
+  - name: incidents-information2
+    type: org.cloudfoundry.managed-service
+    requires:
+      - name: srv-api
+    parameters:
+      service-name: incidents-information2
+      service: data-privacy-integration-service
+      service-plan: data-privacy-internal
+      config:
+        xs-security:
+          xsappname: incidents-info-${org}-${space}
+          authorities:
+            - $ACCEPT_GRANTED_AUTHORITIES
+        dataPrivacyConfiguration:
+          configType: information
+          applicationConfiguration:
+            applicationName: incidents-information2
+            applicationTitle: incidents-information2
+            enableAutoSubscription: false
+          informationConfiguration:
+            applicationConfiguration:
+              dataSubjectDeletionAgent: retention-manager
+              retentionApplicationName: cap-dpp-incident-mgmt
+              disableDataSubjectCorrection: true
+              cacheControl: no-cache
+            components:
+              - componentName: incidents-srv
+                componentBaseURL: ~{srv-api/srv-url}
+                serviceEndPoints:
+                  - serviceName: incidents-service
+                    serviceFormat: odata-v4
+                    annotationFormat: v4
+                    serviceEndPoint: /dpp/information
+                    appPaginationEnabled: true
+                    cacheControl: no-cache
+  - name: incidents-retention2
+    type: org.cloudfoundry.managed-service
+    requires:
+      - name: srv-api
+    parameters:
+      service-name: incidents-retention2
+      service: data-privacy-integration-service
+      service-plan: data-privacy-internal
+      config:
+        xs-security:
+          xsappname: incidents-${org}-${space}
+          authorities:
+            - $ACCEPT_GRANTED_AUTHORITIES
+        dataPrivacyConfiguration:
+          configType: retention
+          applicationConfiguration:
+            applicationName: cap-dpp-incident-mgmt
+            applicationTitle: cap-dpp-incident-mgmt
+            applicationDescription: cap-dpp-incident-mgmt
+            applicationBaseURL: ~{srv-api/srv-url}
+            enableAutoSubscription: false
+          translationConfiguration:
+            textBundleBaseURL: ~{srv-api/srv-url}
+            textBundleEndPoint: /dpp/retention/i18n-files/i18n.properties
+            defaultLanguage: en
+            supportedLanguages:
+              - de
+              - fr
+              - es
+              - en
+          retentionConfiguration:
+            applicationConfiguration:
+              applicationType: TransactionMaster
+              simulationSupportedForArchiving: true
+              simulationSupportedForDestruction: true
+              iLMObjectDiscoveryEndPoint: /dpp/retention/iLMObjects
+            dataSubjectRoles:
+              - dataSubjectRoleName: Customer
+                dataSubjectDescription: Customer
+                dataSubjectBaseURL: ~{srv-api/srv-url}
+                dataSubjectBlockingEndPoint: /dpp/retention/dataSubjectBlocking
+                dataSubjectInformationEndPoint: /dpp/retention/dataSubjectInformation
+                dataSubjectsDestroyingEndPoint: /dpp/retention/dataSubjectsDestroying
+            organizationAttributes:
+              - organizationAttributeName: LegalEntities
+                organizationAttributeDescription: LegalEntity
+                organizationAttributeBaseURL: ~{srv-api/srv-url}
+                organizationAttributeValueHelpEndPoint: /dpp/retention/valueHelp_orgAttribute_LegalEntities
+  - name: incidents-db
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: service-manager
+      service-plan: container
+  - name: incidents-registry
+    type: org.cloudfoundry.managed-service
+    requires:
+      - name: mtx-api
+    parameters:
+      service: saas-registry
+      service-plan: application
+      config:
+        xsappname: incidents-${org}-${space}
+        appName: incidents-${org}-${space}
+        displayName: incidents
+        description: CAP DPP Sample for DPI MTX.
+        category: "Category"
+        appUrls:
+          getDependencies: ~{mtx-api/mtx-url}/-/cds/saas-provisioning/dependencies
+          onSubscription: ~{mtx-api/mtx-url}/-/cds/saas-provisioning/tenant/{tenantId}
+          onSubscriptionAsync: true
+          onUnSubscriptionAsync: true
+          onUpdateDependenciesAsync: true
+          callbackTimeoutMillis: 300000 # Increase if your deployments are taking longer than that
+  - name: incidents-logging
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: application-logs
+      service-plan: lite
