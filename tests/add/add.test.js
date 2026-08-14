@@ -33,8 +33,16 @@ async function generateProject(name, facets = []) {
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
 
   // Use junction on Windows (no elevated privileges needed), symlink elsewhere
-  const linkType = process.platform === "win32" ? "junction" : "dir";
-  fs.symlinkSync(ROOT_NODE_MODULES, path.join(projectDir, "node_modules"), linkType);
+  //const linkType = process.platform === "win32" ? "junction" : "dir";
+
+  if (process.platform === "win32") {
+    //windows
+    const linkType = process.platform === "win32" ? "junction" : "dir";
+    fs.symlinkSync(ROOT_NODE_MODULES, path.join(projectDir, "node_modules"), linkType);
+  } else {
+    //mac/linux
+    fs.symlinkSync(ROOT_NODE_MODULES, path.join(projectDir, "node_modules"), "dir");
+  }
 
   return projectDir;
 }
