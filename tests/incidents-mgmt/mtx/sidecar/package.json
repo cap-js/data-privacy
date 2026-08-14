@@ -1,17 +1,13 @@
 {
   "name": "incidents-mgmt-mtx",
   "dependencies": {
-    "@cap-js/data-privacy": "file:../../../../",
-    "@cap-js/hana": ">=2",
-    "@sap/cds": ">=9",
-    "@sap/cds-mtxs": ">=3",
-    "@sap/xssec": "^4"
+    "@sap/cds": "^9.9.2",
+    "@sap/cds-mtxs": "^2",
+    "@sap/xssec": "^4",
+    "express": "^5"
   },
   "devDependencies": {
-    "@cap-js/sqlite": ">=2"
-  },
-  "engines": {
-    "node": ">=22"
+    "@cap-js/sqlite": "^2"
   },
   "scripts": {
     "start": "cds-serve"
@@ -19,6 +15,9 @@
   "cds": {
     "profile": "mtx-sidecar",
     "requires": {
+      "cds.xt.ModelProviderService": {
+        "root": "../.."
+      },
       "sap.dpp.InformationService": false,
       "sap.ilm.RetentionService": false,
       "html5-host": true,

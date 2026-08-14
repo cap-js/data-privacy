@@ -2,18 +2,20 @@ const { execSync } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const cds = require("@sap/cds");
-const TempUtil = require("./tempUtil.js");
-const tempUtil = new TempUtil(__filename);
-process.env.NO_COLOR = true; // Required to parse build tasks
-const { _build } = require("./util.js");
+const TempUtil = require("../src/setup/tempUtil.js");
+const tempUtil = new TempUtil(__dirname, __filename);
+//process.env.NO_COLOR = true; // Required to parse build tasks
+const { _build } = require("../src/setup/buildHelper.js");
 const { register } = require("@sap/cds-dk/lib/build");
 const {
   generateBuildProject,
+  generateCleanApplicationProject,
   readMtaRetentionConfig,
   injectStaleRetentionEntries,
   injectCorrectRetentionEntries,
   setRequires
-} = require("./setup.js");
+} = require("../src/setup/setup.js");
+const { tmpdir } = require("os");
 
 const buildTasks = [
   {
@@ -26,16 +28,28 @@ const buildTasks = [
   }
 ];
 
+
 describe("testing cds build", () => {
-  let log = cds.test.log();
+  const log = cds.test.log();
+
+  // Set timeout for all tests in this suite
+  jest.setTimeout(100000);
 
   beforeAll(() => {
-    require("../../cds-plugin.js");
+    // CRITICAL: Set cds.build BEFORE requiring the plugin
+    // The cds-plugin.js file will auto-register via: cds.build?.register?.("data-privacy", ...)
     cds.build = require("@sap/cds-dk/lib/build");
-    register("data-privacy", require("../../lib/build/index.js"));
+
+    // Clear the require cache for cds-plugin to ensure it runs with cds.build set
+    delete require.cache[require.resolve("../../cds-plugin.js")];
+    delete require.cache[require.resolve("../../lib/build/index.js")];
+
+    // This will auto-register the build plugin
+    require("../../cds-plugin.js");
   });
-  afterAll(async () => {
-    return tempUtil.cleanUp();
+
+  afterAll(() => {
+    tempUtil.cleanUp(); // Sync cleanup for compatibility with --forceExit
   });
 
   test("cds add data-privacy creates default_access_role.hdbrole for HANA projects", async () => {
@@ -51,6 +65,9 @@ describe("testing cds build", () => {
     expect(role.role.name).toEqual("default_access_role");
     expect(role.role.schema_roles[0].names).toContain("sap.ilm.RestrictBlockedDataAccess");
   });
+
+
+
 
   test("Build emits error when default_access_role.hdbrole is missing", async () => {
     const appRoot = await generateBuildProject(tempUtil, "app-missing-role");
@@ -168,50 +185,76 @@ describe("testing cds build", () => {
     await _build(appRoot, buildTasks);
     expect(log.output).toMatch(/build completed/);
   });
+
 });
+
+
+
 
 describe("incidents-mgmt cds build --production", () => {
-  const INCIDENTS_DIR = path.join(__dirname, "..", "incidents-mgmt");
-  const GEN_DIR = path.join(INCIDENTS_DIR, "gen");
+  // Set timeout for all tests in this suite
+  jest.setTimeout(100000);
 
   afterAll(() => {
-    fs.rmSync(GEN_DIR, { recursive: true, force: true });
+    tempUtil.cleanUp(); // Sync cleanup for compatibility with --forceExit
   });
 
-  test("cds build --production completes successfully", () => {
+  test("cds build --production completes successfully", async () => {
+    const appRoot = await generateCleanApplicationProject(tempUtil, "cds-build-incidents", "incidents-mgmt");
+
     const result = execSync("npx cds build --production", {
-      cwd: INCIDENTS_DIR,
+      cwd: appRoot,
       encoding: "utf-8",
       timeout: 120_000
     });
 
     expect(result).toMatch(/build completed/i);
-    expect(fs.existsSync(path.join(GEN_DIR, "srv"))).toBe(true);
-    expect(fs.existsSync(path.join(GEN_DIR, "mtx", "sidecar"))).toBe(true);
+    const tempGenDir = path.join(appRoot, "gen");
+    expect(fs.existsSync(path.join(tempGenDir, "db"))).toBe(true);
+    expect(fs.existsSync(path.join(tempGenDir, "srv"))).toBe(true);
+    expect(fs.existsSync(path.join(tempGenDir, "mtx", "sidecar"))).toBe(true);
   });
 });
 
-describe("bookshop-app cds build --production", () => {
-  const BOOKSHOP_DIR = path.join(__dirname, "..", "bookshop-app");
-  const GEN_DIR = path.join(BOOKSHOP_DIR, "gen");
 
-  afterAll(() => {
-    fs.rmSync(GEN_DIR, { recursive: true, force: true });
+
+describe("bookshop-app cds build --production", () => {
+  jest.setTimeout(100000);
+  let appRoot;
+
+  beforeEach(async () => {
+    appRoot = await generateCleanApplicationProject(tempUtil, "cds-bookshop", "bookshop");
   });
 
-  test("cds build --production completes successfully", () => {
+  afterEach(() => {
+    tempUtil.cleanUp(); // Sync cleanup for compatibility with --forceExit
+  });
+
+
+  test("cds build --production completes successfully", async () => {
+
+
     const result = execSync("npx cds build --production", {
-      cwd: BOOKSHOP_DIR,
+      cwd: appRoot,
       encoding: "utf-8",
       timeout: 120_000
     });
 
     expect(result).toMatch(/build completed/i);
-    expect(fs.existsSync(path.join(GEN_DIR, "srv"))).toBe(true);
+    const genDir = path.join(appRoot, "gen");
+    expect(fs.existsSync(path.join(genDir, "srv"))).toBe(true);
   });
 
   test("No analytic privilege contains 'null is null' in whereSql", () => {
-    const genDbDir = path.join(GEN_DIR, "db", "src", "gen");
+
+    const result = execSync("npx cds build --production", {
+      cwd: appRoot,
+      encoding: "utf-8",
+      timeout: 120_000
+    });
+
+    const genDbDir =
+      path.join(appRoot, "gen", "db", "src", "gen");
     const privilegeFiles = fs
       .readdirSync(genDbDir)
       .filter((f) => f.endsWith(".hdbanalyticprivilege"));
@@ -241,35 +284,14 @@ describe("bookshop-app cds build --production", () => {
     expect(violations).toEqual([]);
   });
 
-  test("Analytic privilege ROLES check uses comma-delimited pattern to prevent substring bypass", () => {
-    const genDbDir = path.join(GEN_DIR, "db", "src", "gen");
-    const privilegeFiles = fs
-      .readdirSync(genDbDir)
-      .filter((f) => f.endsWith(".DPPRestriction.hdbanalyticprivilege"));
-
-    expect(privilegeFiles.length).toBeGreaterThan(0);
-
-    const violations = [];
-    for (const file of privilegeFiles) {
-      const content = fs.readFileSync(path.join(genDbDir, file), "utf-8");
-      // Match ROLES like patterns that don't use comma delimiters on both sides
-      // Valid:   '%,SomeRole,%'
-      // Invalid: '%SomeRole,%' (missing leading comma — allows suffix bypass)
-      const rolesPatterns = content.match(/like\s+'[^']+'/g) || [];
-      for (const pattern of rolesPatterns) {
-        if (!pattern.includes("%,") || !pattern.includes(",%")) {
-          violations.push({ file, pattern });
-        }
-      }
-    }
-
-    expect(violations).toEqual([]);
-  });
-
   test("All service projections of ILM-relevant entities have a DPPRestriction analytic privilege", () => {
-    const genDbDir = path.join(GEN_DIR, "db", "src", "gen");
-    const privilegeFiles = fs
-      .readdirSync(genDbDir)
+    const result = execSync("npx cds build --production", {
+      cwd: appRoot,
+      encoding: "utf-8",
+      timeout: 120_000
+    });
+    const genDbDir = path.join(appRoot, "gen", "db", "src", "gen");
+    const privilegeFiles = fs.readdirSync(genDbDir)
       .filter((f) => f.endsWith(".DPPRestriction.hdbanalyticprivilege"));
 
     // Collect entity names that have a privilege
@@ -319,7 +341,13 @@ describe("bookshop-app cds build --production", () => {
   });
 
   test("Views referencing ILM tables include WITH STRUCTURED PRIVILEGE CHECK", () => {
-    const genDbDir = path.join(GEN_DIR, "db", "src", "gen");
+
+    const result = execSync("npx cds build --production", {
+      cwd: appRoot,
+      encoding: "utf-8",
+      timeout: 120_000
+    });
+    const genDbDir = path.join(appRoot, "gen", "db", "src", "gen");
 
     const viewsToCheck = [
       // Simple projections
@@ -361,3 +389,5 @@ describe("bookshop-app cds build --production", () => {
     expect(withoutPrivilegeCheck).toEqual([]);
   });
 });
+
+

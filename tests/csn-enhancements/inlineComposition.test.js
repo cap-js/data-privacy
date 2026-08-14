@@ -1,5 +1,22 @@
 const cds = require("@sap/cds");
 const path = require("path");
+const TempUtil = require("../src/setup/tempUtil.js");
+const tempUtil = new TempUtil(__dirname, __filename);
+const {
+  generateBuildProject,
+  generateCleanApplicationProject,
+  readMtaRetentionConfig,
+  injectStaleRetentionEntries,
+  injectCorrectRetentionEntries,
+  setRequires
+} = require("../src/setup/setup.js");
+const { tmpdir } = require("os");
+
+// jest.config.js sets testTimeout:40000 for test functions, but beforeAll/afterAll
+// hooks always use the *global* Jest timeout (default 5000 ms). The CAP server
+// startup for bookshop-app takes longer than 5 s, so we raise the global timeout
+// here before cds.test() registers its beforeAll hook.
+jest.setTimeout(40000);
 
 let { GET: _GET } = cds.test().in(path.join(__dirname, "../bookshop-app"));
 const GET = async function () {
@@ -9,10 +26,23 @@ const GET = async function () {
     return e.response ?? e;
   }
 };
+
 const DPI_Service = { username: "dpi", password: "1234" };
 
 describe("Inline composition (up_ backlink) on ILM entity", () => {
+
+  let appRoot;
+  beforeAll(async () => {
+    appRoot = await generateCleanApplicationProject(tempUtil, "inlineCompTest", "bookshop");
+  });
+
+  afterAll(async () => {
+    tempUtil.cleanUp();
+  });
+
   test("Inline composition entity is exposed in RetentionService", () => {
+
+
     const campaigns = cds.model.definitions["sap.ilm.RetentionService.Marketing_Campaigns"];
     expect(campaigns).toBeTruthy();
     expect(campaigns.kind).toEqual("entity");

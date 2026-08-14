@@ -286,7 +286,7 @@ annotate ILMObjectWithStaticBlockingDisabled with @(
 annotate ILMObjectWithEDMJSONBlockingEnabled with @(
   PersonalData.DataSubjectRole: 'Customer',
   PersonalData.EntitySemantics: 'Other',
-  ILM.BlockingEnabled: {$edmJson: {$Path: '/CatalogService.EntityContainer/Configuration/isBlockingEnabled'}}
+  ILM.BlockingEnabled: '(SELECT isBlockingEnabled FROM CatalogService.Configuration)'
 ) {
   Customer @PersonalData.FieldSemantics: 'DataSubjectID';
   marketingDate @PersonalData.FieldSemantics: 'EndOfBusinessDate';

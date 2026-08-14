@@ -1,7 +1,11 @@
 const cds = require("@sap/cds");
 const path = require("path");
 
+jest.setTimeout(40000);
+
 cds.test().in(path.join(__dirname, "../bookshop-app"));
+//cds.root = path.join(__dirname, "../bookshop-app");
+//require("../../cds-plugin.js");
 
 describe("xtended csn", () => {
   let log = cds.test.log();

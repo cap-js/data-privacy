@@ -1,85 +1,85 @@
 {
-  "name": "incidents-mgmt",
-  "version": "1.0.0",
-  "dependencies": {
-    "@cap-js/audit-logging": "^1.0.0",
-    "@cap-js/data-privacy": "file:../../",
-    "@cap-js/hana": ">=2",
-    "@sap/cds": ">=9",
-    "@sap/cds-mtxs": ">=3",
-    "@sap/xssec": "^4",
-    "express": "^5.2.1",
-    "passport": "^0"
-  },
-  "devDependencies": {
-    "@cap-js/sqlite": ">=2",
-    "@sap/cds-dk": ">=9",
-    "@sap/ux-specification": "^1.108.4",
-    "cds-launchpad-plugin": "^2.2.0",
-    "cds-plugin-ui5": "^0.17.0"
-  },
-  "scripts": {
-    "watch": "cds watch",
-    "start": "cds-serve",
-    "test": "npx jest --silent"
-  },
-  "private": true,
-  "workspaces": [
-    "app/*"
-  ],
-  "sapux": [
-    "app/incidents"
-  ],
-  "cds": {
-    "requires": {
-      "[production]": {
-        "auth": "xsuaa",
-        "multitenancy": true
-      },
-      "[development]": {
-        "auth": {
-          "kind": "mocked",
-          "users": {
-            "incident.support@tester.sap.com": {
-              "password": "initial",
-              "roles": [
-                "support",
-                "PersonalDataManagerUser",
-                "DataRetentionManagerUser",
-                "admin"
-              ]
-            },
-            "alice": {
-              "roles": [
-                "support",
-                "PersonalDataManagerUser",
-                "DataRetentionManagerUser",
-                "admin"
-              ]
-            },
-            "bob": {
-              "roles": [
-                "support",
-                "PersonalDataManagerUser",
-                "DataRetentionManagerUser",
-                "admin"
-              ]
-            }
-          }
-        }
-      },
-      "sap.dpp.RetentionService": {
-        "applicationName": "cap-dpp-incident-mgmt"
-      },
-      "[with-mtx]": {
-        "multitenancy": true
-      },
-      "toggles": true,
-      "extensibility": true,
-      "html5-repo": true,
-      "workzone": true,
-      "application-logging": true
+    "name": "incidents-mgmt",
+    "version": "1.0.0",
+    "dependencies": {
+        "@cap-js/audit-logging": "^1.0.0",
+        "@cap-js/data-privacy": "file:../../",
+        "@cap-js/hana": ">=2",
+        "@sap/cds": ">=9",
+        "@sap/cds-mtxs": ">=3",
+        "@sap/xssec": "^4",
+        "express": "^5.2.1",
+        "passport": "^0"
     },
-    "profile": "with-mtx-sidecar"
-  }
+    "devDependencies": {
+        "@cap-js/sqlite": ">=2",
+        "@sap/cds-dk": ">=9",
+        "@sap/ux-specification": "^1.108.4",
+        "cds-launchpad-plugin": "^2.2.0",
+        "cds-plugin-ui5": "^0.17.0"
+    },
+    "scripts": {
+        "watch": "cds watch",
+        "start": "cds-serve",
+        "test": "npx jest --silent"
+    },
+    "private": true,
+    "workspaces": [
+        "app/*"
+    ],
+    "sapux": [
+        "app/incidents"
+    ],
+    "cds": {
+        "requires": {
+            "[production]": {
+                "auth": "xsuaa",
+                "multitenancy": true
+            },
+            "[development]": {
+                "auth": {
+                    "kind": "mocked",
+                    "users": {
+                        "incident.support@tester.sap.com": {
+                            "password": "initial",
+                            "roles": [
+                                "support",
+                                "PersonalDataManagerUser",
+                                "DataRetentionManagerUser",
+                                "admin"
+                            ]
+                        },
+                        "alice": {
+                            "roles": [
+                                "support",
+                                "PersonalDataManagerUser",
+                                "DataRetentionManagerUser",
+                                "admin"
+                            ]
+                        },
+                        "bob": {
+                            "roles": [
+                                "support",
+                                "PersonalDataManagerUser",
+                                "DataRetentionManagerUser",
+                                "admin"
+                            ]
+                        }
+                    }
+                }
+            },
+            "sap.dpp.RetentionService": {
+                "applicationName": "cap-dpp-incident-mgmt"
+            },
+            "[with-mtx]": {
+                "multitenancy": true
+            },
+            "toggles": true,
+            "extensibility": true,
+            "html5-repo": true,
+            "workzone": true,
+            "application-logging": true
+        },
+        "profile": "with-mtx-sidecar"
+    }
 }

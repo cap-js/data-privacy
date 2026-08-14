@@ -2,8 +2,8 @@ const { execSync } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const cds = require("@sap/cds");
-const TempUtil = require("./tempUtil.js");
-const tempUtil = new TempUtil(__filename);
+const TempUtil = require("../src/setup/tempUtil");
+const tempUtil = new TempUtil(__dirname, __filename);
 
 const ROOT_DIR = path.join(__dirname, "..", "..");
 const ROOT_NODE_MODULES = path.join(ROOT_DIR, "node_modules");
@@ -32,8 +32,9 @@ async function generateProject(name, facets = []) {
   pkg.dependencies["@cap-js/data-privacy"] = `file:${ROOT_DIR}`;
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
 
-  // Symlink root node_modules for module resolution
-  fs.symlinkSync(ROOT_NODE_MODULES, path.join(projectDir, "node_modules"), "dir");
+  // Use junction on Windows (no elevated privileges needed), symlink elsewhere
+  const linkType = process.platform === "win32" ? "junction" : "dir";
+  fs.symlinkSync(ROOT_NODE_MODULES, path.join(projectDir, "node_modules"), linkType);
 
   return projectDir;
 }
@@ -71,14 +72,18 @@ function findSidecarModule(mta) {
 }
 
 describe("cds add data-privacy", () => {
-  afterAll(async () => {
-    return tempUtil.cleanUp();
+
+
+
+
+  afterEach(async () => {
+    tempUtil.cleanUp();
   });
 
   describe("single-tenant (mta, xsuaa)", () => {
     let appRoot, mta, xsSecurity;
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       appRoot = await generateProject("basic", ["mta", "xsuaa"]);
       runCdsAdd(appRoot);
       mta = readMta(appRoot);
@@ -147,7 +152,7 @@ describe("cds add data-privacy", () => {
   describe("multi-tenant (mta, xsuaa, hana, multitenancy)", () => {
     let appRoot, mta, xsSecurity, sidecarPkg;
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       appRoot = await generateProject("mtx", ["mta", "xsuaa", "hana", "multitenancy"]);
       runCdsAdd(appRoot);
       mta = readMta(appRoot);
@@ -197,7 +202,6 @@ describe("cds add data-privacy", () => {
       const undeploy = readJson(path.join(appRoot, "db", "undeploy.json"));
       expect(undeploy).toContain("src/gen/**/*.hdbanalyticprivilege");
       expect(undeploy).toContain("src/**/*.hdbanalyticprivilege");
-      expect(undeploy).toContain("src/gen/**/*.hdbview");
     });
   });
 

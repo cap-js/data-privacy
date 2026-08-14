@@ -4,14 +4,16 @@ const path = require("path");
 
 module.exports = class TempUtil {
   static get DEFAULT_TEMP_DIR() {
-    return path.join(__dirname, "_out");
+    return path.join(__dirname, "../../..", "_out");
   }
   static get OS_TEMP_DIR() {
     return os.tmpdir();
   }
 
-  constructor(fileName) {
-    this.fileName = `${path.parse(path.basename(fileName)).name.replace(".", "-")}-`;
+  // Accepts (testDir, filename) or just (filename) for backwards compat
+  constructor(testDirOrFilename, filename) {
+    const fname = filename ?? testDirOrFilename;
+    this.fileName = `${path.parse(path.basename(fname)).name.replace(".", "-")}-`;
     this.tempFolders = new Set();
   }
 
@@ -24,9 +26,9 @@ module.exports = class TempUtil {
     return tempFolder;
   }
 
-  async cleanUp() {
+  cleanUp() {
     for (let tempFolder of this.tempFolders) {
-      await fs.promises.rm(tempFolder, { force: true, recursive: true });
+      fs.rmSync(tempFolder, { force: true, recursive: true });
     }
     this.tempFolders.clear();
   }

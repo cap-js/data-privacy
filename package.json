@@ -1,6 +1,6 @@
 {
   "name": "@cap-js/data-privacy",
-  "version": "0.6.3",
+  "version": "0.6.2",
   "description": "CDS plugin providing an integration with the SAP Data Privacy Integration service for PII data retention and information retrieval based on annotations.",
   "license": "Apache-2.0",
   "author": "SAP SE (https://www.sap.com)",
@@ -27,38 +27,39 @@
     "CHANGELOG.md"
   ],
   "dependencies": {
-    "@sap/xsenv": "^6.1.0"
+    "@sap/xsenv": "^6.2.2"
   },
   "peerDependencies": {
-    "@cap-js/audit-logging": "^1.1.0",
+    "@cap-js/audit-logging": "^1.2.0",
     "@sap/cds": ">=9.8"
   },
   "devDependencies": {
-    "@cap-js/cds-test": "^1.0.1",
-    "@cap-js/cds-types": "^0.17.0",
-    "@cap-js/sqlite": ">=2",
+    "@cap-js/cds-test": "^1.0.2",
+    "@cap-js/cds-types": "^0.18.0",
+    "@cap-js/sqlite": "^3",
     "@eslint/js": "^10",
     "@sap/cds-common-content": "*",
-    "@sap/cds-dk": ">=9",
-    "@sap/cds-lsp": ">=9",
+    "@sap/cds-dk": "^9",
+    "@sap/cds-lsp": "^10",
     "eslint": "^10",
-    "jest": "^30.2.0",
+    "jest": "^30.4.2",
     "patch-package": "^8",
-    "prettier": "^3.8.1"
+    "prettier": "^3.9.6",
+    "axios": "^1.19.0"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=20"
   },
   "scripts": {
     "postinstall": "npx patch-package",
     "lint": "npx eslint .",
     "format": "prettier . --write && format-cds -f",
     "format:check": "prettier . --check && format-cds --check",
-    "test": "npx jest --silent --forceExit",
-    "test:integration": "cds bind --exec --profile hybrid,integration -- npx jest --silent --forceExit --testPathPatterns \"tests/retention/dataSubjectDeletion.test.js|tests/information/information-service.test.js|tests/csn-enhancements/joinUnionRuntime.test.js\""
-  },
-  "jest": {
-    "testTimeout": 40000
+    "test": "npm run test:integration && npm run test:add && npm run test:build",
+    "test1": "npx jest --detectOpenHandles  --silent --forceExit",
+    "test:integration": "npx jest --detectOpenHandles  --silent --forceExit --selectProjects \"DPI Integration Tests\"",
+    "test:add": "npx jest --detectOpenHandles --forceExit --verbose --selectProjects \"CDS ADD\"",
+    "test:build": "npx jest --detectOpenHandles --forceExit --verbose --selectProjects \"CDS BUILD\""
   },
   "cds": {
     "requires": {
