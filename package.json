@@ -30,8 +30,8 @@
     "@sap/xsenv": "^6.2.2"
   },
   "peerDependencies": {
-    "@cap-js/audit-logging": "^1.2.0",
-    "@sap/cds": ">=9.8"
+    "@cap-js/audit-logging": "1.2.2",
+    "@sap/cds": "10.0.6"
   },
   "devDependencies": {
     "@cap-js/cds-test": "^1.0.2",
@@ -39,13 +39,13 @@
     "@cap-js/sqlite": "^3",
     "@eslint/js": "^10",
     "@sap/cds-common-content": "*",
-    "@sap/cds-dk": "^9",
-    "@sap/cds-lsp": "^10",
+    "@sap/cds-dk": "10.0.8",
+    "@sap/cds-lsp": "^10.0.2",
+    "axios": "^1.19.0",
     "eslint": "^10",
     "jest": "^30.4.2",
     "patch-package": "^8",
-    "prettier": "^3.9.6",
-    "axios": "^1.19.0"
+    "prettier": "^3.9.6"
   },
   "engines": {
     "node": ">=20"
