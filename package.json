@@ -54,11 +54,10 @@
     "lint": "npx eslint .",
     "format": "prettier . --write && format-cds -f",
     "format:check": "prettier . --check && format-cds --check",
-    "test": "npx jest --silent --forceExit",
-    "test:integration": "cds bind --exec --profile hybrid,integration -- npx jest --silent --forceExit --testPathPatterns \"tests/retention/dataSubjectDeletion.test.js|tests/information/information-service.test.js|tests/csn-enhancements/joinUnionRuntime.test.js\""
-  },
-  "jest": {
-    "testTimeout": 40000
+    "test": "npm run test:integration && npm run test:add && npm run test:build",
+    "test:integration": "npx jest --detectOpenHandles  --silent --forceExit --selectProjects \"DPI Integration Tests\"",
+    "test:add": "npx jest --detectOpenHandles --forceExit --verbose --selectProjects \"CDS ADD\"",
+    "test:build": "npx jest --detectOpenHandles --forceExit --verbose --selectProjects \"CDS BUILD\""
   },
   "cds": {
     "requires": {
