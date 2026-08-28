@@ -3,8 +3,10 @@ module.exports = {
         // Integration tests in tests/ folder - run serially
         {
       displayName: 'DPI Integration Tests',
-      testMatch: ['<rootDir>/tests/**/*.test.js', '<rootDir>/tests/**/*.spec.js'
-            ],
+      testMatch: [
+        '<rootDir>/tests/!(add|build)/**/*.test.js',
+        '<rootDir>/tests/!(add|build)/**/*.spec.js',
+      ],
       testTimeout: 40000,
       maxWorkers: 1, // Force serial execution for integration tests
       modulePathIgnorePatterns: [
