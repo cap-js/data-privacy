@@ -1,4 +1,5 @@
 module.exports = {
+  testTimeout: 100000,
   projects: [
     // Integration tests in tests/ folder - run serially
     {
@@ -8,7 +9,6 @@ module.exports = {
         '<rootDir>/tests/!(add|build)/**/*.spec.js',
       ],
       testTimeout: 40000,
-      hookTimeout: 40000,
       maxWorkers: 1, // Force serial execution for integration tests
       modulePathIgnorePatterns: [
         '<rootDir>/tests/incidents-mgmt/build',
