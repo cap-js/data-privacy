@@ -1,8 +1,8 @@
 {
   "name": "incidents-mgmt-mtx",
   "dependencies": {
-    "@sap/cds": "^9.9.2",
-    "@sap/cds-mtxs": "^2",
+    "@sap/cds": "10.0.6",
+    "@sap/cds-mtxs": ">= 3.9.7",
     "@sap/xssec": "^4",
     "express": "^5"
   },
