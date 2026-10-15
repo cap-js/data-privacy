@@ -142,3 +142,69 @@ describe("Blocking field propagation to service views of composition targets", (
     });
   });
 });
+
+describe("Feature flag: dataSubjectReuseAnnotations with @ILM.IsRetentionManaged", () => {
+  const RETENTION_SRV = "sap.ilm.RetentionService";
+  const SCENARIO_FILES = [
+    "./tests/csn-enhancements/scenarios/base.cds",
+    "./tests/csn-enhancements/scenarios/retentionManaged.cds",
+    "./srv/DPIInformation.cds",
+    "./srv/TableHeaderBlocking.cds"
+  ];
+
+  function hasBlockingField(model, entityName) {
+    const entity = model.definitions[entityName];
+    expect(entity).toBeTruthy();
+    return Object.values(entity.elements).some(
+      (e) => e["@PersonalData.FieldSemantics"] === "BlockingDate"
+    );
+  }
+
+  describe("Flag OFF (default): all ILM objects get blocking fields regardless of @ILM.IsRetentionManaged", () => {
+    let model;
+    let savedFlag;
+
+    beforeAll(async () => {
+      savedFlag = cds.env.requires[RETENTION_SRV]?.dataSubjectReuseAnnotations;
+      cds.env.requires[RETENTION_SRV].dataSubjectReuseAnnotations = false;
+      model = await cds.load(SCENARIO_FILES);
+      enhanceModel(model);
+    });
+
+    afterAll(() => {
+      cds.env.requires[RETENTION_SRV].dataSubjectReuseAnnotations = savedFlag;
+    });
+
+    test("Orders (annotated with @ILM.IsRetentionManaged) gets blocking fields", () => {
+      expect(hasBlockingField(model, "sap.ilm.bookshop.Orders")).toBe(true);
+    });
+
+    test("Marketing (no @ILM.IsRetentionManaged) also gets blocking fields when flag is off", () => {
+      expect(hasBlockingField(model, "sap.ilm.bookshop.Marketing")).toBe(true);
+    });
+  });
+
+  describe("Flag ON: only entities with @ILM.IsRetentionManaged get blocking fields", () => {
+    let model;
+    let savedFlag;
+
+    beforeAll(async () => {
+      savedFlag = cds.env.requires[RETENTION_SRV]?.dataSubjectReuseAnnotations;
+      cds.env.requires[RETENTION_SRV].dataSubjectReuseAnnotations = true;
+      model = await cds.load(SCENARIO_FILES);
+      enhanceModel(model);
+    });
+
+    afterAll(() => {
+      cds.env.requires[RETENTION_SRV].dataSubjectReuseAnnotations = savedFlag;
+    });
+
+    test("Orders with @ILM.IsRetentionManaged: true gets blocking fields", () => {
+      expect(hasBlockingField(model, "sap.ilm.bookshop.Orders")).toBe(true);
+    });
+
+    test("Marketing without @ILM.IsRetentionManaged does NOT get blocking fields", () => {
+      expect(hasBlockingField(model, "sap.ilm.bookshop.Marketing")).toBe(false);
+    });
+  });
+});
