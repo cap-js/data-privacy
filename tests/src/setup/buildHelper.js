@@ -9,6 +9,4 @@ async function _build(project, tasks, options) {
   return build({ root: project, tasks, ...options });
 }
 
-module.exports = {
-  _build
-};
+module.exports = { _build };

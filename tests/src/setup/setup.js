@@ -3,9 +3,17 @@ const path = require("path");
 const fs = require("fs");
 const cds = require("@sap/cds");
 
-const ROOT_DIR = path.join(__dirname, "..", "..");
+const ROOT_DIR = path.join(__dirname, "../../..");
 const ROOT_NODE_MODULES = path.join(ROOT_DIR, "node_modules");
-const TEMPLATES_DIR = path.join(__dirname, "templates");
+const TEMPLATES_DIR = path.join(__dirname, "../../build/templates");
+
+// On Windows, directory symlinks require admin/Developer Mode; junctions do not.
+const SYMLINK_TYPE = process.platform === "win32" ? "junction" : "dir";
+
+const FIXTURE_APPS = {
+  bookshop: path.join(ROOT_DIR, "tests/bookshop-app"),
+  "incidents-mgmt": path.join(ROOT_DIR, "tests/incidents-mgmt")
+};
 
 /**
  * Generate a CAP project via cds init, copy CDS model templates, inject plugin dep,
@@ -20,24 +28,45 @@ async function generateBuildProject(tempUtil, name, facets = ["mta", "xsuaa", "h
   });
   const projectDir = path.join(tempDir, name);
 
-  // Copy CDS model templates
   fs.cpSync(path.join(TEMPLATES_DIR, "db"), path.join(projectDir, "db"), { recursive: true });
   fs.cpSync(path.join(TEMPLATES_DIR, "srv"), path.join(projectDir, "srv"), { recursive: true });
 
-  // Inject @cap-js/data-privacy dep + symlink node_modules
   const pkgPath = path.join(projectDir, "package.json");
   const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
   pkg.dependencies ??= {};
   pkg.dependencies["@cap-js/data-privacy"] = `file:${ROOT_DIR}`;
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
-  fs.symlinkSync(ROOT_NODE_MODULES, path.join(projectDir, "node_modules"), "dir");
+  fs.symlinkSync(ROOT_NODE_MODULES, path.join(projectDir, "node_modules"), SYMLINK_TYPE);
 
-  // Run cds add data-privacy to generate DPI resources in mta.yaml + xs-security.json
   execSync("npx cds add data-privacy", {
     cwd: projectDir,
     encoding: "utf-8",
     timeout: 120_000
   });
+
+  return projectDir;
+}
+
+/**
+ * Copy a fixture app into a temp folder and symlink node_modules.
+ * @param {object} tempUtil - TempUtil instance
+ * @param {string} name - name for the temp project folder
+ * @param {string} fixtureKey - key into FIXTURE_APPS ("bookshop" or "incidents-mgmt")
+ */
+async function generateCleanApplicationProject(tempUtil, name, fixtureKey) {
+  const fixtureDir = FIXTURE_APPS[fixtureKey];
+  if (!fixtureDir) {
+    throw new Error(`Unknown fixture app key: "${fixtureKey}". Available: ${Object.keys(FIXTURE_APPS).join(", ")}`);
+  }
+  const tempDir = await tempUtil.mkTempFolder();
+  const projectDir = path.join(tempDir, name);
+  fs.cpSync(fixtureDir, projectDir, {
+    recursive: true,
+    filter: (src) => !src.includes("node_modules") && !src.includes("gen") && !src.includes("_out")
+  });
+
+  // Symlink root node_modules so cds build can resolve dependencies
+  fs.symlinkSync(ROOT_NODE_MODULES, path.join(projectDir, "node_modules"), SYMLINK_TYPE);
 
   return projectDir;
 }
@@ -53,9 +82,6 @@ function readMtaRetentionConfig(appRoot, mtaRelPath = "mta.yaml") {
   return retentionResource?.parameters?.config?.dataPrivacyConfiguration?.retentionConfiguration;
 }
 
-/**
- * Inject stale dataSubjectRoles and organizationAttributes into the retention config.
- */
 function injectStaleRetentionEntries(appRoot) {
   const mtaPath = path.join(appRoot, "mta.yaml");
   const mta = cds.parse.yaml(fs.readFileSync(mtaPath, "utf-8"));
@@ -86,9 +112,6 @@ function injectStaleRetentionEntries(appRoot) {
   fs.writeFileSync(mtaPath, cds.compile.to.yaml(mta));
 }
 
-/**
- * Inject correct (current) dataSubjectRoles and organizationAttributes into the retention config.
- */
 function injectCorrectRetentionEntries(appRoot) {
   const mtaPath = path.join(appRoot, "mta.yaml");
   const mta = cds.parse.yaml(fs.readFileSync(mtaPath, "utf-8"));
@@ -121,9 +144,6 @@ function injectCorrectRetentionEntries(appRoot) {
   fs.writeFileSync(mtaPath, cds.compile.to.yaml(mta));
 }
 
-/**
- * Set a cds.requires entry in the project's package.json.
- */
 function setRequires(appRoot, key, value) {
   const pkgPath = path.join(appRoot, "package.json");
   const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
@@ -135,6 +155,7 @@ function setRequires(appRoot, key, value) {
 
 module.exports = {
   generateBuildProject,
+  generateCleanApplicationProject,
   readMtaRetentionConfig,
   injectStaleRetentionEntries,
   injectCorrectRetentionEntries,

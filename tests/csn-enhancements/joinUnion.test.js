@@ -1,7 +1,13 @@
 const cds = require("@sap/cds");
 const path = require("path");
 
-cds.test().in(path.join(__dirname, "../bookshop-app"));
+// These tests only load and inspect the CSN model; they never call any served
+// endpoint. Launching a full CAP server via cds.test() for the bookshop-app
+// (HANA, ams, audit-logging, ...) is unnecessary and exceeds the Jest timeout.
+// Instead, point cds.root at the app and register the plugin so its
+// cds.on("loaded", enhanceModel) hook enhances the model on every cds.load().
+cds.root = path.join(__dirname, "../bookshop-app");
+require("../../cds-plugin.js");
 
 describe("Join and Union view handling", () => {
   let log = cds.test.log();

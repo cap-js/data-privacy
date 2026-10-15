@@ -213,7 +213,8 @@ module.exports = class TableHeaderBlockingService extends require("./DPIRetentio
         SELECT.one.from(iLMObject).where(whereCondition).columns("count(1) as amt")
       );
       try {
-        await this.run(DELETE.from(iLMObject).where(whereCondition));
+        await this.delete.from(iLMObject).where(whereCondition);
+
         LOG.debug(
           `Deleted ${amt} ${iLMObject} for the data subject role ${dataSubjectRole} as they reached end of blocking`
         );
@@ -304,7 +305,7 @@ module.exports = class TableHeaderBlockingService extends require("./DPIRetentio
           );
         } else {
           try {
-            await this.run(DELETE.from(singleEntity).where(where));
+            await this.delete.from(singleEntity).where(where);
             LOG.debug(
               `Where clause for deleting ${singleEntity.name}`,
               where,
@@ -400,7 +401,7 @@ module.exports = class TableHeaderBlockingService extends require("./DPIRetentio
           );
           records += amt;
           innerRecords = amt;
-          await this.run(DELETE.from(dataSubjectEntity).where(where));
+          await this.delete.from(dataSubjectEntity).where(where);
           LOG.debug(
             `Destroyed ${innerRecords} data subjects, with ${dataSubjectIDsToDestroy.length} data subject IDs being provided.`
           );
@@ -634,7 +635,7 @@ module.exports = class TableHeaderBlockingService extends require("./DPIRetentio
               : iLMObject._dpi.orgAttributeReference;
             if (
               !iLMObject.elements[
-                iLMObject._dpi.elementByVHId(orgAttrRef.organizationAttributeName)
+              iLMObject._dpi.elementByVHId(orgAttrRef.organizationAttributeName)
               ]
             ) {
               LOG.warn(

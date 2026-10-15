@@ -1,7 +1,11 @@
 const cds = require("@sap/cds");
 const path = require("path");
 
+jest.setTimeout(40000);
+
 cds.test().in(path.join(__dirname, "../bookshop-app"));
+//cds.root = path.join(__dirname, "../bookshop-app");
+//require("../../cds-plugin.js");
 
 describe("Runtime reads on join and union views", () => {
   test("Read on left outer join view (OrdersWithItems) does not crash", async () => {
