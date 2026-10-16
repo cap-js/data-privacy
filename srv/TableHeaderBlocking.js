@@ -634,7 +634,7 @@ module.exports = class TableHeaderBlockingService extends require("./DPIRetentio
               : iLMObject._dpi.orgAttributeReference;
             if (
               !iLMObject.elements[
-                iLMObject._dpi.elementByVHId(orgAttrRef.organizationAttributeName)
+              iLMObject._dpi.elementByVHId(orgAttrRef.organizationAttributeName)
               ]
             ) {
               LOG.warn(

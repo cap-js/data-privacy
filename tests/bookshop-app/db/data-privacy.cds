@@ -2,6 +2,8 @@
 using {sap.capire.bookshop, } from './schema';
 
 // annotations for Data Privacy
+@ODM.entityName: 'sap.odm.businesspartner.BusinessPartner'
+@ODM.oid: 'globalId'
 annotate bookshop.Customers with @(
   PersonalData: {
     DataSubjectRole: 'Customer',

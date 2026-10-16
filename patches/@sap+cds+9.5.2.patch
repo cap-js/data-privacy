@@ -1,0 +1,28 @@
+diff --git a/node_modules/@sap/cds/libx/_runtime/common/utils/resolveView.js b/node_modules/@sap/cds/libx/_runtime/common/utils/resolveView.js
+index cff187c..1ad3a5d 100644
+--- a/node_modules/@sap/cds/libx/_runtime/common/utils/resolveView.js
++++ b/node_modules/@sap/cds/libx/_runtime/common/utils/resolveView.js
+@@ -523,12 +523,12 @@ const _queryColumns = (target, columns = [], isAborted) => {
+   return queryColumns
+ }
+ 
+-const _mappedValue = (col, alias) => {
++const _mappedValue = (col, alias, _target) => {
+   const key = col.as || col.ref[0]
+ 
+   if (col.ref) {
+     const columnRef = col.ref.filter(columnName => columnName !== alias)
+-    return [key, { ref: columnRef }]
++    return [key, _target.elements[key] && key === columnRef.join('_') ? {ref: [key]} : { ref: columnRef }]
+   }
+ 
+   return [key, { val: col.val }]
+@@ -623,7 +623,7 @@ const getTransition = (queryTarget, service, skipForbiddenViewCheck, event, opti
+   const { target: _target, transitionColumns } = transitionData
+   const query = queryTarget.query
+   const alias = query && query.SELECT && query.SELECT.from && query.SELECT.from.as
+-  const mappedColumns = transitionColumns.map(column => _mappedValue(column, alias))
++  const mappedColumns = transitionColumns.map(column => _mappedValue(column, alias, _target))
+   const mapping = new Map(mappedColumns)
+   return { target: _target, queryTarget, mapping }
+ }
