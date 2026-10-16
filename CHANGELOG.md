@@ -4,6 +4,12 @@
 - The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - This project adheres to [Semantic Versioning](https://semver.org/).
 
+## Version 0.6.4 - TBD
+
+### Fixed
+
+- Fixed an issue for Postgres where HANA specific role config was applied
+
 ## Version 0.6.3 - 2026-07-20
 
 ### Fixed
