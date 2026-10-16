@@ -175,16 +175,16 @@ describe("Feature flag: dataSubjectReuseAnnotations with @ILM.IsRetentionManaged
       cds.env.requires[RETENTION_SRV].dataSubjectReuseAnnotations = savedFlag;
     });
 
-    test("Orders (annotated with @ILM.IsRetentionManaged) gets blocking fields", () => {
+    test("Orders (@ILM.IsRetentionManaged: true) gets blocking fields", () => {
       expect(hasBlockingField(model, "sap.ilm.bookshop.Orders")).toBe(true);
     });
 
-    test("Marketing (no @ILM.IsRetentionManaged) also gets blocking fields when flag is off", () => {
+    test("Marketing (@ILM.IsRetentionManaged: false) also gets blocking fields when flag is off", () => {
       expect(hasBlockingField(model, "sap.ilm.bookshop.Marketing")).toBe(true);
     });
   });
 
-  describe("Flag ON: only entities with @ILM.IsRetentionManaged get blocking fields", () => {
+  describe("Flag ON: ILM objects get blocking fields by default; @ILM.IsRetentionManaged: false opts out", () => {
     let model;
     let savedFlag;
 
@@ -199,11 +199,11 @@ describe("Feature flag: dataSubjectReuseAnnotations with @ILM.IsRetentionManaged
       cds.env.requires[RETENTION_SRV].dataSubjectReuseAnnotations = savedFlag;
     });
 
-    test("Orders with @ILM.IsRetentionManaged: true gets blocking fields", () => {
+    test("Orders (@ILM.IsRetentionManaged: true) gets blocking fields", () => {
       expect(hasBlockingField(model, "sap.ilm.bookshop.Orders")).toBe(true);
     });
 
-    test("Marketing without @ILM.IsRetentionManaged does NOT get blocking fields", () => {
+    test("Marketing (@ILM.IsRetentionManaged: false) does NOT get blocking fields", () => {
       expect(hasBlockingField(model, "sap.ilm.bookshop.Marketing")).toBe(false);
     });
   });

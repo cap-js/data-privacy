@@ -172,8 +172,6 @@ describe("testing cds build", () => {
 });
 
 describe("dataSubjectReuseAnnotations feature flag", () => {
-  let log = cds.test.log();
-
   beforeAll(() => {
     require("../../cds-plugin.js");
     cds.build = require("@sap/cds-dk/lib/build");
