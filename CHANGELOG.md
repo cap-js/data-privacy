@@ -4,6 +4,13 @@
 - The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - This project adheres to [Semantic Versioning](https://semver.org/).
 
+## Version 0.7.0 - 2026-10-13
+
+### Added
+
+- Added support for `@ILM.IsRetentionManaged` annotation on ILM object entities when `cds.requires["sap.ilm.RetentionService"].dataSubjectReuseAnnotations` is enabled. When set to `true`, the plugin injects the `dppBlockingDate` and `ilmEarliestDestructionDate` fields from the `sap.ilm.blocking` and `sap.ilm.destruction` aspects. Without the annotation, the plugin does not inject these fields automatically, allowing apps to manage retention columns themselves.
+- Added support for `@PersonalData.IsReuseDataSubjectRole` annotation on data subject entities when `cds.requires["sap.ilm.RetentionService"].dataSubjectReuseAnnotations` is enabled. When set (boolean or struct form with `applicationName` / `dataSubjectRoleName`), the build hook omits the blocking, information, and destroying endpoint entries from `mta.yaml` for that role and instead writes the `reuseApplicationName` and `reuseApplicationDataSubjectRoleName` fields. Stale endpoint fields from previous non-reuse builds are actively removed.
+
 ## Version 0.6.3 - 2026-07-20
 
 ### Fixed
