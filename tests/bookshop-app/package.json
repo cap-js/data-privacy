@@ -16,7 +16,7 @@
   },
   "devDependencies": {
     "@cap-js/sqlite": ">=2",
-    "@sap/ams-dev": "^2",
+    "@sap/ams-dev": "^3",
     "@sap/cds-dk": ">=9",
     "@sap/ux-specification": "^1.102.15"
   },
