@@ -3,6 +3,13 @@ const cds = require("@sap/cds");
 const LOG = cds.log("data-privacy");
 const { _buildWhereClauseForDS, whereForConditionSet } = require("../lib/utils");
 
+function _isReuseDataSubjectRole(srvDefinition, dataSubjectRoleName) {
+  const { dataSubjectReuseAnnotations } = cds.env.requires?.["sap.ilm.RetentionService"] ?? {};
+  if (!dataSubjectReuseAnnotations) return false;
+  const dsEntities = srvDefinition._dpi.dataSubjectsForRole(dataSubjectRoleName);
+  return Object.values(dsEntities).some((e) => e["@PersonalData.IsReuseDataSubjectRole"]);
+}
+
 module.exports = class TableHeaderBlockingService extends require("./DPIRetention") {
   async init() {
     this.on("dataSubjectEndOfBusiness", async (req) => {
@@ -234,6 +241,12 @@ module.exports = class TableHeaderBlockingService extends require("./DPIRetentio
       LOG.debug(
         `Block data subject request for role ${dataSubjectRoleName}, ID ${dataSubjectId} and application group ${applicationName} with end of retention ${maxDeletionDate}.`
       );
+      if (_isReuseDataSubjectRole(this.definition, dataSubjectRoleName)) {
+        return req.error(
+          400,
+          `Data subject role '${dataSubjectRoleName}' is a reuse role managed by another application. Blocking must be handled by the owning application.`
+        );
+      }
       const dsEntities = this.definition._dpi.dataSubjectsForRole(dataSubjectRoleName); //Ensures that data subject details are also retrieved
       if (dsEntities.length === 0) {
         return req.error("Non existing data subject");
@@ -331,6 +344,12 @@ module.exports = class TableHeaderBlockingService extends require("./DPIRetentio
       LOG.debug(
         `Destroy data subjects request for role ${dataSubjectRoleName} and application group ${applicationName} where end of retention is reached.`
       );
+      if (_isReuseDataSubjectRole(this.definition, dataSubjectRoleName)) {
+        return req.error(
+          400,
+          `Data subject role '${dataSubjectRoleName}' is a reuse role managed by another application. Destroying must be handled by the owning application.`
+        );
+      }
       //Delete only possible if all iLMObjects also reached end of blocking
       const dataSubjectsEntities = this.definition._dpi.dataSubjectsForRole(dataSubjectRoleName);
 
@@ -574,6 +593,12 @@ module.exports = class TableHeaderBlockingService extends require("./DPIRetentio
       LOG.debug(
         `Requested data subject information for ${dataSubjectRoleName} and application ${applicationName}`
       );
+      if (_isReuseDataSubjectRole(this.definition, dataSubjectRoleName)) {
+        return req.error(
+          400,
+          `Data subject role '${dataSubjectRoleName}' is a reuse role managed by another application. Personal data information must be retrieved from the owning application.`
+        );
+      }
       LOG.debug(
         `Data subject info, data subject IDs`,
         dataSubjects.map((d) => d.dataSubjectId)

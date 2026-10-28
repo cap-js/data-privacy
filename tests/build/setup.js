@@ -133,10 +133,21 @@ function setRequires(appRoot, key, value) {
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
 }
 
+/**
+ * Append a CDS annotation snippet to db/data-privacy.cds in the generated project.
+ * Used to add @PersonalData.IsReuseDataSubjectRole (and similar) without modifying templates.
+ */
+function injectReuseAnnotation(appRoot, annotationCds) {
+  const dpPath = path.join(appRoot, "db", "data-privacy.cds");
+  const existing = fs.readFileSync(dpPath, "utf-8");
+  fs.writeFileSync(dpPath, existing + "\n" + annotationCds);
+}
+
 module.exports = {
   generateBuildProject,
   readMtaRetentionConfig,
   injectStaleRetentionEntries,
   injectCorrectRetentionEntries,
-  setRequires
+  setRequires,
+  injectReuseAnnotation
 };

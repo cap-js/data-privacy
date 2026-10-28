@@ -4,6 +4,13 @@
 - The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - This project adheres to [Semantic Versioning](https://semver.org/).
 
+## Version 0.7.0 - 2026-10-28
+
+### Added
+
+- Added support for `@ILM.IsRetentionManaged` annotation on ILM object entities, evaluated when `cds.requires["sap.ilm.RetentionService"].dataSubjectReuseAnnotations` is enabled. Follows an opt-out model: fields are injected by default; annotating with `@ILM.IsRetentionManaged: false` suppresses injection for that entity.
+- Added support for `@PersonalData.IsReuseDataSubjectRole` annotation on `DataSubject` entities, evaluated when `cds.requires["sap.ilm.RetentionService"].dataSubjectReuseAnnotations` is enabled. Accepts a boolean or a struct (`{ applicationName, dataSubjectRoleName }`). Marks a data subject role whose lifecycle is owned by another application, affecting both build-time `mta.yaml` generation and runtime behavior for that role.
+
 ## Version 0.6.3 - 2026-07-20
 
 ### Fixed

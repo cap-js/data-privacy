@@ -12,7 +12,8 @@ const {
   readMtaRetentionConfig,
   injectStaleRetentionEntries,
   injectCorrectRetentionEntries,
-  setRequires
+  setRequires,
+  injectReuseAnnotation
 } = require("./setup.js");
 
 const buildTasks = [
@@ -167,6 +168,173 @@ describe("testing cds build", () => {
     setRequires(appRoot, "sap.dpp.InformationService", false);
     await _build(appRoot, buildTasks);
     expect(log.output).toMatch(/build completed/);
+  });
+});
+
+describe("dataSubjectReuseAnnotations feature flag", () => {
+  beforeAll(() => {
+    require("../../cds-plugin.js");
+    cds.build = require("@sap/cds-dk/lib/build");
+    try {
+      register("data-privacy", require("../../lib/build/index.js"));
+    } catch (e) {
+      if (!e.message?.includes("already registered")) throw e;
+    }
+  });
+  afterAll(async () => {
+    return tempUtil.cleanUp();
+  });
+
+  test("Flag OFF: @PersonalData.IsReuseDataSubjectRole annotation is ignored, endpoint fields written normally", async () => {
+    const appRoot = await generateBuildProject(tempUtil, "app-reuse-flag-off");
+    // Annotation present but flag is off (default) - should be ignored
+    injectReuseAnnotation(
+      appRoot,
+      "annotate bookshop.Customers with @PersonalData.IsReuseDataSubjectRole: true;"
+    );
+    await _build(appRoot, buildTasks);
+    const retentionConfig = readMtaRetentionConfig(appRoot);
+    const role = retentionConfig.dataSubjectRoles[0];
+    expect(role.dataSubjectRoleName).toBe("Customer");
+    // All three endpoint fields must be present when flag is off
+    expect(role.dataSubjectBlockingEndPoint).toBeDefined();
+    expect(role.dataSubjectInformationEndPoint).toBeDefined();
+    expect(role.dataSubjectsDestroyingEndPoint).toBeDefined();
+    expect(role.reuseApplicationName).toBeUndefined();
+    expect(role.reuseApplicationDataSubjectRoleName).toBeUndefined();
+  });
+
+  test("Flag OFF: existing reuseApplicationName in mta.yaml is preserved (not cleaned up)", async () => {
+    const appRoot = await generateBuildProject(tempUtil, "app-reuse-preserve");
+    // Simulate a mta.yaml that already has a manually maintained reuseApplicationName
+    const mtaPath = path.join(appRoot, "mta.yaml");
+    const mta = cds.parse.yaml(fs.readFileSync(mtaPath, "utf-8"));
+    const retentionResource = mta.resources.find(
+      (r) =>
+        r.parameters?.service === "data-privacy-integration-service" &&
+        r.parameters?.config?.dataPrivacyConfiguration?.configType === "retention"
+    );
+    retentionResource.parameters.config.dataPrivacyConfiguration.retentionConfiguration.dataSubjectRoles =
+      [
+        {
+          dataSubjectRoleName: "Customer",
+          dataSubjectDescription: "Customer",
+          dataSubjectBaseURL: "~{srv-api/srv-url}",
+          dataSubjectBlockingEndPoint: "/dpp/retention/dataSubjectBlocking",
+          dataSubjectInformationEndPoint: "/dpp/retention/dataSubjectInformation",
+          dataSubjectsDestroyingEndPoint: "/dpp/retention/dataSubjectsDestroying",
+          reuseApplicationName: "ManuallyMaintainedApp"
+        }
+      ];
+    fs.writeFileSync(mtaPath, cds.compile.to.yaml(mta));
+    // Build with flag OFF (default) - must not touch reuseApplicationName
+    await _build(appRoot, buildTasks);
+    const retentionConfig = readMtaRetentionConfig(appRoot);
+    const role = retentionConfig.dataSubjectRoles[0];
+    expect(role.reuseApplicationName).toBe("ManuallyMaintainedApp");
+  });
+
+  test("Flag ON + boolean true: endpoint fields absent, dataSubjectBaseURL present", async () => {
+    const appRoot = await generateBuildProject(tempUtil, "app-reuse-bool");
+    setRequires(appRoot, "sap.ilm.RetentionService", { dataSubjectReuseAnnotations: true });
+    injectReuseAnnotation(
+      appRoot,
+      "annotate bookshop.Customers with @PersonalData.IsReuseDataSubjectRole: true;"
+    );
+    await _build(appRoot, buildTasks);
+    const retentionConfig = readMtaRetentionConfig(appRoot);
+    const role = retentionConfig.dataSubjectRoles[0];
+    expect(role.dataSubjectRoleName).toBe("Customer");
+    expect(role.dataSubjectBaseURL).toBeDefined();
+    expect(role.dataSubjectBlockingEndPoint).toBeUndefined();
+    expect(role.dataSubjectInformationEndPoint).toBeUndefined();
+    expect(role.dataSubjectsDestroyingEndPoint).toBeUndefined();
+  });
+
+  test("Flag ON + struct form: reuseApplicationName and reuseApplicationDataSubjectRoleName written, endpoints absent", async () => {
+    const appRoot = await generateBuildProject(tempUtil, "app-reuse-struct");
+    setRequires(appRoot, "sap.ilm.RetentionService", { dataSubjectReuseAnnotations: true });
+    injectReuseAnnotation(
+      appRoot,
+      "annotate bookshop.Customers with @PersonalData.IsReuseDataSubjectRole: { applicationName: 'ExternalApp', dataSubjectRoleName: 'ExternalEmployee' };"
+    );
+    await _build(appRoot, buildTasks);
+    const retentionConfig = readMtaRetentionConfig(appRoot);
+    const role = retentionConfig.dataSubjectRoles[0];
+    expect(role.dataSubjectRoleName).toBe("Customer");
+    expect(role.reuseApplicationName).toBe("ExternalApp");
+    expect(role.reuseApplicationDataSubjectRoleName).toBe("ExternalEmployee");
+    expect(role.dataSubjectBlockingEndPoint).toBeUndefined();
+    expect(role.dataSubjectInformationEndPoint).toBeUndefined();
+    expect(role.dataSubjectsDestroyingEndPoint).toBeUndefined();
+  });
+
+  test("Flag ON + struct with only dataSubjectRoleName: treated as reuse, endpoints absent", async () => {
+    const appRoot = await generateBuildProject(tempUtil, "app-reuse-rolename-only");
+    setRequires(appRoot, "sap.ilm.RetentionService", { dataSubjectReuseAnnotations: true });
+    injectReuseAnnotation(
+      appRoot,
+      "annotate bookshop.Customers with @PersonalData.IsReuseDataSubjectRole: { dataSubjectRoleName: 'ExternalEmployee' };"
+    );
+    await _build(appRoot, buildTasks);
+    const retentionConfig = readMtaRetentionConfig(appRoot);
+    const role = retentionConfig.dataSubjectRoles[0];
+    expect(role.dataSubjectRoleName).toBe("Customer");
+    expect(role.reuseApplicationDataSubjectRoleName).toBe("ExternalEmployee");
+    expect(role.dataSubjectBlockingEndPoint).toBeUndefined();
+    expect(role.dataSubjectInformationEndPoint).toBeUndefined();
+    expect(role.dataSubjectsDestroyingEndPoint).toBeUndefined();
+  });
+
+  test("Stale endpoint fields removed when role transitions from non-reuse to reuse", async () => {
+    const appRoot = await generateBuildProject(tempUtil, "app-reuse-stale-endpoints");
+    // Simulate previous non-reuse build by injecting endpoint fields
+    injectCorrectRetentionEntries(appRoot);
+    // Now mark as reuse and enable flag
+    setRequires(appRoot, "sap.ilm.RetentionService", { dataSubjectReuseAnnotations: true });
+    injectReuseAnnotation(
+      appRoot,
+      "annotate bookshop.Customers with @PersonalData.IsReuseDataSubjectRole: true;"
+    );
+    await _build(appRoot, buildTasks);
+    const retentionConfig = readMtaRetentionConfig(appRoot);
+    const role = retentionConfig.dataSubjectRoles[0];
+    expect(role.dataSubjectBlockingEndPoint).toBeUndefined();
+    expect(role.dataSubjectInformationEndPoint).toBeUndefined();
+    expect(role.dataSubjectsDestroyingEndPoint).toBeUndefined();
+    expect(role.dataSubjectBaseURL).toBeDefined();
+  });
+
+  test("Stale reuse metadata removed when role transitions from reuse to non-reuse", async () => {
+    const appRoot = await generateBuildProject(tempUtil, "app-reuse-stale-metadata");
+    // Simulate previous reuse build by injecting reuseApplicationName into mta.yaml
+    const mtaPath = path.join(appRoot, "mta.yaml");
+    const mta = cds.parse.yaml(fs.readFileSync(mtaPath, "utf-8"));
+    const retentionResource = mta.resources.find(
+      (r) =>
+        r.parameters?.service === "data-privacy-integration-service" &&
+        r.parameters?.config?.dataPrivacyConfiguration?.configType === "retention"
+    );
+    retentionResource.parameters.config.dataPrivacyConfiguration.retentionConfiguration.dataSubjectRoles =
+      [
+        {
+          dataSubjectRoleName: "Customer",
+          dataSubjectDescription: "Customer",
+          dataSubjectBaseURL: "~{srv-api/srv-url}",
+          reuseApplicationName: "OldApp",
+          reuseApplicationDataSubjectRoleName: "OldRole"
+        }
+      ];
+    fs.writeFileSync(mtaPath, cds.compile.to.yaml(mta));
+    // Run build with flag ON but WITHOUT IsReuseDataSubjectRole annotation
+    setRequires(appRoot, "sap.ilm.RetentionService", { dataSubjectReuseAnnotations: true });
+    await _build(appRoot, buildTasks);
+    const retentionConfig = readMtaRetentionConfig(appRoot);
+    const role = retentionConfig.dataSubjectRoles[0];
+    expect(role.reuseApplicationName).toBeUndefined();
+    expect(role.reuseApplicationDataSubjectRoleName).toBeUndefined();
+    // Standard endpoint fields should be back
+    expect(role.dataSubjectBlockingEndPoint).toBeDefined();
   });
 });
 
