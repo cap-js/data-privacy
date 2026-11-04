@@ -4,6 +4,12 @@
 - The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - This project adheres to [Semantic Versioning](https://semver.org/).
 
+## Version 0.7.1 - 2026-11-04
+
+### Fixed
+
+- Fixed an issue in `dataSubjectsDestroying` where the active records check used the DataSubject entity's own DataSubjectID field name when querying ILM Object tables, causing the check to always return false. As a result, DataSubjects were incorrectly destroyed even when related ILM Object records still existed. For composition-based ILM Objects (e.g. a child entity composed under the DataSubject), this led to a foreign key constraint violation on HANA. The fix uses each ILM Object's own DataSubjectID field, consistent with the approach in `dataSubjectBlocking`.
+
 ## Version 0.7.0 - 2026-10-28
 
 ### Added

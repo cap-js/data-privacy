@@ -849,6 +849,15 @@ describe("data subject deletion", () => {
 
     test("dataSubjectsDestroying does destroy if end of retention reached with custom destruction date", async () => {
       const { Employees } = cds.entities("sap.capire.bookshop");
+      // ILM Objects must be cleared before a DataSubject can be destroyed —
+      // the active records check now correctly uses each ILM Object's own DataSubjectID field.
+      const RetentionSrv = await cds.connect.to("sap.ilm.RetentionService");
+      const iLMObjects = RetentionSrv.definition._dpi.iLMObjectsForRole("Employee");
+      for (const iLMObject of Object.values(iLMObjects)) {
+        await DELETE.from(iLMObject).where({
+          [_getDataSubjectIDField(iLMObject.elements)]: employeeData.employeeId
+        });
+      }
       await UPDATE.entity(Employees)
         .where({ ID: employeeData.employeeId })
         .set({
@@ -874,6 +883,15 @@ describe("data subject deletion", () => {
 
     test("dataSubjectsDestroying does destroy if end of retention reached", async () => {
       const { Customers } = cds.entities("sap.capire.bookshop");
+      // ILM Objects must be cleared before a DataSubject can be destroyed —
+      // the active records check now correctly uses each ILM Object's own DataSubjectID field.
+      const RetentionSrv = await cds.connect.to("sap.ilm.RetentionService");
+      const iLMObjects = RetentionSrv.definition._dpi.iLMObjectsForRole("Customer");
+      for (const iLMObject of Object.values(iLMObjects)) {
+        await DELETE.from(iLMObject).where({
+          [_getDataSubjectIDField(iLMObject.elements)]: customerData.customerId
+        });
+      }
       await UPDATE.entity(Customers)
         .where({ ID: customerData.customerId })
         .set({

@@ -371,9 +371,10 @@ module.exports = class TableHeaderBlockingService extends require("./DPIRetentio
         for (const entityName in this.definition._dpi.iLMObjects) {
           const entity = this.entities[entityName];
           if (entity && entity["@PersonalData.EntitySemantics"] === "Other") {
-            if (!dataSubjectEntity._dpi.dataSubjectIdReference) continue;
+            const entityDSIDRef = entity._dpi.dataSubjectIdReference;
+            if (!entityDSIDRef) continue;
             const where = [];
-            where.push({ ref: [dataSubjectEntity._dpi.dataSubjectIdReference] }, "=", {
+            where.push({ ref: [entityDSIDRef] }, "=", {
               val: dataSubjectID
             });
             //For dynamic data subject role - then it is a path.
