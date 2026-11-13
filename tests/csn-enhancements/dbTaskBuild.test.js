@@ -154,3 +154,55 @@ describe("Backstop: fallback aspect load fails (defensive guard, no raw TypeErro
     }
   });
 });
+
+describe("DB-task build: sap.ilm.RetentionService absent from CSN (issue #41, Crash C)", () => {
+  // Same root-cause family as Crash A, different code path. In an isolated db-task build the
+  // RetentionService *service* is not in the CSN. For every `'Other'` entity with a filterable
+  // field, exposeRetentionEntity -> enhanceModelWithValueLists set
+  // options.retentionService = model.definitions["sap.ilm.RetentionService"] (undefined) and
+  // handleValueList then dereferenced `o.retentionService.path`, crashing with
+  // `TypeError: Cannot read properties of undefined (reading 'path')`
+  // (enhanceModelWithValueLists.js:208). Value-help / SelectionCriteria generation targets the
+  // RetentionService OData surface, which is irrelevant to a table-only db-task build, so it is
+  // correctly skipped when the service is absent.
+  //
+  // Aspects are supplied by ensureILMAspects (Crash A fix), so this isolates Crash C.
+  const OTHER_MODEL = `
+    namespace dbtaskc;
+
+    entity Orders {
+      key ID          : UUID;
+          description : String;
+          customer    : String;
+    }
+
+    annotate Orders with @(
+      PersonalData.DataSubjectRole: 'Customer',
+      PersonalData.EntitySemantics: 'Other'
+    ) {
+      customer @PersonalData.FieldSemantics: 'DataSubjectID';
+    };
+  `;
+
+  async function buildOtherDbTaskCsn() {
+    const csn = await cds.compile(OTHER_MODEL, { flavor: "inferred" });
+    // Mimics the db-task build: the RetentionService service is not part of the CSN.
+    expect(csn.definitions["sap.ilm.RetentionService"]).toBeUndefined();
+    return csn;
+  }
+
+  test("enhanceModel does not throw for an 'Other' entity with a filterable field when RetentionService is absent", async () => {
+    const csn = await buildOtherDbTaskCsn();
+    expect(() => enhanceModel(csn)).not.toThrow();
+  });
+
+  test("value-list enhancement is skipped (no RetentionService value-help artifacts created)", async () => {
+    const csn = await buildOtherDbTaskCsn();
+    enhanceModel(csn);
+    // No value-help view entities were injected into a (non-existent) RetentionService surface.
+    const vhArtifacts = Object.keys(csn.definitions).filter(
+      (k) => k.startsWith("sap.ilm.RetentionService.") && /VH|ValueHelp/i.test(k)
+    );
+    expect(vhArtifacts).toEqual([]);
+  });
+});
